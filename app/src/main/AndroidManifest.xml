@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name="com.kabouzeid.musicplayer.App"
+        android:name="top.geek_studio.chenlongcould.musicplayer.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -23,7 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Phonograph.Light"
         tools:ignore="UnusedAttribute">
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.MainActivity">
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.MUSIC_PLAYER" />
@@ -94,41 +94,41 @@
                 <data android:mimeType="vnd.android.cursor.dir/audio" />
             </intent-filter>
         </activity>
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.AlbumDetailActivity" />
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.ArtistDetailActivity" />
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.GenreDetailActivity" />
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.PlaylistDetailActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.AlbumDetailActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.ArtistDetailActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.GenreDetailActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.PlaylistDetailActivity" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.tageditor.SongTagEditorActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.SongTagEditorActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.tageditor.AlbumTagEditorActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.AlbumTagEditorActivity"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.SearchActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.SettingsActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.SettingsActivity"
             android:label="@string/action_settings" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.AboutActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.AboutActivity"
             android:label="@string/action_about" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.intro.AppIntroActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity"
             android:label="@string/intro_label"
             android:theme="@style/Theme.Intro" />
         <activity
-            android:name="com.kabouzeid.musicplayer.ui.activities.bugreport.BugReportActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.bugreport.BugReportActivity"
             android:label="@string/report_an_issue" />
         <activity
-            android:name="com.kabouzeid.musicplayer.appshortcuts.AppShortcutLauncherActivity"
+            android:name="top.geek_studio.chenlongcould.musicplayer.appshortcuts.AppShortcutLauncherActivity"
             android:launchMode="singleInstance"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity android:name="com.kabouzeid.musicplayer.ui.activities.PurchaseActivity" />
+        <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.PurchaseActivity" />
 
         <service
-            android:name="com.kabouzeid.musicplayer.service.MusicService"
+            android:name="top.geek_studio.chenlongcould.musicplayer.service.MusicService"
             android:enabled="true" />
 
-        <receiver android:name="com.kabouzeid.musicplayer.service.MediaButtonIntentReceiver">
+        <receiver android:name="top.geek_studio.chenlongcould.musicplayer.service.MediaButtonIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
@@ -148,14 +148,14 @@
             android:value="GlideModule" />
 
         <!-- Widgets -->
-        <receiver android:name="com.kabouzeid.musicplayer.appwidgets.BootReceiver">
+        <receiver android:name="top.geek_studio.chenlongcould.musicplayer.appwidgets.BootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
         <receiver
-            android:name="com.kabouzeid.musicplayer.appwidgets.AppWidgetBig"
+            android:name="top.geek_studio.chenlongcould.musicplayer.appwidgets.AppWidgetBig"
             android:exported="false"
             android:label="@string/app_widget_big_name">
             <intent-filter>
@@ -167,7 +167,7 @@
                 android:resource="@xml/app_widget_big_info" />
         </receiver>
         <receiver
-            android:name="com.kabouzeid.musicplayer.appwidgets.AppWidgetClassic"
+            android:name="top.geek_studio.chenlongcould.musicplayer.appwidgets.AppWidgetClassic"
             android:exported="false"
             android:label="@string/app_widget_classic_name">
             <intent-filter>
@@ -179,7 +179,7 @@
                 android:resource="@xml/app_widget_classic_info" />
         </receiver>
         <receiver
-            android:name="com.kabouzeid.musicplayer.appwidgets.AppWidgetSmall"
+            android:name="top.geek_studio.chenlongcould.musicplayer.appwidgets.AppWidgetSmall"
             android:exported="false"
             android:label="@string/app_widget_small_name">
             <intent-filter>
@@ -191,7 +191,7 @@
                 android:resource="@xml/app_widget_small_info" />
         </receiver>
         <receiver
-            android:name="com.kabouzeid.musicplayer.appwidgets.AppWidgetCard"
+            android:name="top.geek_studio.chenlongcould.musicplayer.appwidgets.AppWidgetCard"
             android:exported="false"
             android:label="@string/app_widget_card_name">
             <intent-filter>

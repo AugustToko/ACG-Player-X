@@ -7,19 +7,6 @@
     android:foreground="?attr/rectSelector"
     tools:ignore="UnusedAttribute">
 
-    <top.geek_studio.chenlongcould.musicplayer.views.IconImageView
-        android:id="@+id/drag_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical|start"
-        android:layout_marginLeft="-8dp"
-        android:layout_marginStart="-8dp"
-        android:tint="?attr/iconColor"
-        android:tintMode="src_in"
-        android:visibility="gone"
-        app:srcCompat="@drawable/ic_drag_vertical_white_24dp"
-        tools:ignore="ContentDescription" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,10 +17,10 @@
             android:id="@+id/image_container"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:paddingEnd="0dp"
+            android:paddingStart="16dp"
             android:paddingLeft="16dp"
-            android:paddingRight="0dp"
-            android:paddingStart="16dp">
+            android:paddingEnd="0dp"
+            android:paddingRight="0dp">
 
             <ImageView
                 android:id="@+id/image"
@@ -41,6 +28,7 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:scaleType="centerCrop"
+                tools:background="#000"
                 tools:ignore="ContentDescription" />
 
             <TextView
@@ -56,16 +44,16 @@
 
         </FrameLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingEnd="0dp"
+            android:paddingStart="16dp"
             android:paddingLeft="16dp"
-            android:paddingRight="0dp"
-            android:paddingStart="16dp">
+            android:paddingEnd="0dp"
+            android:paddingRight="0dp">
 
             <TextView
                 android:id="@+id/title"
@@ -73,17 +61,93 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif"
                 android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="TITLE" />
 
             <TextView
                 android:id="@+id/text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="sans-serif"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="?android:textColorSecondary"
+                app:layout_constraintEnd_toStartOf="@+id/format_text"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                tools:text="SUB TITLE"
+                android:layout_marginRight="8dp" />
+
+            <TextView
+                android:id="@+id/song_duration_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif"
                 android:singleLine="true"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                android:textColor="?android:textColorSecondary" />
-        </LinearLayout>
+                android:textColor="?android:textColorSecondary"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="DURATION" />
+
+            <TextView
+                android:id="@+id/format_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:fontFamily="sans-serif"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="?android:textColorSecondary"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/song_duration_text"
+                tools:text="FORMAT" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!--        <LinearLayout-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_gravity="center"-->
+        <!--            android:layout_weight="1"-->
+        <!--            android:orientation="vertical"-->
+        <!--            android:paddingEnd="0dp"-->
+        <!--            android:paddingLeft="16dp"-->
+        <!--            android:paddingRight="0dp"-->
+        <!--            android:paddingStart="16dp">-->
+
+        <!--            <TextView-->
+        <!--                android:id="@+id/title"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_height="wrap_content"-->
+        <!--                android:fontFamily="sans-serif"-->
+        <!--                android:singleLine="true"-->
+        <!--                tools:text="TITLE"-->
+        <!--                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />-->
+
+        <!--            <TextView-->
+        <!--                android:id="@+id/text"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_height="wrap_content"-->
+        <!--                android:fontFamily="sans-serif"-->
+        <!--                android:singleLine="true"-->
+        <!--                tools:text="SUB TITLE"-->
+        <!--                android:textAppearance="@style/TextAppearance.AppCompat.Body1"-->
+        <!--                android:textColor="?android:textColorSecondary" />-->
+
+        <!--            <TextView-->
+        <!--                android:id="@+id/song_duration_text"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_height="wrap_content"-->
+        <!--                android:fontFamily="sans-serif"-->
+        <!--                android:singleLine="true"-->
+        <!--                tools:text="SUB TITLE"-->
+        <!--                android:textAppearance="@style/TextAppearance.AppCompat.Body1"-->
+        <!--                android:textColor="?android:textColorSecondary" />-->
+        <!--        </LinearLayout>-->
 
         <top.geek_studio.chenlongcould.musicplayer.views.IconImageView
             android:id="@+id/menu"
@@ -106,8 +170,21 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_gravity="bottom"
-        android:layout_marginLeft="72dp"
         android:layout_marginStart="72dp"
+        android:layout_marginLeft="72dp"
         android:background="?attr/dividerColor" />
+
+    <top.geek_studio.chenlongcould.musicplayer.views.IconImageView
+        android:id="@+id/drag_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical|start"
+        android:layout_marginStart="-8dp"
+        android:layout_marginLeft="-8dp"
+        android:tint="?attr/iconColor"
+        android:tintMode="src_in"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_drag_vertical_white_24dp"
+        tools:ignore="ContentDescription" />
 
 </FrameLayout>

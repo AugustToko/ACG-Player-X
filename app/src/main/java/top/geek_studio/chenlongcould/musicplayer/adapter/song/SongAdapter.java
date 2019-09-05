@@ -1,22 +1,26 @@
 package top.geek_studio.chenlongcould.musicplayer.adapter.song;
 
 import android.graphics.drawable.Drawable;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.util.Pair;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
+
 import com.afollestad.materialcab.MaterialCab;
 import com.bumptech.glide.Glide;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
+
+import java.util.List;
+
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
 import top.geek_studio.chenlongcould.musicplayer.glide.PhonographColoredTarget;
@@ -25,15 +29,16 @@ import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongsMenuHelper;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
-import java.util.List;
 
 /**
+ * 歌曲适配器
+ *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongAdapter extends AbsMultiSelectAdapter<SongAdapter.ViewHolder, Song> implements MaterialCab.Callback, FastScrollRecyclerView.SectionedAdapter {
@@ -113,6 +118,10 @@ public class SongAdapter extends AbsMultiSelectAdapter<SongAdapter.ViewHolder, S
         if (holder.text != null) {
             holder.text.setText(getSongText(song));
         }
+
+        if (holder.durationText != null)
+            holder.durationText.setText(MusicUtil.getReadableDurationString(song.duration));
+        if (holder.formatText != null) holder.formatText.setText(song.data);
 
         loadAlbumCover(song, holder);
 

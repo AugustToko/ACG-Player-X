@@ -2,6 +2,8 @@ import javax.annotation.Nullable
 
 apply plugin: 'com.android.application'
 
+def lifecycle_version = "2.0.0"
+
 static def gitBranch() {
     def branch = 'GitHub'
     try {
@@ -85,6 +87,7 @@ android {
     dataBinding {
         enabled = true
     }
+
 }
 
 dependencies {
@@ -130,4 +133,5 @@ dependencies {
     implementation 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
     implementation 'com.github.AdrienPoupa:jaudiotagger:2.2.3'
     implementation files('src/main/libs/live2d_android.jar')
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
 }

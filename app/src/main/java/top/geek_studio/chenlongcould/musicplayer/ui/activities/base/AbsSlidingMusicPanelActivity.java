@@ -5,34 +5,35 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.annotation.LayoutRes;
-import androidx.fragment.app.Fragment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.PathInterpolator;
 
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.LayoutRes;
+import androidx.fragment.app.Fragment;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.AbsPlayerFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.MiniPlayerFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.NowPlayingScreen;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.card.CardPlayerFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.flat.FlatPlayerFragment;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
- *         <p/>
- *         Do not use {@link #setContentView(int)}. Instead wrap your layout with
- *         {@link #wrapSlidingMusicPanel(int)} first and then return it in {@link #createContentView()}
+ * <p/>
+ * Do not use {@link #setContentView(int)}. Instead wrap your layout with
+ * {@link #wrapSlidingMusicPanel(int)} first and then return it in {@link #createContentView()}
  */
 public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
 
@@ -50,10 +51,17 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     private ValueAnimator navigationBarColorAnimator;
     private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
 
+    /**
+     * 根 View
+     */
+    private View mRootView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(createContentView());
+
+        mRootView = createContentView();
+        setContentView(mRootView);
         ButterKnife.bind(this);
 
         currentNowPlayingScreen = PreferenceUtil.getInstance(this).getNowPlayingScreen();
@@ -135,6 +143,9 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     @Override
     public void onPanelSlide(View panel, @FloatRange(from = 0, to = 1) float slideOffset) {
         setMiniPlayerAlphaProgress(slideOffset);
+
+        // FIXME: sliderPanel 与 Activity 为一体, Activity 移动时 Panel 也会跟着移动
+        mRootView.findViewById(R.id.content_container).setTranslationY(0 - slideOffset * 120);
         if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel();
         super.setNavigationbarColor((int) argbEvaluator.evaluate(slideOffset, navigationbarColor, playerFragment.getPaletteColor()));
     }

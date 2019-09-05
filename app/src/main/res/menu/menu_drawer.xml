@@ -1,43 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group
-        android:id="@+id/navigation_drawer_menu_category_sections"
-        android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_library"
-            android:icon="@drawable/ic_library_music_white_24dp"
-            android:title="@string/library" />
-        <item
-            android:id="@+id/nav_folders"
-            android:icon="@drawable/ic_folder_white_24dp"
-            android:title="@string/folders" />
-    </group>
+    <item android:title="Location">
+        <menu>
+            <group
+                android:id="@+id/navigation_drawer_menu_category_sections"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_library"
+                    android:icon="@drawable/ic_library_music_white_24dp"
+                    android:title="@string/library" />
+                <item
+                    android:id="@+id/nav_folders"
+                    android:icon="@drawable/ic_folder_white_24dp"
+                    android:title="@string/folders" />
+            </group>
+        </menu>
+    </item>
 
-    <group android:checkableBehavior="none">
-        <item
-            android:id="@+id/action_scan"
-            android:icon="@drawable/ic_scanner_white_24dp"
-            android:title="@string/scan_media" />
-    </group>
+    <item android:title="Tools">
+        <menu>
+            <group android:checkableBehavior="none">
+                <item
+                    android:id="@+id/nav_data_overview"
+                    android:icon="@drawable/ic_data_usage_white_24dp"
+                    android:title="Data overview" />
 
+                <item
+                    android:id="@+id/action_scan"
+                    android:icon="@drawable/ic_scanner_white_24dp"
+                    android:title="@string/scan_media" />
+            </group>
+        </menu>
+    </item>
 
-    <group
-        android:id="@+id/navigation_drawer_menu_category_other"
-        android:checkableBehavior="none">
-        <item
-            android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_settings_white_24dp"
-            android:title="@string/action_settings" />
-        <item
-            android:id="@+id/nav_about"
-            android:icon="@drawable/ic_help_white_24dp"
-            android:title="@string/action_about" />
-    </group>
+    <item android:title="Other">
+        <menu>
+            <group
+                android:id="@+id/navigation_drawer_menu_category_other"
+                android:checkableBehavior="none">
+                <item
+                    android:id="@+id/nav_settings"
+                    android:icon="@drawable/ic_settings_white_24dp"
+                    android:title="@string/action_settings" />
+                <item
+                    android:id="@+id/nav_about"
+                    android:icon="@drawable/ic_help_white_24dp"
+                    android:title="@string/action_about" />
+                <item
+                    android:id="@+id/nav_exit"
+                    android:icon="@drawable/ic_exit_to_app_white_24dp"
+                    android:title="Exit" />
+            </group>
+        </menu>
+    </item>
 
     <group
         android:id="@+id/navigation_drawer_menu_category_buy_pro"
-        android:checkableBehavior="none">
+        android:checkableBehavior="none"
+        android:visible="false">
         <item
             android:id="@+id/buy_pro"
             android:icon="@drawable/ic_local_play_white_24dp"

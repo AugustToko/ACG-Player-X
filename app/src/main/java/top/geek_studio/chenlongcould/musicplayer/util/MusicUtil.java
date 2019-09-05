@@ -142,6 +142,11 @@ public class MusicUtil {
         return duration;
     }
 
+    /**
+     * 获取可读的音乐时长
+     *
+     * @param songDurationMillis 音乐长度
+     */
     public static String getReadableDurationString(long songDurationMillis) {
         long minutes = (songDurationMillis / 1000) / 60;
         long seconds = (songDurationMillis / 1000) % 60;

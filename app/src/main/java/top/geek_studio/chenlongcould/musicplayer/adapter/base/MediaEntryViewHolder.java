@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+import org.w3c.dom.Text;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -52,6 +54,14 @@ public class MediaEntryViewHolder extends RecyclerView.ViewHolder implements Vie
     @Nullable
     @BindView(R.id.palette_color_container)
     public View paletteColorContainer;
+
+    @Nullable
+    @BindView(R.id.song_duration_text)
+    public TextView durationText;
+
+    @Nullable
+    @BindView(R.id.format_text)
+    public TextView formatText;
 
     public MediaEntryViewHolder(View itemView) {
         super(itemView);

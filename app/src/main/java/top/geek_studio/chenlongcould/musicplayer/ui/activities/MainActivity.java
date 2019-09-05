@@ -1,18 +1,46 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.activities;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.bumptech.glide.Glide;
+import com.google.android.material.navigation.NavigationView;
+import com.kabouzeid.appthemehelper.ThemeStore;
+import com.kabouzeid.appthemehelper.util.ATHUtil;
+import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
+import com.kabouzeid.chenlongcould.musicplayer.R;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ChangelogDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ScanMediaFolderChooserDialog;
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
@@ -25,44 +53,19 @@ import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.SoundManag
 import top.geek_studio.chenlongcould.musicplayer.loader.AlbumLoader;
 import top.geek_studio.chenlongcould.musicplayer.loader.ArtistLoader;
 import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistSongLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.MyViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
-import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.Utils;
-import com.google.android.material.navigation.NavigationView;
-import androidx.fragment.app.Fragment;
-import androidx.drawerlayout.widget.DrawerLayout;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.bumptech.glide.Glide;
-
-import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.appthemehelper.util.ATHUtil;
-import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
-import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
+/**
+ * MainActivity {@link R.layout#activity_main_drawer_layout}
+ */
 public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -77,14 +80,16 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     @BindView(R.id.drawer_layout)
     DrawerLayout drawerLayout;
 
-    LAppLive2DManager live2DMgr;
-
-    LAppView mlAppView;
-
-    FrameLayout mLive2DContent;
-
     @Nullable
     MainActivityFragmentCallbacks currentFragment;
+
+    ////////////////// LIVE 2D ////////////////////
+    private LAppLive2DManager live2DMgr;
+    private LAppView mlAppView;
+    private FrameLayout mLive2DContent;
+    ////////////////// LIVE 2D ////////////////////
+
+    private MyViewModel mViewModel;
 
     @Nullable
     private View navigationDrawerHeader;
@@ -113,19 +118,20 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             showChangelog();
         }
 
-        setUpLive2D();
+        mViewModel = ViewModelProviders.of(this).get(MyViewModel.class);
     }
 
+    /**
+     * 设置 Live2D
+     */
     private void setUpLive2D() {
-        FileManager.init(this.getApplicationContext());
-
-        // live2D
+        FileManager.init(this);
         SoundManager.init(this);
+
         live2DMgr = new LAppLive2DManager();
 
         mlAppView = live2DMgr.createView(this, true);
         mlAppView.setBackground(null);
-        mlAppView.setBackgroundColor(Color.TRANSPARENT);
 
         mLive2DContent = new FrameLayout(this);
         mLive2DContent.addView(mlAppView);
@@ -139,7 +145,11 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         mlAppView.setLongClickable(true);
         mlAppView.setOnLongClickListener(view -> {
-            Utils.Ui.createMessageDialog(MainActivity.this, "Hi", "这里是 ACG Player 助手酱 ~").show();
+            new MaterialDialog.Builder(MainActivity.this).title("Hi")
+                    .content("这里是 ACG Player 助手酱 ~")
+                    .showListener(dialogInterface -> mViewModel.dialogs.add(dialogInterface))
+                    .dismissListener(dialogInterface -> mViewModel.dialogs.remove(dialogInterface))
+                    .show();
             return false;
         });
     }
@@ -153,7 +163,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mlAppView.onResume();
+        setUpLive2D();
+
+        if (mlAppView != null) mlAppView.onResume();
     }
 
     @Override
@@ -164,6 +176,12 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         mLive2DContent.removeAllViews();
         mlAppView = null;
         mLive2DContent = null;
+
+        for (DialogInterface d : mViewModel.dialogs) {
+            if (d != null) d.dismiss();
+        }
+
+        mViewModel.dialogs.clear();
     }
 
     private void setMusicChooser(int key) {
@@ -255,6 +273,13 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 case R.id.nav_about:
                     new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, AboutActivity.class)), 200);
                     break;
+                case R.id.nav_data_overview:
+                    // TODO: DATA OVERVIEW
+                    break;
+                case R.id.nav_exit:
+                    stopService(new Intent(MainActivity.this, MusicService.class));
+                    finish();
+                    break;
             }
             return true;
         });
@@ -279,7 +304,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             Song song = MusicPlayerRemote.getCurrentSong();
             if (navigationDrawerHeader == null) {
                 navigationDrawerHeader = navigationView.inflateHeaderView(R.layout.navigation_drawer_header);
-                //noinspection ConstantConditions
                 navigationDrawerHeader.setOnClickListener(v -> {
                     drawerLayout.closeDrawers();
                     if (getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
@@ -394,7 +418,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 try {
                     id = Long.parseLong(idString);
                 } catch (NumberFormatException e) {
-                    Log.e(TAG, e.getMessage());
+                    Log.e(TAG, String.valueOf(e.getMessage()));
                 }
             }
         }

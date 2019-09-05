@@ -33,13 +33,10 @@ import de.psdev.licensesdialog.LicensesDialog;
 @SuppressWarnings("FieldCanBeLocal")
 public class AboutActivity extends AbsBaseActivity implements View.OnClickListener {
 
-    private static String GITHUB = "https://github.com/kabouzeid/Phonograph";
+    private static String GITHUB = "https://github.com/AugustToko/ACG-Player-X";
 
-    private static String TWITTER = "https://twitter.com/karimjabouzeid";
-    private static String WEBSITE = "https://kabouzeid.com/";
-
-    private static String TRANSLATE = "https://phonograph.oneskyapp.com/collaboration/project?id=26521";
-    private static String RATE_ON_GOOGLE_PLAY = "https://play.google.com/store/apps/details?id=com.kabouzeid.gramophone";
+    private static String TWITTER = "https://twitter.com/chenlongcould";
+    private static String WEBSITE = "https://geek-cloud.top";
 
     private static String AIDAN_FOLLESTAD_GOOGLE_PLUS = "https://google.com/+AidanFollestad";
     private static String AIDAN_FOLLESTAD_GITHUB = "https://github.com/afollestad";
@@ -195,14 +192,14 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
             startActivity(new Intent(this, BugReportActivity.class));
         } else if (v == writeAnEmail) {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setData(Uri.parse("mailto:contact@kabouzeid.com"));
-            intent.putExtra(Intent.EXTRA_EMAIL, "contact@kabouzeid.com");
-            intent.putExtra(Intent.EXTRA_SUBJECT, "Phonograph");
+            intent.setData(Uri.parse("mailto:827266641qq@gmail.com"));
+            intent.putExtra(Intent.EXTRA_EMAIL, "827266641qq@gmail.com");
+            intent.putExtra(Intent.EXTRA_SUBJECT, "ACG Player X");
             startActivity(Intent.createChooser(intent, "E-Mail"));
         } else if (v == translate) {
-            openUrl(TRANSLATE);
+//            openUrl(TRANSLATE);
         } else if (v == rateOnGooglePlay) {
-            openUrl(RATE_ON_GOOGLE_PLAY);
+//            openUrl(RATE_ON_GOOGLE_PLAY);
         } else if (v == donate) {
             if (App.isProVersion()) {
                 DonationsDialog.create().show(getSupportFragmentManager(), "DONATION_DIALOG");

@@ -201,7 +201,7 @@
     <string name="permissions_denied">Permissions denied.</string>
     <string name="permission_external_storage_denied">Permission to access external storage denied.</string>
     <string name="support_development">Support development</string>
-    <string name="buy_pro">Buy ACG Player Pro</string>
+    <string name="buy_pro">Buy ACG Player X Pro</string>
     <string name="thank_you">Thank you!</string>
     <string name="restored_previous_purchase_please_restart">Restored previous purchase. Please restart the app to make use of all features.</string>
     <string name="version">Version</string>
@@ -213,9 +213,9 @@
     <string name="report_bugs">Report bugs</string>
     <string name="report_bugs_summary">Report bugs or request new features.</string>
     <string name="translate">Translate</string>
-    <string name="translate_summary">Help translating ACG Player to your native language.</string>
+    <string name="translate_summary">Help translating ACG Player X to your native language.</string>
     <string name="rate_on_google_play">Rate</string>
-    <string name="rate_on_google_play_summary">Leave a positive rating on Google Play if you like ACG Player.</string>
+    <string name="rate_on_google_play_summary">Leave a positive rating on Google Play if you like ACG Player X.</string>
     <string name="donate">Donate</string>
     <string name="donate_summary">If you think I deserve to get paid for my work, you can leave me a few dollars here.</string>
     <string name="aidan_follestad_summary">For the theme engine and some other great stuff.</string>
@@ -227,7 +227,7 @@
     <string name="up_next">Up next</string>
     <string name="pref_title_now_playing_screen_appearance">Appearance</string>
     <string name="intro_label">Introduction</string>
-    <string name="welcome_to_acg_player">"Welcome to ACG Player, a beautiful and lightweight music player for Android. "</string>
+    <string name="welcome_to_acg_player">"Welcome to ACG Player X, a beautiful and lightweight music player for Android. "</string>
     <string name="open_playing_queue_instruction">Swipe the card in the now playing screen up to reveal the full playing queue.</string>
     <string name="rearrange_playing_queue_instruction">Rearrange the playing queue by dragging a song from its track number.</string>
     <string name="library">Library</string>
@@ -243,10 +243,10 @@
     <string name="could_not_scan_files">Could not scan %d files.</string>
     <string name="listing_files">Listing files</string>
     <string name="new_start_directory">%s is the new start directory.</string>
-    <string name="app_widget_big_name">ACG Player - Big</string>
-    <string name="app_widget_classic_name">ACG Player - Classic</string>
-    <string name="app_widget_small_name">ACG Player - Small</string>
-    <string name="app_widget_card_name">ACG Player - Card</string>
+    <string name="app_widget_big_name">ACG Player X - Big</string>
+    <string name="app_widget_classic_name">ACG Player X - Classic</string>
+    <string name="app_widget_small_name">ACG Player X - Small</string>
+    <string name="app_widget_card_name">ACG Player X - Card</string>
     <string name="report_an_issue">Report an issue</string>
     <string name="bug_report_issue">Issue</string>
     <string name="login">Login</string>
@@ -277,9 +277,9 @@
     <string name="playing_notification_description">The playing notification provides actions for play/pause etc.</string>
     <string name="playing_notification_name">Playing notification</string>
     <string name="only_the_first_5_colors_available">Only the first 5 colors are available in the free version.</string>
-    <string name="black_theme_is_a_pro_feature">The black theme is ACG Player Pro feature.</string>
-    <string name="sleep_timer_is_a_pro_feature">Sleep timer is a ACG Player Pro feature</string>
-    <string name="folder_view_is_a_pro_feature">Folder view is a ACG Player Pro feature.</string>
+    <string name="black_theme_is_a_pro_feature">The black theme is ACG Player X Pro feature.</string>
+    <string name="sleep_timer_is_a_pro_feature">Sleep timer is a ACG Player X Pro feature</string>
+    <string name="folder_view_is_a_pro_feature">Folder view is a ACG Player X Pro feature.</string>
     <string name="restoring_purchase">Restoring purchase…</string>
     <string name="could_not_restore_purchase">Could not restore purchase.</string>
     <string name="purchase">Purchase</string>
@@ -309,5 +309,5 @@
     <string name="sort_order_year">Year</string>
     <string name="finish_current_music_sleep_timer">Finish last song</string>
     <string name="dialog_ringtone_title">Set ringtone</string>
-    <string name="dialog_ringtone_message">Allow ACG Player to modify audio settings</string>
+    <string name="dialog_ringtone_message">Allow ACG Player X to modify audio settings</string>
 </resources>
