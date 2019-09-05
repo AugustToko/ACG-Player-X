@@ -1,0 +1,24 @@
+<!--
+  ~ *************************************************************
+  ~ 文件：ic_launcher_foreground.xml  模块：app  项目：MusicPlayer
+  ~ 当前修改时间：2019年01月17日 17:31:46
+  ~ 上次修改时间：2019年01月17日 17:28:52
+  ~ 作者：chenlongcould
+  ~ Geek Studio
+  ~ Copyright (c) 2019
+  ~ *************************************************************
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="33.661972"
+    android:viewportHeight="33.661972">
+    <group
+        android:translateX="4.8809857"
+        android:translateY="4.8809857">
+        <path
+            android:fillColor="#ffd400"
+            android:pathData="M13,2.52V9.11a3.2,3.2 0,1 0,-1.07 6.21,3.23 3.23,0 0,0 3.2,-2.85h0V4.65l2.84,-1V2.52Z" />
+    </group>
+</vector>
