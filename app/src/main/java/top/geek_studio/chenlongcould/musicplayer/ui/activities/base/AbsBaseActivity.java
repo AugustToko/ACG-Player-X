@@ -21,9 +21,15 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 /**
  * AbsBaseActivity
  *
+ * 权限, 基础设置
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsBaseActivity extends AbsThemeActivity {
+
+    /**
+     * for {@link #onActivityResult(int, int, Intent)}
+     */
     public static final int PERMISSION_REQUEST = 100;
 
     private boolean hadPermissions;
@@ -33,9 +39,12 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 设置音频流
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         permissions = getPermissionsToRequest();
+
         hadPermissions = hasPermissions();
 
         setPermissionDeniedMessage(null);
@@ -44,6 +53,8 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+
+        // 如果没有权限, 获取
         if (!hasPermissions()) {
             requestPermissions();
         }
@@ -52,6 +63,8 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // 再次检测权限
         final boolean hasPermissions = hasPermissions();
         if (hasPermissions != hadPermissions) {
             hadPermissions = hasPermissions;
@@ -61,10 +74,18 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         }
     }
 
+    /**
+     * 权限得到了变化
+     *
+     * @param hasPermissions 是否拥有权限
+     */
     protected void onHasPermissionsChanged(boolean hasPermissions) {
         // implemented by sub classes
     }
 
+    /**
+     * 按键事件调度
+     */
     @Override
     public boolean dispatchKeyEvent(@NonNull KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && event.getAction() == KeyEvent.ACTION_UP) {
@@ -74,15 +95,28 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         return super.dispatchKeyEvent(event);
     }
 
+    /**
+     * 显示菜单 (浮动菜单)
+     * */
     protected void showOverflowMenu() {
 
     }
 
+    /**
+     * 获取所需权限
+     *
+     * @return 返回权限数组
+     * */
     @Nullable
     protected String[] getPermissionsToRequest() {
         return null;
     }
 
+    /**
+     * 获取 SnackBar 容器
+     *
+     * @return view
+     * */
     protected View getSnackBarContainer() {
         return getWindow().getDecorView();
     }
@@ -95,12 +129,18 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         return permissionDeniedMessage == null ? getString(R.string.permissions_denied) : permissionDeniedMessage;
     }
 
+    /**
+     * 请求权限
+     * */
     protected void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
             requestPermissions(permissions, PERMISSION_REQUEST);
         }
     }
 
+    /**
+     * 检测权限
+     * */
     protected boolean hasPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
             for (String permission : permissions) {
@@ -119,7 +159,7 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
             for (int grantResult : grantResults) {
                 if (grantResult != PackageManager.PERMISSION_GRANTED) {
                     if (ActivityCompat.shouldShowRequestPermissionRationale(AbsBaseActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                        //User has deny from permission dialog
+                        // User has deny from permission dialog
                         Snackbar.make(getSnackBarContainer(), getPermissionDeniedMessage(),
                                 Snackbar.LENGTH_INDEFINITE)
                                 .setAction(R.string.action_grant, view -> requestPermissions())

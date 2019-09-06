@@ -22,10 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * AbsMusicServiceActivity
+ *
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements MusicServiceEventListener {
 
+    /**
+     * 回调集合
+     */
     private final List<MusicServiceEventListener> mMusicServiceEventListeners = new ArrayList<>();
 
     private MusicPlayerRemote.ServiceToken serviceToken;
