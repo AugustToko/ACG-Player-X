@@ -2,14 +2,17 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.player;
 
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
+
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.kabouzeid.chenlongcould.musicplayer.R;
+
 import top.geek_studio.chenlongcould.musicplayer.dialogs.AddToPlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.CreatePlaylistDialog;
-import top.geek_studio.chenlongcould.musicplayer.dialogs.SleepTimerDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.SongDetailDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.SongShareDialog;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
@@ -17,10 +20,9 @@ import top.geek_studio.chenlongcould.musicplayer.interfaces.PaletteColorHolder;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.AbsTagEditorActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.SongTagEditorActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 
 public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implements Toolbar.OnMenuItemClickListener, PaletteColorHolder {
 
@@ -48,7 +50,8 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         final Song song = MusicPlayerRemote.getCurrentSong();
         switch (item.getItemId()) {
             case R.id.action_sleep_timer:
-                new SleepTimerDialog().show(getFragmentManager(), "SET_SLEEP_TIMER");
+                new MaterialDialog.Builder(getActivity()).title("Building").content("Same as title.").show();
+//                new SleepTimerDialog().show(getFragmentManager(), "SET_SLEEP_TIMER");
                 return true;
             case R.id.action_toggle_favorite:
                 toggleFavorite(song);
@@ -135,8 +138,8 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         final long duration = MusicPlayerRemote.getQueueDurationMillis(MusicPlayerRemote.getPosition());
 
         return MusicUtil.buildInfoString(
-            getResources().getString(R.string.up_next),
-            MusicUtil.getReadableDurationString(duration)
+                getResources().getString(R.string.up_next),
+                MusicUtil.getReadableDurationString(duration)
         );
     }
 

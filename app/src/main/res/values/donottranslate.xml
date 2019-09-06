@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Phonograph</string>
+    <string name="app_name" translatable="false">ACG Player X</string>
 
-    <string name="karim_abou_zeid" translatable="false">Chen Long</string>
+    <string name="chen_long" translatable="false">Chen Long</string>
     <string name="aidan_follestad" translatable="false">Aidan Follestad</string>
     <string name="maarten_corpel" translatable="false">Maarten Corpel</string>
     <string name="michael_cook_cookicons" translatable="false">Michael Cook (Cookicons)</string>

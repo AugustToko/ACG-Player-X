@@ -13,12 +13,18 @@ import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.NonNull;
 import android.util.Property;
 import android.view.animation.DecelerateInterpolator;
 
+import androidx.annotation.NonNull;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+/**
+ * PLAY-PAUSE Drawable
+ * <p>
+ * 一个可从 PLAY 到 PAUSE 图标变化的 Drawable
+ */
 public class PlayPauseDrawable extends Drawable {
     private static final long PLAY_PAUSE_ANIMATION_DURATION = 250;
 

@@ -7,6 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 
+/**
+ * 状态栏
+ */
 public class StatusBarView extends View {
 
     public StatusBarView(Context context) {
@@ -21,6 +24,9 @@ public class StatusBarView extends View {
         super(context, attrs, defStyleAttr);
     }
 
+    /**
+     * 设置尺寸
+     */
     @Override
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

@@ -6,13 +6,29 @@
     android:layout_height="match_parent"
     android:gravity="bottom"
     sothree:umanoOverlay="false"
+    sothree:umanoFadeColor="@android:color/transparent"
     sothree:umanoPanelHeight="0dp"
     sothree:umanoShadowHeight="@dimen/card_elevation">
 
     <FrameLayout
-        android:id="@+id/content_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.github.mmin18.widget.RealtimeBlurView
+            android:id="@+id/real_blur"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            sothree:realtimeOverlayColor="#00FFFFFF"
+            android:visibility="gone">
+
+        </com.github.mmin18.widget.RealtimeBlurView>
+
+    </FrameLayout>
 
     <FrameLayout
         android:id="@+id/sliding_panel"
@@ -25,6 +41,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <!--MainActivity下小长条(用于拖动)-->
         <fragment
             android:id="@+id/mini_player_fragment"
             class="top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.MiniPlayerFragment"

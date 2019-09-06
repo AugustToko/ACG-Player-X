@@ -26,6 +26,7 @@ import java.util.List;
 
 public final class PreferenceUtil {
     public static final String GENERAL_THEME = "general_theme";
+    public static final String BLUR_OVERLAY = "use_overlay_blur";
     public static final String REMEMBER_LAST_TAB = "remember_last_tab";
     public static final String LAST_PAGE = "last_start_page";
     public static final String LAST_MUSIC_CHOOSER = "last_music_chooser";
@@ -172,6 +173,10 @@ public final class PreferenceUtil {
 
     public final int getLastMusicChooser() {
         return mPreferences.getInt(LAST_MUSIC_CHOOSER, 0);
+    }
+
+    public final boolean isUseBlur() {
+        return mPreferences.getBoolean(BLUR_OVERLAY, true);
     }
 
     public final NowPlayingScreen getNowPlayingScreen() {

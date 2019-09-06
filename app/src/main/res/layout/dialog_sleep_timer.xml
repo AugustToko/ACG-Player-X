@@ -8,7 +8,14 @@
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-<!--        //TODO: 修改-->
+
+        <TextView
+            android:id="@+id/timer_display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textAppearance="?android:textAppearanceLarge" />
+
         <!--        <com.triggertrap.seekarc.SeekArc-->
 <!--            android:id="@+id/seek_arc"-->
 <!--            android:layout_width="match_parent"-->
@@ -22,21 +29,14 @@
 <!--            seekarc:SeekArc_startAngle="30"-->
 <!--            seekarc:SeekArc_sweepAngle="300" />-->
 
-        <TextView
-            android:id="@+id/timer_display"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:textAppearance="?android:textAppearanceLarge" />
-
     </FrameLayout>
 
     <com.kabouzeid.appthemehelper.common.views.ATECheckBox
         android:id="@+id/should_finish_last_song"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:text="@string/finish_current_music_sleep_timer" />
 
 </LinearLayout>

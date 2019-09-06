@@ -7,6 +7,8 @@ import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
 /**
+ * 宽度自适应布局
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class WidthFitSquareLayout extends FrameLayout {
@@ -32,7 +34,7 @@ public class WidthFitSquareLayout extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //noinspection SuspiciousNameCombination
+        // 测量时长宽一至
         super.onMeasure(widthMeasureSpec, forceSquare ? widthMeasureSpec : heightMeasureSpec);
     }
 

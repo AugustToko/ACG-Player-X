@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -96,6 +97,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     private boolean blockRequestPermissions;
 
+    private boolean pressBack = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +122,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
 
         mViewModel = ViewModelProviders.of(this).get(MyViewModel.class);
+
+
     }
 
     /**
@@ -297,6 +302,31 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     private void setUpDrawerLayout() {
         setUpNavigationView();
+
+        drawerLayout.setScrimColor(Color.TRANSPARENT);
+        drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+                Log.d(TAG, "onDrawerSlide: " + slideOffset);
+                MainActivity.super.setBlur(slideOffset, false);
+                MainActivity.super.translationRootView(slideOffset, 'x');
+            }
+
+            @Override
+            public void onDrawerOpened(@NonNull View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerClosed(@NonNull View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+
+            }
+        });
     }
 
     private void updateNavigationDrawerHeader() {
@@ -352,10 +382,21 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     @Override
     public boolean handleBackPress() {
+
         if (drawerLayout.isDrawerOpen(navigationView)) {
             drawerLayout.closeDrawers();
             return true;
         }
+
+        if (!pressBack) {
+            pressBack = true;
+            Toast.makeText(this, "Press again to exit!", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(() -> pressBack = false, 2000);
+            return true;
+        } else {
+            finish();
+        }
+
         return super.handleBackPress() || (currentFragment != null && currentFragment.handleBackPress());
     }
 

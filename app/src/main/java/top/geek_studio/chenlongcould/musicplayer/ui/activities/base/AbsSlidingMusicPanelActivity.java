@@ -5,6 +5,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -15,6 +16,7 @@ import androidx.annotation.FloatRange;
 import androidx.annotation.LayoutRes;
 import androidx.fragment.app.Fragment;
 
+import com.github.mmin18.widget.RealtimeBlurView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -37,6 +39,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
  */
 public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
 
+    private static final String TAG = "AbsSlidingMusicPanel";
     @BindView(R.id.sliding_layout)
     SlidingUpPanelLayout slidingUpPanelLayout;
 
@@ -56,11 +59,16 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      */
     private View mRootView;
 
+    private RealtimeBlurView realtimeBlurView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mRootView = createContentView();
+
+        initBlur();
+
         setContentView(mRootView);
         ButterKnife.bind(this);
 
@@ -142,22 +150,75 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     @Override
     public void onPanelSlide(View panel, @FloatRange(from = 0, to = 1) float slideOffset) {
-        setMiniPlayerAlphaProgress(slideOffset);
+        Log.d(TAG, "onPanelSlide: " + slideOffset);
 
-        // FIXME: sliderPanel 与 Activity 为一体, Activity 移动时 Panel 也会跟着移动
-        mRootView.findViewById(R.id.content_container).setTranslationY(0 - slideOffset * 120);
+        setBlur(slideOffset, true);
+
+        translationRootView(slideOffset, 'y');
+
+        setMiniPlayerAlphaProgress(slideOffset);
         if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel();
         super.setNavigationbarColor((int) argbEvaluator.evaluate(slideOffset, navigationbarColor, playerFragment.getPaletteColor()));
+    }
+
+    /**
+     * 初始化 BlurView
+     */
+    private void initBlur() {
+        realtimeBlurView = mRootView.findViewById(R.id.real_blur);
+        realtimeBlurView.setVisibility(View.GONE);
+
+        if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur()) {
+            // set realtimeBlur
+            realtimeBlurView.setBlurRadius(150);
+            realtimeBlurView.setDownsampleFactor(0.1f);
+        }
+    }
+
+    /**
+     * 设置覆盖模糊
+     *
+     * @param slideOffset 滑动偏移值
+     * @param transition  是否将 Activity ROOT view 位移
+     */
+    protected void setBlur(float slideOffset, boolean transition) {
+        if (!PreferenceUtil.getInstance(getApplicationContext()).isUseBlur()) return;
+
+        if (slideOffset > 0) realtimeBlurView.setVisibility(View.VISIBLE);
+        if (slideOffset == 0) realtimeBlurView.setVisibility(View.GONE);
+
+        if (transition) realtimeBlurView.setTranslationY(0 - slideOffset * 120);
+        realtimeBlurView.setAlpha((float) (slideOffset * 1.5));
+//        realtimeBlurView.setBlurRadius(slideOffset * 50);
+    }
+
+    /**
+     * 移动 ROOT view
+     *
+     * @param slideOffset 偏移值
+     * @param target      目标 (xyz)
+     */
+    protected void translationRootView(float slideOffset, char target) {
+        if (target == 'y' || target == 'Y')
+            mRootView.findViewById(R.id.content_container).setTranslationY(0 - slideOffset * 120);
+        if (target == 'x' || target == 'X')
+            mRootView.findViewById(R.id.content_container).setTranslationX(0 + slideOffset * 120);
     }
 
     @Override
     public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
         switch (newState) {
             case COLLAPSED:
+                Log.d(TAG, "onPanelStateChanged: COLLAPSED");
                 onPanelCollapsed(panel);
+                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
+                    realtimeBlurView.setVisibility(View.GONE);
                 break;
             case EXPANDED:
+                Log.d(TAG, "onPanelStateChanged: EXPANDED");
                 onPanelExpanded(panel);
+                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
+                    realtimeBlurView.setVisibility(View.VISIBLE);
                 break;
             case ANCHORED:
                 collapsePanel(); // this fixes a bug where the panel would get stuck for some reason
@@ -232,6 +293,9 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
             super.onBackPressed();
     }
 
+    /**
+     * 处理返回
+     */
     public boolean handleBackPress() {
         if (slidingUpPanelLayout.getPanelHeight() != 0 && playerFragment.onBackPressed())
             return true;

@@ -43,12 +43,16 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
  */
 public class SongAdapter extends AbsMultiSelectAdapter<SongAdapter.ViewHolder, Song> implements MaterialCab.Callback, FastScrollRecyclerView.SectionedAdapter {
 
+    private static final String TAG = "SongAdapter";
+
     protected final AppCompatActivity activity;
+
     protected List<Song> dataSet;
 
     protected int itemLayoutRes;
 
     protected boolean usePalette = false;
+
     protected boolean showSectionName = true;
 
     public SongAdapter(AppCompatActivity activity, List<Song> dataSet, @LayoutRes int itemLayoutRes, boolean usePalette, @Nullable CabHolder cabHolder) {
@@ -121,10 +125,10 @@ public class SongAdapter extends AbsMultiSelectAdapter<SongAdapter.ViewHolder, S
 
         if (holder.durationText != null)
             holder.durationText.setText(MusicUtil.getReadableDurationString(song.duration));
-        if (holder.formatText != null) holder.formatText.setText(song.data);
+        if (holder.formatText != null)
+            holder.formatText.setText(song.data.substring(song.data.lastIndexOf(".") + 1));
 
         loadAlbumCover(song, holder);
-
     }
 
     private void setColors(int color, ViewHolder holder) {

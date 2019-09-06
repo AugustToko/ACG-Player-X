@@ -46,13 +46,14 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 175
-        versionName '1.3.1'
+        versionCode 153
+        versionName '1.0.0'
+        applicationIdSuffix = 'Common'
     }
     signingConfigs {
         release {
             Properties properties = getProperties('/Users/karim/Documents/Phonograph/privatekeys/keystore.properties')
-            storeFile file(getProperty(properties, 'storeFile'))
+            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\chenlongcould.jks')
             keyAlias getProperty(properties, 'keyAlias')
             storePassword getProperty(properties, 'storePassword')
             keyPassword getProperty(properties, 'keyPassword')
@@ -64,6 +65,8 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+
+//            resValue('string', 'app_name', "ACG Player X")
         }
         debug {
             applicationIdSuffix '.debug'
@@ -91,6 +94,7 @@ android {
 }
 
 dependencies {
+    implementation files('src/main/libs/live2d_android.jar')
     implementation 'androidx.core:core:1.0.2'
     implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
     implementation 'androidx.legacy:legacy-support-core-ui:1.0.0'
@@ -110,7 +114,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.github.kabouzeid:app-theme-helper:1.3.10'
     implementation 'com.github.kabouzeid:RecyclerView-FastScroll:1.0.16-kmod'
-    //    implementation 'com.github.kabouzeid:SeekArc:1.1'
+//    implementation 'com.github.kabouzeid:SeekArc:1.1'
+    implementation 'com.github.mmin18:realtimeblurview:1.2.1'
     implementation 'com.github.kabouzeid:AndroidSlidingUpPanel:3.3.3-kmod'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
@@ -132,6 +137,5 @@ dependencies {
     implementation 'com.github.bumptech.glide:okhttp3-integration:1.5.0'
     implementation 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
     implementation 'com.github.AdrienPoupa:jaudiotagger:2.2.3'
-    implementation files('src/main/libs/live2d_android.jar')
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
 }

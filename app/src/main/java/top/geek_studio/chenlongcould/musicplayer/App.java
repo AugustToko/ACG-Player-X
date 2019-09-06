@@ -9,10 +9,16 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 
 
 /**
+ * Application
+ *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class App extends Application {
 
+    /**
+     * 单例
+     */
     private static App app;
 
     @Override
@@ -28,6 +34,7 @@ public class App extends Application {
                     .commit();
         }
 
+        // 设置动态快捷方式
         // Set up dynamic shortcuts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             new DynamicShortcutManager(this).initDynamicShortcuts();
@@ -35,16 +42,18 @@ public class App extends Application {
 
     }
 
+    /**
+     * 是否为专业版
+     */
     public static boolean isProVersion() {
         return true;
     }
 
+    /**
+     * 单例
+     */
     public static App getInstance() {
         return app;
     }
 
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-    }
 }
