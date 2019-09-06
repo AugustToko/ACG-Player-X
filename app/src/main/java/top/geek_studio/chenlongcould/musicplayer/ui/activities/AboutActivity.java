@@ -28,6 +28,8 @@ import butterknife.ButterKnife;
 import de.psdev.licensesdialog.LicensesDialog;
 
 /**
+ * About 页面
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 @SuppressWarnings("FieldCanBeLocal")

@@ -19,6 +19,8 @@ import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 /**
+ * AbsBaseActivity
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsBaseActivity extends AbsThemeActivity {
