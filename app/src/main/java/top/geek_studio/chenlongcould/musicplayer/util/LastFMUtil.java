@@ -9,6 +9,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
+ * LastFMUtil
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class LastFMUtil {

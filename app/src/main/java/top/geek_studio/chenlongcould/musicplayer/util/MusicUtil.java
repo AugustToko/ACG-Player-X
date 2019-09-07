@@ -10,23 +10,14 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistLoader;
-import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import top.geek_studio.chenlongcould.musicplayer.model.Album;
-import top.geek_studio.chenlongcould.musicplayer.model.Artist;
-import top.geek_studio.chenlongcould.musicplayer.model.Genre;
-import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.model.lyrics.AbsSynchronizedLyrics;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import org.jaudiotagger.audio.AudioFileIO;
@@ -39,21 +30,52 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistLoader;
+import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.Album;
+import top.geek_studio.chenlongcould.musicplayer.model.Artist;
+import top.geek_studio.chenlongcould.musicplayer.model.Genre;
+import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.model.lyrics.AbsSynchronizedLyrics;
+
 /**
+ * Music Util
+ *
+ * 音乐工具合集
+ *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class MusicUtil {
 
+    @SuppressWarnings("unused")
+    private static final String TAG = "MusicUtil";
+
+    /**
+     * 获取专辑图像 Uri
+     *
+     * @param albumId 专辑 ID
+     */
     public static Uri getMediaStoreAlbumCoverUri(int albumId) {
         final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
 
         return ContentUris.withAppendedId(sArtworkUri, albumId);
     }
 
+    /**
+     * 获取歌曲文件 URI
+     *
+     * @param songId 歌曲 ID
+     */
     public static Uri getSongFileUri(int songId) {
         return ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId);
     }
 
+    /**
+     * 创建分享文件 Intent
+     */
     @NonNull
     public static Intent createShareSongFileIntent(@NonNull final Song song, Context context) {
         try {
@@ -70,34 +92,55 @@ public class MusicUtil {
         }
     }
 
-
-
+    /**
+     * 获取艺术家信息
+     *
+     * @param context ctx
+     * @param artist  artist
+     *
+     * @return info (string type)
+     */
     @NonNull
     public static String getArtistInfoString(@NonNull final Context context, @NonNull final Artist artist) {
         int albumCount = artist.getAlbumCount();
         int songCount = artist.getSongCount();
 
         return MusicUtil.buildInfoString(
-            MusicUtil.getAlbumCountString(context, albumCount),
-            MusicUtil.getSongCountString(context, songCount)
+                MusicUtil.getAlbumCountString(context, albumCount),
+                MusicUtil.getSongCountString(context, songCount)
         );
     }
 
+    /**
+     * 获取专辑信息
+     *
+     * @param context ctx
+     * @param album   album
+     *
+     * @return info
+     */
     @NonNull
     public static String getAlbumInfoString(@NonNull final Context context, @NonNull final Album album) {
         int songCount = album.getSongCount();
 
         return MusicUtil.buildInfoString(
-            album.getArtistName(),
-            MusicUtil.getSongCountString(context, songCount)
+                album.getArtistName(),
+                MusicUtil.getSongCountString(context, songCount)
         );
     }
 
+    /**
+     * 获取歌曲信息
+     *
+     * @param song song
+     *
+     * @return info
+     */
     @NonNull
     public static String getSongInfoString(@NonNull final Song song) {
         return MusicUtil.buildInfoString(
-            song.artistName,
-            song.albumName
+                song.artistName,
+                song.albumName
         );
     }
 
@@ -107,34 +150,65 @@ public class MusicUtil {
         return MusicUtil.getSongCountString(context, songCount);
     }
 
+    /**
+     * 获取播放列表信息
+     *
+     * @param context ctx
+     * @param songs   songs
+     *
+     * @return playlist info
+     */
     @NonNull
     public static String getPlaylistInfoString(@NonNull final Context context, @NonNull List<Song> songs) {
-        final long duration = getTotalDuration(context, songs);
+        final long duration = getTotalDuration(songs);
 
         return MusicUtil.buildInfoString(
-            MusicUtil.getSongCountString(context, songs.size()),
-            MusicUtil.getReadableDurationString(duration)
+                MusicUtil.getSongCountString(context, songs.size()),
+                MusicUtil.getReadableDurationString(duration)
         );
     }
 
+    /**
+     * 获取歌曲数量
+     * <p>
+     * 根据数量来判读是使用 songs 还是 song
+     *
+     * @param context   ctx
+     * @param songCount 歌曲数量
+     *
+     * @return string
+     */
     @NonNull
     public static String getSongCountString(@NonNull final Context context, int songCount) {
         final String songString = songCount == 1 ? context.getResources().getString(R.string.song) : context.getResources().getString(R.string.songs);
         return songCount + " " + songString;
     }
 
+    /**
+     * Same as {@link #getSongCountString(Context, int)}
+     */
     @NonNull
     public static String getAlbumCountString(@NonNull final Context context, int albumCount) {
         final String albumString = albumCount == 1 ? context.getResources().getString(R.string.album) : context.getResources().getString(R.string.albums);
         return albumCount + " " + albumString;
     }
 
+    /**
+     * 获取年份
+     *
+     * @return string
+     */
     @NonNull
     public static String getYearString(int year) {
         return year > 0 ? String.valueOf(year) : "-";
     }
 
-    public static long getTotalDuration(@NonNull final Context context, @NonNull List<Song> songs) {
+    /**
+     * 获取指定歌曲总长度
+     *
+     * @param songs 歌曲
+     */
+    public static long getTotalDuration(@NonNull List<Song> songs) {
         long duration = 0;
         for (int i = 0; i < songs.size(); i++) {
             duration += songs.get(i).duration;
@@ -146,6 +220,8 @@ public class MusicUtil {
      * 获取可读的音乐时长
      *
      * @param songDurationMillis 音乐长度
+     *
+     * @return 长度 (string)
      */
     public static String getReadableDurationString(long songDurationMillis) {
         long minutes = (songDurationMillis / 1000) / 60;
@@ -159,22 +235,24 @@ public class MusicUtil {
         }
     }
 
-    /** 
+    /**
+     * 根据提供的参数构建连接字符串预期目的是显示音乐库项目的额外注释。 例如：对于给定的专辑 - >
+     * buildInfoString（album.artist，album.songCount）
+     * <p>
      * Build a concatenated string from the provided arguments
      * The intended purpose is to show extra annotations
      * to a music library item.
      * Ex: for a given album --> buildInfoString(album.artist, album.songCount)
+     * <p>
+     * like ACG-Player-X • ACG-Player-X
      */
     @NonNull
-    public static String buildInfoString(@Nullable final String string1, @Nullable final String string2)
-    {
+    public static String buildInfoString(@Nullable final String string1, @Nullable final String string2) {
         // Skip empty strings
         if (TextUtils.isEmpty(string1)) {
-            //noinspection ConstantConditions
             return TextUtils.isEmpty(string2) ? "" : string2;
         }
         if (TextUtils.isEmpty(string2)) {
-            //noinspection ConstantConditions
             return TextUtils.isEmpty(string1) ? "" : string1;
         }
 
@@ -187,33 +265,53 @@ public class MusicUtil {
         return trackNumberToFix % 1000;
     }
 
+    /**
+     * 插入专辑图
+     *
+     * @param context ctx
+     * @param albumId albumId
+     * @param path    path
+     */
     public static void insertAlbumArt(@NonNull Context context, int albumId, String path) {
-        ContentResolver contentResolver = context.getContentResolver();
+        final ContentResolver contentResolver = context.getContentResolver();
 
-        Uri artworkUri = Uri.parse("content://media/external/audio/albumart");
+        final Uri artworkUri = Uri.parse("content://media/external/audio/albumart");
         contentResolver.delete(ContentUris.withAppendedId(artworkUri, albumId), null, null);
 
-        ContentValues values = new ContentValues();
+        final ContentValues values = new ContentValues();
         values.put("album_id", albumId);
         values.put("_data", path);
 
         contentResolver.insert(artworkUri, values);
     }
 
+    /**
+     * 删除专辑图
+     *
+     * @param context ctx
+     * @param albumId albumId
+     */
     public static void deleteAlbumArt(@NonNull Context context, int albumId) {
-        ContentResolver contentResolver = context.getContentResolver();
-        Uri localUri = Uri.parse("content://media/external/audio/albumart");
+        final ContentResolver contentResolver = context.getContentResolver();
+        final Uri localUri = Uri.parse("content://media/external/audio/albumart");
         contentResolver.delete(ContentUris.withAppendedId(localUri, albumId), null, null);
     }
 
+    /**
+     * 创建专辑文件
+     */
     @NonNull
     public static File createAlbumArtFile() {
         return new File(createAlbumArtDir(), String.valueOf(System.currentTimeMillis()));
     }
 
+    /**
+     * 专辑封面目录
+     */
     @NonNull
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static File createAlbumArtDir() {
+    private static File createAlbumArtDir() {
+        // FIXME: fix on Android Q
         File albumArtDir = new File(Environment.getExternalStorageDirectory(), "/albumthumbs/");
         if (!albumArtDir.exists()) {
             albumArtDir.mkdirs();
@@ -226,13 +324,22 @@ public class MusicUtil {
         return albumArtDir;
     }
 
+    /**
+     * 删除歌曲
+     *
+     * @param context ctx
+     * @param songs   被删除歌曲
+     */
     public static void deleteTracks(@NonNull final Context context, @NonNull final List<Song> songs) {
         final String[] projection = new String[]{
+                // FIXME: fix on Android Q
                 BaseColumns._ID, MediaStore.MediaColumns.DATA
         };
         final StringBuilder selection = new StringBuilder();
         selection.append(BaseColumns._ID + " IN (");
         for (int i = 0; i < songs.size(); i++) {
+
+            // 计入选择区
             selection.append(songs.get(i).id);
             if (i < songs.size() - 1) {
                 selection.append(",");
@@ -247,19 +354,23 @@ public class MusicUtil {
             if (cursor != null) {
                 // Step 1: Remove selected tracks from the current playlist, as well
                 // as from the album art cache
+                // 从当前播放列表中删除所选曲目，如同从专辑封面缓存中删除
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {
                     final int id = cursor.getInt(0);
                     final Song song = SongLoader.getSong(context, id);
+
+                    // 从队列中移除
                     MusicPlayerRemote.removeFromQueue(song);
                     cursor.moveToNext();
                 }
 
                 // Step ic_launcher: Remove selected tracks from the database
+                // 从数据库中删除选定的曲目
                 context.getContentResolver().delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         selection.toString(), null);
 
-                // Step 3: Remove files from card
+                // Step 3: Remove files from sdcard
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {
                     final String name = cursor.getString(1);
@@ -282,25 +393,58 @@ public class MusicUtil {
             context.getContentResolver().notifyChange(Uri.parse("content://media"), null);
             Toast.makeText(context, context.getString(R.string.deleted_x_songs, songs.size()), Toast.LENGTH_SHORT).show();
         } catch (SecurityException ignored) {
+            // ...
         }
     }
 
+    /**
+     * 是否为喜爱列表
+     *
+     * @param context  ctx
+     * @param playlist 播放列表
+     */
     public static boolean isFavoritePlaylist(@NonNull final Context context, @NonNull final Playlist playlist) {
         return playlist.name != null && playlist.name.equals(context.getString(R.string.favorites));
     }
 
-    public static Playlist getFavoritesPlaylist(@NonNull final Context context) {
+    /**
+     * 获取喜爱列表
+     *
+     * @param context ctx
+     *
+     * @return playlist
+     */
+    private static Playlist getFavoritesPlaylist(@NonNull final Context context) {
         return PlaylistLoader.getPlaylist(context, context.getString(R.string.favorites));
     }
 
+    /**
+     * 获取(创建) 喜爱列表
+     *
+     * @return playlist
+     */
     private static Playlist getOrCreateFavoritesPlaylist(@NonNull final Context context) {
         return PlaylistLoader.getPlaylist(context, PlaylistsUtil.createPlaylist(context, context.getString(R.string.favorites)));
     }
 
+    /**
+     * 指定歌曲是否为喜爱歌曲
+     *
+     * @param context ctx
+     * @param song    song
+     *
+     * @return bool
+     */
     public static boolean isFavorite(@NonNull final Context context, @NonNull final Song song) {
         return PlaylistsUtil.doPlaylistContains(context, getFavoritesPlaylist(context).id, song.id);
     }
 
+    /**
+     * 切换歌曲是否为喜爱
+     *
+     * @param song    target song
+     * @param context ctx
+     */
     public static void toggleFavorite(@NonNull final Context context, @NonNull final Song song) {
         if (isFavorite(context, song)) {
             PlaylistsUtil.removeFromPlaylist(context, song, getFavoritesPlaylist(context).id);
@@ -309,6 +453,15 @@ public class MusicUtil {
         }
     }
 
+    /**
+     * 是否为位置艺术家
+     * <p>
+     * 用于检测元数据不完整歌曲, 或某些看似是歌曲的 mp3 文件
+     *
+     * @param artistName artist
+     *
+     * @return bool
+     */
     public static boolean isArtistNameUnknown(@Nullable String artistName) {
         if (TextUtils.isEmpty(artistName)) return false;
         if (artistName.equals(Artist.UNKNOWN_ARTIST_DISPLAY_NAME)) return true;
@@ -329,6 +482,13 @@ public class MusicUtil {
         return String.valueOf(musicMediaTitle.charAt(0)).toUpperCase();
     }
 
+    /**
+     * 获取歌词
+     *
+     * @param song song
+     *
+     * @return 歌词
+     */
     @Nullable
     public static String getLyrics(Song song) {
         String lyrics = null;
@@ -346,7 +506,9 @@ public class MusicUtil {
 
             if (dir != null && dir.exists() && dir.isDirectory()) {
                 String format = ".*%s.*\\.(lrc|txt)";
-                String filename = Pattern.quote(FileUtil.stripExtension(file.getName()));
+                String s = FileUtil.stripExtension(file.getName());
+                if (s == null) return "";
+                String filename = Pattern.quote(s);
                 String songtitle = Pattern.quote(song.title);
 
                 final List<Pattern> patterns = new ArrayList<>();

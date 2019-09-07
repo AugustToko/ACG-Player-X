@@ -76,10 +76,20 @@ public class ImageUtil {
         return Bitmap.createScaledBitmap(src, dstWidth, dstHeight, false);
     }
 
+    /**
+     * 创建 bitmap
+     *
+     * @see #createBitmap(Drawable, float)
+     */
     public static Bitmap createBitmap(Drawable drawable) {
         return createBitmap(drawable, 1f);
     }
 
+    /**
+     * 创建 bitmap
+     *
+     * @see #createBitmap(Drawable)
+     */
     public static Bitmap createBitmap(Drawable drawable, float sizeMultiplier) {
         Bitmap bitmap = Bitmap.createBitmap((int) (drawable.getIntrinsicWidth() * sizeMultiplier), (int) (drawable.getIntrinsicHeight() * sizeMultiplier), Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bitmap);
@@ -88,7 +98,16 @@ public class ImageUtil {
         return bitmap;
     }
 
-    public static Drawable getVectorDrawable(@NonNull Resources res, @DrawableRes int resId, @Nullable Resources.Theme theme) {
+    /**
+     * 获取矢量 Drawable
+     *
+     * @param res   res
+     * @param resId id
+     * @param theme theme
+     *
+     * @see Resources#getDrawable(int, Resources.Theme)
+     */
+    private static Drawable getVectorDrawable(@NonNull Resources res, @DrawableRes int resId, @Nullable Resources.Theme theme) {
         if (Build.VERSION.SDK_INT >= 21) {
             return res.getDrawable(resId, theme);
         }

@@ -4,22 +4,28 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.media.audiofx.AudioEffect;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.util.Pair;
-import android.widget.Toast;
+
+import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.model.Genre;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
-import com.kabouzeid.chenlongcould.musicplayer.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.AlbumDetailActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.ArtistDetailActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.GenreDetailActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.PlaylistDetailActivity;
 
 /**
+ * 导航工具
+ * <p>
+ * 用于启动各种界面 (Activity)
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class NavigationUtil {
@@ -28,7 +34,6 @@ public class NavigationUtil {
         final Intent intent = new Intent(activity, ArtistDetailActivity.class);
         intent.putExtra(ArtistDetailActivity.EXTRA_ARTIST_ID, artistId);
 
-        //noinspection unchecked
         if (sharedElements != null && sharedElements.length > 0) {
             activity.startActivity(intent, ActivityOptionsCompat.makeSceneTransitionAnimation(activity, sharedElements).toBundle());
         } else {
