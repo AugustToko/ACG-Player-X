@@ -3,13 +3,11 @@ package top.geek_studio.chenlongcould.musicplayer.util;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.webkit.MimeTypeMap;
 
-import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import top.geek_studio.chenlongcould.musicplayer.loader.SortedCursor;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,11 +21,20 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
+import top.geek_studio.chenlongcould.musicplayer.loader.SortedCursor;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+
 /**
+ * 文件工具类
+ *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public final class FileUtil {
-    private FileUtil() {
+
+    private FileUtil() throws Exception {
+        throw new Exception();
     }
 
     @NonNull
@@ -35,8 +42,11 @@ public final class FileUtil {
         return SongLoader.getSongs(makeSongCursor(context, files));
     }
 
+    /**
+     * Song Cursor
+     */
     @Nullable
-    public static SortedCursor makeSongCursor(@NonNull final Context context, @Nullable final List<File> files) {
+    private static SortedCursor makeSongCursor(@NonNull final Context context, @Nullable final List<File> files) {
         String selection = null;
         String[] paths = null;
 
@@ -48,7 +58,7 @@ public final class FileUtil {
             }
         }
 
-        Cursor songCursor = SongLoader.makeSongCursor(context, selection, selection == null ? null : paths);
+        final Cursor songCursor = SongLoader.makeSongCursor(context, selection, selection == null ? null : paths);
 
         return songCursor == null ? null : new SortedCursor(songCursor, paths, MediaStore.Audio.AudioColumns.DATA);
     }
@@ -62,6 +72,9 @@ public final class FileUtil {
         return sb.toString();
     }
 
+    /**
+     * 转为 path string集合
+     */
     @Nullable
     private static String[] toPathArray(@Nullable List<File> files) {
         if (files != null) {
@@ -74,6 +87,14 @@ public final class FileUtil {
         return null;
     }
 
+    /**
+     * 获取 file list
+     *
+     * @param directory  目标目录
+     * @param fileFilter 过滤器
+     *
+     * @return file list
+     */
     @NonNull
     public static List<File> listFiles(@NonNull File directory, @Nullable FileFilter fileFilter) {
         List<File> fileList = new LinkedList<>();
@@ -104,6 +125,13 @@ public final class FileUtil {
         return resFiles;
     }
 
+    /**
+     * 查询文件并加入集合
+     *
+     * @param files      待装容器
+     * @param fileFilter 过滤器
+     * @param directory  目标目录
+     */
     private static void internalListFilesDeep(@NonNull Collection<File> files, @NonNull File directory, @Nullable FileFilter fileFilter) {
         File[] found = directory.listFiles(fileFilter);
 
@@ -118,6 +146,9 @@ public final class FileUtil {
         }
     }
 
+    /**
+     * 检测文件类型匹配
+     */
     public static boolean fileIsMimeType(File file, String mimeType, MimeTypeMap mimeTypeMap) {
         if (mimeType == null || mimeType.equals("*/*")) {
             return true;
