@@ -12,11 +12,12 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
-import androidx.annotation.ColorInt;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.PathInterpolator;
 import android.widget.TextView;
+
+import androidx.annotation.ColorInt;
 
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
@@ -25,20 +26,44 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 /**
+ * View Tools
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class ViewUtil {
 
+    /**
+     * 动画持续时间
+     */
     public final static int PHONOGRAPH_ANIM_TIME = 1000;
 
+    /**
+     * 背景过度颜色
+     */
     public static Animator createBackgroundColorTransition(final View v, @ColorInt final int startColor, @ColorInt final int endColor) {
         return createColorAnimator(v, "backgroundColor", startColor, endColor);
     }
 
+    /**
+     * 文本过渡颜色
+     */
     public static Animator createTextColorTransition(final TextView v, @ColorInt final int startColor, @ColorInt final int endColor) {
         return createColorAnimator(v, "textColor", startColor, endColor);
     }
 
+    /**
+     * 创建色彩动画
+     *
+     * @see #createBackgroundColorTransition(View, int, int)
+     * @see #createTextColorTransition(TextView, int, int)
+     *
+     * @param target       目标
+     * @param startColor   起始颜色
+     * @param endColor     终点颜色
+     * @param propertyName 属性名称
+     *
+     * @return 动画
+     */
     private static Animator createColorAnimator(Object target, String propertyName, @ColorInt int startColor, @ColorInt int endColor) {
         ObjectAnimator animator;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
