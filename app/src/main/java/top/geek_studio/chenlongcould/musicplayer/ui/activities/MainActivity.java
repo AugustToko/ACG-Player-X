@@ -97,8 +97,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     private boolean blockRequestPermissions;
 
-    private boolean pressBack = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -386,15 +384,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         if (drawerLayout.isDrawerOpen(navigationView)) {
             drawerLayout.closeDrawers();
             return true;
-        }
-
-        if (!pressBack) {
-            pressBack = true;
-            Toast.makeText(this, "Press again to exit!", Toast.LENGTH_SHORT).show();
-            new Handler().postDelayed(() -> pressBack = false, 2000);
-            return true;
-        } else {
-            finish();
         }
 
         return super.handleBackPress() || (currentFragment != null && currentFragment.handleBackPress());

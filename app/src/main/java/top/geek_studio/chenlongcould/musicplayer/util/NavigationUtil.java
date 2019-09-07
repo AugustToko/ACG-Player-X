@@ -30,6 +30,13 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.PlaylistDetailAct
  */
 public class NavigationUtil {
 
+    /**
+     * 显示艺术家详情页面
+     *
+     * @param activity       activity
+     * @param artistId       艺术家 ID
+     * @param sharedElements 共享元素
+     */
     public static void goToArtist(@NonNull final Activity activity, final int artistId, @Nullable Pair... sharedElements) {
         final Intent intent = new Intent(activity, ArtistDetailActivity.class);
         intent.putExtra(ArtistDetailActivity.EXTRA_ARTIST_ID, artistId);
@@ -41,6 +48,13 @@ public class NavigationUtil {
         }
     }
 
+    /**
+     * 千万专辑详情页面
+     *
+     * @param activity       activity
+     * @param albumId        专辑 ID
+     * @param sharedElements 共享元素
+     */
     public static void goToAlbum(@NonNull final Activity activity, final int albumId, @Nullable Pair... sharedElements) {
         final Intent intent = new Intent(activity, AlbumDetailActivity.class);
         intent.putExtra(AlbumDetailActivity.EXTRA_ALBUM_ID, albumId);
@@ -55,17 +69,27 @@ public class NavigationUtil {
     public static void goToGenre(@NonNull final Activity activity, final Genre genre, @Nullable Pair... sharedElements) {
         final Intent intent = new Intent(activity, GenreDetailActivity.class);
         intent.putExtra(GenreDetailActivity.EXTRA_GENRE, genre);
-
         activity.startActivity(intent);
     }
 
+    /**
+     * 前往播放列表页面
+     *
+     * @param activity       activity
+     * @param playlist       播放列表
+     * @param sharedElements 共享元素
+     */
     public static void goToPlaylist(@NonNull final Activity activity, final Playlist playlist, @Nullable Pair... sharedElements) {
         final Intent intent = new Intent(activity, PlaylistDetailActivity.class);
         intent.putExtra(PlaylistDetailActivity.EXTRA_PLAYLIST, playlist);
-
         activity.startActivity(intent);
     }
 
+    /**
+     * 打开均衡器
+     *
+     * @param activity activity
+     */
     public static void openEqualizer(@NonNull final Activity activity) {
         final int sessionId = MusicPlayerRemote.getAudioSessionId();
         if (sessionId == AudioEffect.ERROR_BAD_VALUE) {

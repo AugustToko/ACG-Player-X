@@ -5,11 +5,13 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.PathInterpolator;
+import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
@@ -60,6 +62,8 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     private View mRootView;
 
     private RealtimeBlurView realtimeBlurView;
+
+    private boolean pressBack = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -303,6 +307,16 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
             collapsePanel();
             return true;
         }
+
+        if (!pressBack) {
+            pressBack = true;
+            Toast.makeText(this, "Press again to exit!", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(() -> pressBack = false, 2000);
+            return true;
+        } else {
+            finish();
+        }
+
         return false;
     }
 
