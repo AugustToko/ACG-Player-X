@@ -17,9 +17,16 @@ import androidx.annotation.NonNull;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+/**
+ * 铃声管理
+ */
 public class RingtoneManager {
 
-
+    /**
+     * 检测是否能写入设置
+     *
+     * @param context ctx
+     */
     public static boolean requiresDialog(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return !Settings.System.canWrite(context);
@@ -27,6 +34,11 @@ public class RingtoneManager {
         return false;
     }
 
+    /**
+     * 获取权限
+     *
+     * @param context ctx
+     */
     public static MaterialDialog showDialog(Context context) {
         return new MaterialDialog.Builder(context)
                 .title(R.string.dialog_ringtone_title)
@@ -41,7 +53,10 @@ public class RingtoneManager {
                 .show();
     }
 
-    public   void setRingtone(@NonNull final Context context, final int id) {
+    /**
+     * 设置铃声，通过 {@link android.content.ContentProvider} 设置
+     */
+    public void setRingtone(@NonNull final Context context, final int id) {
         final ContentResolver resolver = context.getContentResolver();
         final Uri uri = MusicUtil.getSongFileUri(id);
         try {
@@ -54,21 +69,18 @@ public class RingtoneManager {
         }
 
         try {
-            Cursor cursor = resolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    new String[]{MediaStore.MediaColumns.TITLE},
-                    BaseColumns._ID + "=?",
-                    new String[]{String.valueOf(id)},
-                    null);
-            try {
+            try (
+                    final Cursor cursor = resolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                            new String[]{MediaStore.MediaColumns.TITLE},
+                            BaseColumns._ID + "=?",
+                            new String[]{String.valueOf(id)},
+                            null)
+            ) {
                 if (cursor != null && cursor.getCount() == 1) {
                     cursor.moveToFirst();
                     Settings.System.putString(resolver, Settings.System.RINGTONE, uri.toString());
                     final String message = context.getString(R.string.x_has_been_set_as_ringtone, cursor.getString(0));
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
                 }
             }
         } catch (SecurityException ignored) {

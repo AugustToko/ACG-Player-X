@@ -308,15 +308,6 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
             return true;
         }
 
-        if (!pressBack) {
-            pressBack = true;
-            Toast.makeText(this, "Press again to exit!", Toast.LENGTH_SHORT).show();
-            new Handler().postDelayed(() -> pressBack = false, 2000);
-            return true;
-        } else {
-            finish();
-        }
-
         return false;
     }
 
