@@ -2,12 +2,19 @@ package top.geek_studio.chenlongcould.musicplayer.adapter;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.SparseArray;
+import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
-import android.util.SparseArray;
-import android.view.ViewGroup;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
 import top.geek_studio.chenlongcould.musicplayer.model.CategoryInfo;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
@@ -16,12 +23,6 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.SongsFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 
 public class MusicLibraryPagerAdapter extends FragmentPagerAdapter {
 

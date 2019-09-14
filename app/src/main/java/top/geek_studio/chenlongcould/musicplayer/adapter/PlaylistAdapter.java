@@ -3,10 +3,6 @@ package top.geek_studio.chenlongcould.musicplayer.adapter;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.os.Build;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,16 +10,26 @@ import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.kabouzeid.appthemehelper.util.ATHUtil;
+import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ClearSmartPlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.DeletePlaylistDialog;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
-import com.kabouzeid.appthemehelper.util.ATHUtil;
-import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.PlaylistMenuHelper;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongsMenuHelper;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistSongLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WeakContextAsyncTask;
 import top.geek_studio.chenlongcould.musicplayer.model.AbsCustomPlaylist;
@@ -34,10 +40,6 @@ import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.LastAddedPl
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)

@@ -3,30 +3,36 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.player;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
+import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicProgressViewUpdateHelper;
-import top.geek_studio.chenlongcould.musicplayer.helper.PlayPauseButtonOnClickHandler;
-import top.geek_studio.chenlongcould.musicplayer.views.PlayPauseDrawable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.GravityCompat;
+
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicProgressViewUpdateHelper;
+import top.geek_studio.chenlongcould.musicplayer.helper.PlayPauseButtonOnClickHandler;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
+import top.geek_studio.chenlongcould.musicplayer.views.PlayPauseDrawable;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
@@ -59,12 +65,12 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         unbinder = ButterKnife.bind(this, view);
 
         view.setOnTouchListener(new FlingPlayBackController(getActivity()));
-        setUpMiniPlayer();
+        setUpMiniPlayer(view);
     }
 
     @Override
@@ -73,7 +79,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         unbinder.unbind();
     }
 
-    private void setUpMiniPlayer() {
+    private void setUpMiniPlayer(View root) {
         setUpPlayPauseButton();
         progressBar.setProgressTintList(ColorStateList.valueOf(ThemeStore.accentColor(getActivity())));
     }

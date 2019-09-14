@@ -2,30 +2,32 @@ package top.geek_studio.chenlongcould.musicplayer.adapter;
 
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
-import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.glide.audiocover.AudioFileCover;
-import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
+import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
+import top.geek_studio.chenlongcould.musicplayer.glide.audiocover.AudioFileCover;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
+import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 
 public class SongFileAdapter extends AbsMultiSelectAdapter<SongFileAdapter.ViewHolder, File> implements FastScrollRecyclerView.SectionedAdapter {
 

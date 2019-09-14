@@ -123,7 +123,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         mViewModel = ViewModelProviders.of(this).get(MyViewModel.class);
 
-
     }
 
     /**

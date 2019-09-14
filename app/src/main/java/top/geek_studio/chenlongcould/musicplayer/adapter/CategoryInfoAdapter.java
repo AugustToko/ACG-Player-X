@@ -1,9 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.adapter;
 
 import android.annotation.SuppressLint;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,11 +9,16 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.model.CategoryInfo;
-import top.geek_studio.chenlongcould.musicplayer.util.SwipeAndDragHelper;
 
 import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.model.CategoryInfo;
+import top.geek_studio.chenlongcould.musicplayer.util.SwipeAndDragHelper;
 
 public class CategoryInfoAdapter extends RecyclerView.Adapter<CategoryInfoAdapter.ViewHolder> implements SwipeAndDragHelper.ActionCompletionContract {
     private List<CategoryInfo> categoryInfos;

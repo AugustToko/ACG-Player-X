@@ -1,18 +1,23 @@
 package top.geek_studio.chenlongcould.musicplayer.adapter;
 
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.core.util.Pair;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
-import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
 import top.geek_studio.chenlongcould.musicplayer.glide.ArtistGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
@@ -22,9 +27,6 @@ import top.geek_studio.chenlongcould.musicplayer.model.Artist;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
