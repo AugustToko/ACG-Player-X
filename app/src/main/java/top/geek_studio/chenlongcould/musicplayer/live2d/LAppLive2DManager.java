@@ -154,7 +154,6 @@ public class LAppLive2DManager {
 		if (getModelNum() == 0) {
 
 			changeModel();
-
 		}
 	}
 
@@ -163,10 +162,13 @@ public class LAppLive2DManager {
 
 	//=========================================================
 
-	public void changeModel() {
-		reloadFlg = true;
-		modelCount++;
-	}
+    /**
+     * 更换模型
+     */
+    public void changeModel() {
+        reloadFlg = true;
+        modelCount++;
+    }
 
 
 	//=========================================================

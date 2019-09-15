@@ -27,6 +27,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
@@ -153,6 +154,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     .content("这里是 ACG Player 助手酱 ~")
                     .showListener(dialogInterface -> mViewModel.dialogs.add(dialogInterface))
                     .dismissListener(dialogInterface -> mViewModel.dialogs.remove(dialogInterface))
+                    .negativeText("Change Me!")
+                    .onNegative((dialog, which) -> live2DMgr.changeModel())
                     .show();
             return false;
         });
