@@ -69,6 +69,7 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         if (hasPermissions != hadPermissions) {
             hadPermissions = hasPermissions;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // 权限发生变化
                 onHasPermissionsChanged(hasPermissions);
             }
         }
@@ -121,6 +122,9 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         return getWindow().getDecorView();
     }
 
+    /**
+     * TODO: ？
+     */
     protected void setPermissionDeniedMessage(String message) {
         permissionDeniedMessage = message;
     }
@@ -152,6 +156,11 @@ public abstract class AbsBaseActivity extends AbsThemeActivity {
         return true;
     }
 
+    /**
+     * 权限申请结果
+     *
+     * @see android.app.Activity#onRequestPermissionsResult(int, String[], int[])
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

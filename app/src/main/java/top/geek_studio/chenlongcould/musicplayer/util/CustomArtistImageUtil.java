@@ -25,8 +25,10 @@ import java.util.Locale;
 
 import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.model.Artist;
+import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 
 /**
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 
@@ -65,14 +67,13 @@ public class CustomArtistImageUtil {
 
                     @Override
                     public void onResourceReady(final Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                        new AsyncTask<Void, Void, Void>() {
-                            @SuppressLint("ApplySharedPref")
+                        CustomThreadPool.post(new Runnable() {
                             @Override
-                            protected Void doInBackground(Void... params) {
+                            public void run() {
                                 File dir = new File(App.getInstance().getFilesDir(), FOLDER_NAME);
                                 if (!dir.exists()) {
                                     if (!dir.mkdirs()) { // create the folder
-                                        return null;
+                                        return;
                                     }
                                 }
                                 File file = new File(dir, getFileName(artist));
@@ -91,31 +92,77 @@ public class CustomArtistImageUtil {
                                     ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
                                     App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
                                 }
-                                return null;
                             }
-                        }.execute();
+                        });
+
+//                        new AsyncTask<Void, Void, Void>() {
+//                            @SuppressLint("ApplySharedPref")
+//                            @Override
+//                            protected Void doInBackground(Void... params) {
+//                                File dir = new File(App.getInstance().getFilesDir(), FOLDER_NAME);
+//                                if (!dir.exists()) {
+//                                    if (!dir.mkdirs()) { // create the folder
+//                                        return null;
+//                                    }
+//                                }
+//                                File file = new File(dir, getFileName(artist));
+//
+//                                boolean succesful = false;
+//                                try {
+//                                    OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+//                                    succesful = ImageUtil.resizeBitmap(resource, 2048).compress(Bitmap.CompressFormat.JPEG, 100, os);
+//                                    os.close();
+//                                } catch (IOException e) {
+//                                    Toast.makeText(App.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
+//                                }
+//
+//                                if (succesful) {
+//                                    mPreferences.edit().putBoolean(getFileName(artist), true).commit();
+//                                    ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
+//                                    App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+//                                }
+//                                return null;
+//                            }
+//                        }.execute();
                     }
                 });
     }
 
     public void resetCustomArtistImage(final Artist artist) {
-        new AsyncTask<Void, Void, Void>() {
-            @SuppressLint("ApplySharedPref")
+        CustomThreadPool.post(new Runnable() {
             @Override
-            protected Void doInBackground(Void... params) {
+            public void run() {
                 mPreferences.edit().putBoolean(getFileName(artist), false).commit();
                 ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
                 App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
 
-                File file = getFile(artist);
+                final File file = getFile(artist);
                 if (!file.exists()) {
-                    return null;
+                    return;
                 } else {
                     file.delete();
                 }
-                return null;
+                return;
             }
-        }.execute();
+        });
+
+//        new AsyncTask<Void, Void, Void>() {
+//            @SuppressLint("ApplySharedPref")
+//            @Override
+//            protected Void doInBackground(Void... params) {
+//                mPreferences.edit().putBoolean(getFileName(artist), false).commit();
+//                ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
+//                App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+//
+//                final File file = getFile(artist);
+//                if (!file.exists()) {
+//                    return null;
+//                } else {
+//                    file.delete();
+//                }
+//                return null;
+//            }
+//        }.execute();
     }
 
     // shared prefs saves us many IO operations

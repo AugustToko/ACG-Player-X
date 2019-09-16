@@ -21,6 +21,9 @@ import com.kabouzeid.appthemehelper.util.TintHelper;
 import java.io.InputStream;
 
 /**
+ * 图像工具类
+ *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class ImageUtil {

@@ -46,8 +46,8 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 155
-        versionName '1.0.2'
+        versionCode 156
+        versionName '1.0.3'
         applicationIdSuffix = 'Common'
     }
     signingConfigs {

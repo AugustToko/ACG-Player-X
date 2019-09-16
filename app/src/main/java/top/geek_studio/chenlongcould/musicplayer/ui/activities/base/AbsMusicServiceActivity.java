@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * AbsMusicServiceActivity
  *
- *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements MusicServiceEventListener {
@@ -34,8 +34,19 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
      */
     private final List<MusicServiceEventListener> mMusicServiceEventListeners = new ArrayList<>();
 
+    /**
+     * token
+     */
     private MusicPlayerRemote.ServiceToken serviceToken;
+
+    /**
+     * 音乐状态广播
+     */
     private MusicStateReceiver musicStateReceiver;
+
+    /**
+     * 标记是否已注册广播
+     */
     private boolean receiverRegistered;
 
     @Override
@@ -59,19 +70,29 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        // 取消绑定服务
         MusicPlayerRemote.unbindFromService(serviceToken);
+
+        // 取消注册广播
         if (receiverRegistered) {
             unregisterReceiver(musicStateReceiver);
             receiverRegistered = false;
         }
     }
 
-    public void addMusicServiceEventListener(final MusicServiceEventListener listener) {
+    /**
+     * 添加监听
+     * */
+    public void addMusicServiceEventListener(@Nullable final MusicServiceEventListener listener) {
         if (listener != null) {
             mMusicServiceEventListeners.add(listener);
         }
     }
 
+    /**
+     * 移除监听
+     * */
     public void removeMusicServiceEventListener(final MusicServiceEventListener listener) {
         if (listener != null) {
             mMusicServiceEventListeners.remove(listener);
@@ -80,6 +101,7 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
 
     @Override
     public void onServiceConnected() {
+        // 注册广播
         if (!receiverRegistered) {
             musicStateReceiver = new MusicStateReceiver(this);
 
@@ -96,6 +118,7 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
             receiverRegistered = true;
         }
 
+        // 通知全部监听器
         for (MusicServiceEventListener listener : mMusicServiceEventListeners) {
             if (listener != null) {
                 listener.onServiceConnected();
@@ -105,11 +128,13 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
 
     @Override
     public void onServiceDisconnected() {
+        // 移除光标
         if (receiverRegistered) {
             unregisterReceiver(musicStateReceiver);
             receiverRegistered = false;
         }
 
+        // 通知监听
         for (MusicServiceEventListener listener : mMusicServiceEventListeners) {
             if (listener != null) {
                 listener.onServiceDisconnected();
@@ -171,6 +196,9 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
         }
     }
 
+    /**
+     * 音乐状态广播
+     * */
     private static final class MusicStateReceiver extends BroadcastReceiver {
 
         private final WeakReference<AbsMusicServiceActivity> reference;
@@ -208,6 +236,9 @@ public abstract class AbsMusicServiceActivity extends AbsBaseActivity implements
         }
     }
 
+    /**
+     * 权限发生变化, 发送广播
+     * */
     @Override
     protected void onHasPermissionsChanged(boolean hasPermissions) {
         super.onHasPermissionsChanged(hasPermissions);

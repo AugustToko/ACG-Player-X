@@ -8,14 +8,11 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.widget.Toast;
 
-import top.geek_studio.chenlongcould.musicplayer.helper.M3UWriter;
-import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
-import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.io.File;
@@ -23,30 +20,72 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.helper.M3UWriter;
+import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
+import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+
 import static android.provider.MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
 
 /**
+ * @author chenlongcould (modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class PlaylistsUtil {
 
+    /**
+     * 通过 id 查播放列表
+     *
+     * @param context    ctx
+     * @param playlistId playlist id
+     *
+     * @return exists?
+     */
     public static boolean doesPlaylistExist(@NonNull final Context context, final int playlistId) {
         return playlistId != -1 && doesPlaylistExist(context,
                 MediaStore.Audio.Playlists._ID + "=?",
                 new String[]{String.valueOf(playlistId)});
     }
 
+    /**
+     * 通过 播放列表名称 查播放列表
+     *
+     * @param context ctx
+     * @param name    playlist name
+     *
+     * @return exists
+     */
     public static boolean doesPlaylistExist(@NonNull final Context context, final String name) {
         return doesPlaylistExist(context,
                 MediaStore.Audio.PlaylistsColumns.NAME + "=?",
                 new String[]{name});
     }
 
+    private static boolean doesPlaylistExist(@NonNull final Context context, @NonNull final String selection, @NonNull final String[] values) {
+        final Cursor cursor = context.getContentResolver().query(EXTERNAL_CONTENT_URI,
+                new String[]{}, selection, values, null);
+
+        boolean exists = false;
+        if (cursor != null) {
+            exists = cursor.getCount() != 0;
+            cursor.close();
+        }
+        return exists;
+    }
+
+    /**
+     * 创建播放列表
+     *
+     * @param context ctx
+     * @param name    playlist name
+     *
+     * @return playlist id
+     */
     public static int createPlaylist(@NonNull final Context context, @Nullable final String name) {
         int id = -1;
         if (name != null && name.length() > 0) {
             try {
-                Cursor cursor = context.getContentResolver().query(EXTERNAL_CONTENT_URI,
+                final Cursor cursor = context.getContentResolver().query(EXTERNAL_CONTENT_URI,
                         new String[]{MediaStore.Audio.Playlists._ID},
                         MediaStore.Audio.PlaylistsColumns.NAME + "=?", new String[]{name},
                         null);
@@ -58,6 +97,7 @@ public class PlaylistsUtil {
                             values);
                     if (uri != null) {
                         // Necessary because somehow the MediaStoreObserver is not notified when adding a playlist
+                        // 这是必要的，因为在添加播放列表时不会以某种方式通知 MediaStoreObserver
                         context.getContentResolver().notifyChange(Uri.parse("content://media"), null);
                         Toast.makeText(context, context.getResources().getString(
                                 R.string.created_playlist_x, name), Toast.LENGTH_SHORT).show();
@@ -69,19 +109,25 @@ public class PlaylistsUtil {
                         id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
                     }
                 }
-                if (cursor != null) {
-                    cursor.close();
-                }
+                if (cursor != null) cursor.close();
             } catch (SecurityException ignored) {
             }
         }
+
         if (id == -1) {
             Toast.makeText(context, context.getResources().getString(
                     R.string.could_not_create_playlist), Toast.LENGTH_SHORT).show();
         }
+
         return id;
     }
 
+    /**
+     * 移除多个播放列表
+     *
+     * @param context   ctx
+     * @param playlists 播放列表集合
+     */
     public static void deletePlaylists(@NonNull final Context context, @NonNull final List<Playlist> playlists) {
         final StringBuilder selection = new StringBuilder();
         selection.append(MediaStore.Audio.Playlists._ID + " IN (");
@@ -99,12 +145,28 @@ public class PlaylistsUtil {
         }
     }
 
+    /**
+     * 添加到 playlist
+     *
+     * @param context           ctx
+     * @param song              song
+     * @param playlistId        id
+     * @param showToastOnFinish show playlist
+     */
     public static void addToPlaylist(@NonNull final Context context, final Song song, final int playlistId, final boolean showToastOnFinish) {
-        List<Song> helperList = new ArrayList<>();
+        final List<Song> helperList = new ArrayList<>();
         helperList.add(song);
         addToPlaylist(context, helperList, playlistId, showToastOnFinish);
     }
 
+    /**
+     * 添加到 playlist
+     *
+     * @param context           ctx
+     * @param songs             songs
+     * @param playlistId        id
+     * @param showToastOnFinish show playlist
+     */
     public static void addToPlaylist(@NonNull final Context context, @NonNull final List<Song> songs, final int playlistId, final boolean showToastOnFinish) {
         final int size = songs.size();
         final ContentResolver resolver = context.getContentResolver();
@@ -141,12 +203,12 @@ public class PlaylistsUtil {
     }
 
     @NonNull
-    public static ContentValues[] makeInsertItems(@NonNull final List<Song> songs, final int offset, int len, final int base) {
+    private static ContentValues[] makeInsertItems(@NonNull final List<Song> songs, final int offset, int len, final int base) {
         if (offset + len > songs.size()) {
             len = songs.size() - offset;
         }
 
-        ContentValues[] contentValues = new ContentValues[len];
+        final ContentValues[] contentValues = new ContentValues[len];
 
         for (int i = 0; i < len; i++) {
             contentValues[i] = new ContentValues();
@@ -246,17 +308,5 @@ public class PlaylistsUtil {
 
     public static File savePlaylist(Context context, Playlist playlist) throws IOException {
         return M3UWriter.write(context, new File(Environment.getExternalStorageDirectory(), "Playlists"), playlist);
-    }
-
-    private static boolean doesPlaylistExist(@NonNull Context context, @NonNull final String selection, @NonNull final String[] values) {
-        Cursor cursor = context.getContentResolver().query(EXTERNAL_CONTENT_URI,
-                new String[]{}, selection, values, null);
-
-        boolean exists = false;
-        if (cursor != null) {
-            exists = cursor.getCount() != 0;
-            cursor.close();
-        }
-        return exists;
     }
 }

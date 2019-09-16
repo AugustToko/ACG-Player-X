@@ -24,6 +24,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * PreferenceUtil
+ */
 public final class PreferenceUtil {
     public static final String GENERAL_THEME = "general_theme";
     public static final String BLUR_OVERLAY = "use_overlay_blur";
@@ -111,6 +114,7 @@ public final class PreferenceUtil {
                 return true;
             case "only_wifi":
                 final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (connectivityManager == null) return false;
                 NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
                 return netInfo != null && netInfo.getType() == ConnectivityManager.TYPE_WIFI && netInfo.isConnectedOrConnecting();
             case "never":
@@ -303,7 +307,7 @@ public final class PreferenceUtil {
                 interval = calendarUtil.getElapsedWeek();
                 break;
 
-             case "past_seven_days":
+            case "past_seven_days":
                 interval = calendarUtil.getElapsedDays(7);
                 break;
 

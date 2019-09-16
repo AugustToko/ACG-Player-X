@@ -15,16 +15,13 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
-import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,7 +29,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.WeakHashMap;
 
+import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+
 /**
+ * Music Player Remote
+ *
+ * @author chenlongcould (modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class MusicPlayerRemote {
@@ -42,52 +47,81 @@ public class MusicPlayerRemote {
     @Nullable
     public static MusicService musicService;
 
-    private static final WeakHashMap<Context, ServiceBinder> mConnectionMap = new WeakHashMap<>();
+    /**
+     * 所有绑定的服务集合
+     */
+    private static final WeakHashMap<Context, MyServiceConnection> mConnectionMap = new WeakHashMap<>();
 
-    public static ServiceToken bindToService(@NonNull final Context context,
+    /**
+     * 绑定服务
+     *
+     * @param context  activity
+     * @param callback serviceConnection
+     *
+     * @return token
+     */
+    public static ServiceToken bindToService(@NonNull final Activity context,
                                              final ServiceConnection callback) {
-        Activity realActivity = ((Activity) context).getParent();
+        Activity realActivity = context.getParent();
         if (realActivity == null) {
-            realActivity = (Activity) context;
+            realActivity = context;
         }
 
         final ContextWrapper contextWrapper = new ContextWrapper(realActivity);
+
+        // start service
         contextWrapper.startService(new Intent(contextWrapper, MusicService.class));
 
-        final ServiceBinder binder = new ServiceBinder(callback);
+        final MyServiceConnection binder = new MyServiceConnection(callback);
 
+        // bind service
         if (contextWrapper.bindService(new Intent().setClass(contextWrapper, MusicService.class), binder, Context.BIND_AUTO_CREATE)) {
+            // 存储绑定 binder
             mConnectionMap.put(contextWrapper, binder);
             return new ServiceToken(contextWrapper);
         }
         return null;
     }
 
+    /**
+     * 取消绑定服务
+     *
+     * @param token token
+     */
     public static void unbindFromService(@Nullable final ServiceToken token) {
         if (token == null) {
             return;
         }
         final ContextWrapper mContextWrapper = token.mWrappedContext;
-        final ServiceBinder mBinder = mConnectionMap.remove(mContextWrapper);
-        if (mBinder == null) {
+
+        // 从集合中移除并获取对应的 connection
+        final MyServiceConnection myServiceConnection = mConnectionMap.remove(mContextWrapper);
+        if (myServiceConnection == null) {
             return;
         }
-        mContextWrapper.unbindService(mBinder);
+        mContextWrapper.unbindService(myServiceConnection);
         if (mConnectionMap.isEmpty()) {
             musicService = null;
         }
     }
 
-    public static final class ServiceBinder implements ServiceConnection {
+    /**
+     * 包装 connection
+     */
+    public static final class MyServiceConnection implements ServiceConnection {
+
         private final ServiceConnection mCallback;
 
-        public ServiceBinder(final ServiceConnection callback) {
+        public MyServiceConnection(final ServiceConnection callback) {
             mCallback = callback;
         }
 
+        /**
+         * connect -> callback.connect -> AbsMusicServiceActivity.connect
+         */
         @Override
         public void onServiceConnected(final ComponentName className, final IBinder service) {
-            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+            final MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             musicService = binder.getService();
             if (mCallback != null) {
                 mCallback.onServiceConnected(className, service);
@@ -103,6 +137,10 @@ public class MusicPlayerRemote {
         }
     }
 
+    /**
+     * 封装 contextWrapper
+     * */
+    @SuppressWarnings("WeakerAccess")
     public static final class ServiceToken {
         public ContextWrapper mWrappedContext;
 
@@ -178,7 +216,7 @@ public class MusicPlayerRemote {
     public static void openQueue(final List<Song> queue, final int startPosition, final boolean startPlaying) {
         if (!tryToHandleOpenPlayingQueue(queue, startPosition, startPlaying) && musicService != null) {
             musicService.openQueue(queue, startPosition, startPlaying);
-            if (!PreferenceUtil.getInstance(musicService).rememberShuffle()){
+            if (!PreferenceUtil.getInstance(musicService).rememberShuffle()) {
                 setShuffleMode(MusicService.SHUFFLE_MODE_NONE);
             }
         }
@@ -443,27 +481,22 @@ public class MusicPlayerRemote {
             }
         }
     }
+
     @Nullable
-    private static String getFilePathFromUri(Context context, Uri uri)
-    {
-        Cursor cursor = null;
+    private static String getFilePathFromUri(Context context, Uri uri) {
+
         final String column = "_data";
         final String[] projection = {
                 column
         };
-
-        try {
-            cursor = context.getContentResolver().query(uri, projection, null, null,
-                    null);
+        try (Cursor cursor = context.getContentResolver().query(uri, projection, null, null,
+                null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 final int column_index = cursor.getColumnIndexOrThrow(column);
                 return cursor.getString(column_index);
             }
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        } finally {
-            if (cursor != null)
-                cursor.close();
+            Log.e(TAG, String.valueOf(e.getMessage()));
         }
         return null;
     }
