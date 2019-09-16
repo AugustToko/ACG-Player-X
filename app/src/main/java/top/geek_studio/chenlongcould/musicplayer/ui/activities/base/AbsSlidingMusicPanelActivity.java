@@ -5,13 +5,11 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.PathInterpolator;
-import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
@@ -41,19 +39,43 @@ import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
  */
 public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
 
+    /**
+     * TAG
+     */
     private static final String TAG = "AbsSlidingMusicPanel";
+
     @BindView(R.id.sliding_layout)
     SlidingUpPanelLayout slidingUpPanelLayout;
 
     private int navigationbarColor;
+
+    /**
+     * 卡片后台颜色
+     */
     private int taskColor;
+
+    /**
+     * 是否亮色状态栏
+     */
     private boolean lightStatusbar;
 
+    /**
+     * 存储正在播放的音乐的数据
+     * */
     private NowPlayingScreen currentNowPlayingScreen;
+
     private AbsPlayerFragment playerFragment;
+
     private MiniPlayerFragment miniPlayerFragment;
 
+    /**
+     * 值动画
+     * */
     private ValueAnimator navigationBarColorAnimator;
+
+    /**
+     * ARGB
+     * */
     private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
 
     /**
@@ -61,9 +83,10 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      */
     private View mRootView;
 
+    /**
+     * 覆盖模糊
+     * */
     private RealtimeBlurView realtimeBlurView;
-
-    private boolean pressBack = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +99,12 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         setContentView(mRootView);
         ButterKnife.bind(this);
 
+        // 获取上次播放得数据
         currentNowPlayingScreen = PreferenceUtil.getInstance(this).getNowPlayingScreen();
+
         Fragment fragment; // must implement AbsPlayerFragment
+
+        // 上拉 Fragment 模式(样式)
         switch (currentNowPlayingScreen) {
             case FLAT:
                 fragment = new FlatPlayerFragment();
@@ -87,15 +114,21 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
                 fragment = new CardPlayerFragment();
                 break;
         }
+
+        // 上拉内容
         getSupportFragmentManager().beginTransaction().replace(R.id.player_fragment_container, fragment).commit();
         getSupportFragmentManager().executePendingTransactions();
 
         playerFragment = (AbsPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.player_fragment_container);
         miniPlayerFragment = (MiniPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.mini_player_fragment);
 
-        //noinspection ConstantConditions
-        miniPlayerFragment.getView().setOnClickListener(v -> expandPanel());
+        // 设置点击展开 fragment
+        if (miniPlayerFragment != null) {
+            final View view = miniPlayerFragment.getView();
+            if (view != null) view.setOnClickListener(v -> expandPanel());
+        }
 
+        // TODO: ？
         slidingUpPanelLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -115,26 +148,36 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
                 }
             }
         });
+
+        // 添加监听
         slidingUpPanelLayout.addPanelSlideListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // TODO: ?
         if (currentNowPlayingScreen != PreferenceUtil.getInstance(this).getNowPlayingScreen()) {
             postRecreate();
         }
     }
 
+    /**
+     * 设置拖动视图
+     * */
     public void setAntiDragView(View antiDragView) {
         slidingUpPanelLayout.setAntiDragView(antiDragView);
     }
 
+    /**
+     * 创建 view
+     * */
     protected abstract View createContentView();
 
     @Override
     public void onServiceConnected() {
         super.onServiceConnected();
+
         if (!MusicPlayerRemote.getPlayingQueue().isEmpty()) {
             slidingUpPanelLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -152,15 +195,25 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         hideBottomBar(MusicPlayerRemote.getPlayingQueue().isEmpty());
     }
 
+    /**
+     * 当面板滑动时回调
+     *
+     * @param panel 面板
+     * @param slideOffset 偏移值
+     * */
     @Override
     public void onPanelSlide(View panel, @FloatRange(from = 0, to = 1) float slideOffset) {
-        Log.d(TAG, "onPanelSlide: " + slideOffset);
 
+        // 设置模糊
         setBlur(slideOffset, true);
 
+        // 设置根 view 位置偏移
         translationRootView(slideOffset, 'y');
 
+        // 设置 mini 播放器不透明度
         setMiniPlayerAlphaProgress(slideOffset);
+
+        // 取消动画，重新执行新的颜色过渡
         if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel();
         super.setNavigationbarColor((int) argbEvaluator.evaluate(slideOffset, navigationbarColor, playerFragment.getPaletteColor()));
     }
@@ -209,18 +262,29 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
             mRootView.findViewById(R.id.content_container).setTranslationX(0 + slideOffset * 120);
     }
 
+    /**
+     * 滑动面板状态改变
+     *
+     * @param panel 面板
+     * @param previousState 之前状态
+     * @param newState 现在状态
+     * */
     @Override
     public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
         switch (newState) {
             case COLLAPSED:
-                Log.d(TAG, "onPanelStateChanged: COLLAPSED");
+//                Log.d(TAG, "onPanelStateChanged: COLLAPSED");
                 onPanelCollapsed(panel);
+
+                // 检测模糊
                 if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
                     realtimeBlurView.setVisibility(View.GONE);
                 break;
             case EXPANDED:
-                Log.d(TAG, "onPanelStateChanged: EXPANDED");
+//                Log.d(TAG, "onPanelStateChanged: EXPANDED");
                 onPanelExpanded(panel);
+
+                // 检测模糊
                 if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
                     realtimeBlurView.setVisibility(View.VISIBLE);
                 break;
@@ -230,6 +294,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         }
     }
 
+    /**
+     * 面板被折叠
+     *
+     * @param panel 面板
+     * */
     public void onPanelCollapsed(View panel) {
         // restore values
         super.setLightStatusbar(lightStatusbar);
@@ -241,6 +310,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         playerFragment.onHide();
     }
 
+    /**
+     * 面板展开
+     *
+     * @param panel 面板
+     * */
     public void onPanelExpanded(View panel) {
         // setting fragments values
         int playerFragmentColor = playerFragment.getPaletteColor();
@@ -253,6 +327,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         playerFragment.onShow();
     }
 
+    /**
+     * 设置 mini player alpha 值, 并进行判断是否需要隐藏
+     *
+     * @param progress 值
+     * */
     private void setMiniPlayerAlphaProgress(@FloatRange(from = 0, to = 1) float progress) {
         if (miniPlayerFragment.getView() == null) return;
         float alpha = 1 - progress;
@@ -261,19 +340,34 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         miniPlayerFragment.getView().setVisibility(alpha == 0 ? View.GONE : View.VISIBLE);
     }
 
-
+    /**
+     * 获取面板状态
+     *
+     * @return 面板状态
+     * */
     public SlidingUpPanelLayout.PanelState getPanelState() {
         return slidingUpPanelLayout == null ? null : slidingUpPanelLayout.getPanelState();
     }
 
+    /**
+     * 折叠面板
+     * */
     public void collapsePanel() {
         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
     }
 
+    /**
+     * 展开面板
+     * */
     public void expandPanel() {
         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
     }
 
+    /**
+     * 隐藏上拉
+     *
+     * @param hide 隐藏上拉
+     * */
     public void hideBottomBar(final boolean hide) {
         if (hide) {
             slidingUpPanelLayout.setPanelHeight(0);
@@ -291,10 +385,12 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         return slidingMusicPanelLayout;
     }
 
+    /**
+     * 返回键
+     * */
     @Override
     public void onBackPressed() {
-        if (!handleBackPress())
-            super.onBackPressed();
+        if (!handleBackPress()) super.onBackPressed();
     }
 
     /**
@@ -311,6 +407,9 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         return false;
     }
 
+    /**
+     * 调色盘颜色变更回调
+     * */
     @Override
     public void onPaletteColorChanged() {
         if (getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
@@ -320,6 +419,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         }
     }
 
+    /**
+     * 设置状态颜色模式
+     *
+     * @param enabled isLight
+     * */
     @Override
     public void setLightStatusbar(boolean enabled) {
         lightStatusbar = enabled;
@@ -328,6 +432,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         }
     }
 
+    /**
+     * 设置导航栏颜色
+     *
+     * @param color 颜色
+     * */
     @Override
     public void setNavigationbarColor(int color) {
         this.navigationbarColor = color;
@@ -337,6 +446,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
         }
     }
 
+    /**
+     * 导航栏颜色动画
+     *
+     * @param color 目标色
+     * */
     private void animateNavigationBarColor(int color) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel();
