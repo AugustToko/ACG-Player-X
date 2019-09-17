@@ -2,32 +2,10 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import top.geek_studio.chenlongcould.musicplayer.adapter.MusicLibraryPagerAdapter;
-import top.geek_studio.chenlongcould.musicplayer.dialogs.CreatePlaylistDialog;
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
-import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.ArtistsFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.SongsFragment;
-import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.Util;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,18 +14,43 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
+
 import com.afollestad.materialcab.MaterialCab;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.tabs.TabLayout;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.common.ATHToolbarActivity;
 import com.kabouzeid.appthemehelper.util.TabLayoutUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.adapter.MusicLibraryPagerAdapter;
+import top.geek_studio.chenlongcould.musicplayer.dialogs.CreatePlaylistDialog;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
+import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
+import top.geek_studio.chenlongcould.musicplayer.preferences.LibraryPreferenceDialog;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.ArtistsFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.SongsFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.Util;
 
 public class LibraryFragment extends AbsMainActivityFragment implements CabHolder, MainActivity.MainActivityFragmentCallbacks, ViewPager.OnPageChangeListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -142,6 +145,22 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
             pager.setCurrentItem(PreferenceUtil.getInstance(getContext()).getLastPage());
         }
         pager.addOnPageChangeListener(this);
+
+        final FragmentManager fragmentManager = getFragmentManager();
+        final LibraryPreferenceDialog libraryPreferenceDialog = LibraryPreferenceDialog.newInstance();
+
+        if (fragmentManager != null) {
+            for (int i = 0; i < tabs.getTabCount(); i++) {
+                final TabLayout.Tab tab = tabs.getTabAt(i);
+                if (tab != null) {
+                    ((View) tab.view).setOnLongClickListener(v -> {
+                        // DialogFragment 已经自行实现消失后的移除事务
+                        libraryPreferenceDialog.show(fragmentManager, "LibraryPreferenceDialog");
+                        return false;
+                    });
+                }
+            }
+        }
     }
 
     private void updateTabVisibility() {

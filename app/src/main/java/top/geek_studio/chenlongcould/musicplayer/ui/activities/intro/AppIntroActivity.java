@@ -7,6 +7,8 @@ import com.heinrichreimersoftware.materialintro.slide.SimpleSlide;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 /**
+ * Intro
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class AppIntroActivity extends IntroActivity {
@@ -29,6 +31,7 @@ public class AppIntroActivity extends IntroActivity {
                 .backgroundDark(R.color.md_blue_grey_200)
                 .layout(R.layout.fragment_simple_slide_large_image)
                 .build());
+
         addSlide(new SimpleSlide.Builder()
                 .title(R.string.label_playing_queue)
                 .description(R.string.open_playing_queue_instruction)
@@ -37,6 +40,7 @@ public class AppIntroActivity extends IntroActivity {
                 .backgroundDark(R.color.md_deep_purple_600)
                 .layout(R.layout.fragment_simple_slide_large_image)
                 .build());
+
         addSlide(new SimpleSlide.Builder()
                 .title(R.string.label_playing_queue)
                 .description(R.string.rearrange_playing_queue_instruction)

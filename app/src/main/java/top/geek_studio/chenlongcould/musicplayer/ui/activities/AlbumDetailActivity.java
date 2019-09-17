@@ -6,6 +6,7 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -41,6 +42,7 @@ import top.geek_studio.chenlongcould.musicplayer.misc.SimpleObservableScrollView
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Album;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.preferences.LibraryPreferenceDialog;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.AbsTagEditorActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.AlbumTagEditorActivity;
@@ -125,7 +127,8 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
         setUpToolBar();
         setUpViews();
 
-        getSupportLoaderManager().initLoader(LOADER_ID, getIntent().getExtras(), this);
+//        getSupportLoaderManager().initLoader(LOADER_ID, getIntent().getExtras(), this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, getIntent().getExtras(), this);
     }
 
     @Override
@@ -236,7 +239,8 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
     }
 
     private void reload() {
-        getSupportLoaderManager().restartLoader(LOADER_ID, getIntent().getExtras(), this);
+//        getSupportLoaderManager().restartLoader(LOADER_ID, getIntent().getExtras(), this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, getIntent().getExtras(), this);
     }
 
     @Override
@@ -413,7 +417,9 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
             loadWiki();
         }
 
-        getSupportActionBar().setTitle(album.getTitle());
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setTitle(album.getTitle());
+
         artistTextView.setText(album.getArtistName());
         songCountTextView.setText(MusicUtil.getSongCountString(this, album.getSongCount()));
         durationTextView.setText(MusicUtil.getReadableDurationString(MusicUtil.getTotalDuration(album.songs)));
@@ -422,23 +428,25 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
         adapter.swapDataSet(album.songs);
     }
 
+    @NonNull
     private Album getAlbum() {
         if (album == null) album = new Album();
         return album;
     }
 
+    @NonNull
     @Override
     public Loader<Album> onCreateLoader(int id, Bundle args) {
         return new AsyncAlbumLoader(this, args.getInt(EXTRA_ALBUM_ID));
     }
 
     @Override
-    public void onLoadFinished(Loader<Album> loader, Album data) {
+    public void onLoadFinished(@NonNull Loader<Album> loader, Album data) {
         setAlbum(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<Album> loader) {
+    public void onLoaderReset(@NonNull Loader<Album> loader) {
         this.album = new Album();
         adapter.swapDataSet(album.songs);
     }
