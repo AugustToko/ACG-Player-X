@@ -25,15 +25,21 @@ import com.afollestad.materialdialogs.internal.ThemeSingleton;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.SkuDetails;
 import com.anjlab.android.iab.v3.TransactionDetails;
+import com.kabouzeid.appthemehelper.ThemeStore;
+import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
+ * 捐赠
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 //TODO: 修改
@@ -42,7 +48,7 @@ public class DonationsDialog extends DialogFragment implements BillingProcessor.
 
     private static final int DONATION_PRODUCT_IDS = R.array.donation_ids;
 
-//    private BillingProcessor billingProcessor;
+    private BillingProcessor billingProcessor;
 
     private AsyncTask skuDetailsLoadAsyncTask;
 
@@ -68,14 +74,14 @@ public class DonationsDialog extends DialogFragment implements BillingProcessor.
 
     private void donate(int i) {
         final String[] ids = getResources().getStringArray(DONATION_PRODUCT_IDS);
-//        billingProcessor.purchase(getActivity(), ids[i]);
+        billingProcessor.purchase(getActivity(), ids[i]);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (!billingProcessor.handleActivityResult(requestCode, resultCode, data)) {
-//            super.onActivityResult(requestCode, resultCode, data);
-//        }
+        if (!billingProcessor.handleActivityResult(requestCode, resultCode, data)) {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     @Override
@@ -101,9 +107,9 @@ public class DonationsDialog extends DialogFragment implements BillingProcessor.
 
     @Override
     public void onDestroy() {
-//        if (billingProcessor != null) {
-//            billingProcessor.release();
-//        }
+        if (billingProcessor != null) {
+            billingProcessor.release();
+        }
         if (skuDetailsLoadAsyncTask != null) {
             skuDetailsLoadAsyncTask.cancel(true);
         }
@@ -141,7 +147,7 @@ public class DonationsDialog extends DialogFragment implements BillingProcessor.
             DonationsDialog dialog = donationDialogWeakReference.get();
             if (dialog != null) {
                 final String[] ids = dialog.getResources().getStringArray(DONATION_PRODUCT_IDS);
-//                return dialog.billingProcessor.getPurchaseListingDetails(new ArrayList<>(Arrays.asList(ids)));
+                return dialog.billingProcessor.getPurchaseListingDetails(new ArrayList<>(Arrays.asList(ids)));
             }
             cancel(false);
             return null;
@@ -192,22 +198,19 @@ public class DonationsDialog extends DialogFragment implements BillingProcessor.
             viewHolder.text.setText(skuDetails.description);
             viewHolder.price.setText(skuDetails.priceText);
 
-//            final boolean purchased = donationsDialog.billingProcessor.isPurchased(skuDetails.productId);
-//            int titleTextColor = purchased ? ATHUtil.resolveColor(getContext(), android.R.attr.textColorHint) : ThemeStore.textColorPrimary(getContext());
-//            int contentTextColor = purchased ? titleTextColor : ThemeStore.textColorSecondary(getContext());
-//
-            //noinspection ResourceAsColor
-//            viewHolder.title.setTextColor(titleTextColor);
-            //noinspection ResourceAsColor
-//            viewHolder.text.setTextColor(contentTextColor);
-            //noinspection ResourceAsColor
-//            viewHolder.price.setTextColor(titleTextColor);
+            final boolean purchased = donationsDialog.billingProcessor.isPurchased(skuDetails.productId);
+            int titleTextColor = purchased ? ATHUtil.resolveColor(getContext(), android.R.attr.textColorHint) : ThemeStore.textColorPrimary(getContext());
+            int contentTextColor = purchased ? titleTextColor : ThemeStore.textColorSecondary(getContext());
 
-//            strikeThrough(viewHolder.title, purchased);
-//            strikeThrough(viewHolder.text, purchased);
-//            strikeThrough(viewHolder.price, purchased);
-//
-//            convertView.setOnTouchListener((v, event) -> purchased);
+            viewHolder.title.setTextColor(titleTextColor);
+            viewHolder.text.setTextColor(contentTextColor);
+            viewHolder.price.setTextColor(titleTextColor);
+
+            strikeThrough(viewHolder.title, purchased);
+            strikeThrough(viewHolder.text, purchased);
+            strikeThrough(viewHolder.price, purchased);
+
+            convertView.setOnTouchListener((v, event) -> purchased);
 
             convertView.setOnClickListener(v -> donationsDialog.donate(position));
 

@@ -30,11 +30,13 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
+ * 搜索媒体文件夹
+ *
  * @author Aidan Follestad (afollestad), modified by Karim Abou Zeid
  */
 public class ScanMediaFolderChooserDialog extends DialogFragment implements MaterialDialog.ListCallback {
 
-    String initialPath = PreferenceUtil.getInstance(getContext()).getStartDirectory().getAbsolutePath();
+    private final String initialPath = PreferenceUtil.getInstance(getContext()).getStartDirectory().getAbsolutePath();
     private File parentFolder;
     private File[] parentContents;
     private boolean canGoUp = false;
@@ -44,7 +46,7 @@ public class ScanMediaFolderChooserDialog extends DialogFragment implements Mate
     }
 
     private static void scanPaths(@NonNull WeakReference<Activity> activityWeakReference, @NonNull Context applicationContext, @Nullable String[] toBeScanned) {
-        Activity activity = activityWeakReference.get();
+        final Activity activity = activityWeakReference.get();
         if (toBeScanned == null || toBeScanned.length < 1) {
             Toast.makeText(applicationContext, R.string.nothing_to_scan, Toast.LENGTH_SHORT).show();
         } else {
@@ -59,7 +61,7 @@ public class ScanMediaFolderChooserDialog extends DialogFragment implements Mate
             }
             return new String[]{};
         }
-        String[] results = new String[parentContents.length + (canGoUp ? 1 : 0)];
+        final String[] results = new String[parentContents.length + (canGoUp ? 1 : 0)];
         if (canGoUp) {
             results[0] = "..";
         }

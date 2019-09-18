@@ -7,26 +7,29 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebView;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.internal.ThemeSingleton;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+
 /**
+ * Dialog 变更对话框
+ *
  * @author Aidan Follestad (afollestad)
  */
 public class ChangelogDialog extends DialogFragment {
@@ -35,10 +38,12 @@ public class ChangelogDialog extends DialogFragment {
         return new ChangelogDialog();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @SuppressLint("InflateParams")
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+
         final View customView;
         try {
             customView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_web_view, null);
@@ -50,7 +55,7 @@ public class ChangelogDialog extends DialogFragment {
                     .positiveText(android.R.string.ok)
                     .build();
         }
-        MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
+        final MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
                 .title(R.string.changelog)
                 .customView(customView, false)
                 .positiveText(android.R.string.ok)
@@ -65,7 +70,7 @@ public class ChangelogDialog extends DialogFragment {
             // Load from phonograph-changelog.html in the assets folder
             StringBuilder buf = new StringBuilder();
             InputStream json = getActivity().getAssets().open("phonograph-changelog.html");
-            BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
+            final BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
             String str;
             while ((str = in.readLine()) != null)
                 buf.append(str);

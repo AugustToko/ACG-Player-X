@@ -3,15 +3,19 @@ package top.geek_studio.chenlongcould.musicplayer.dialogs;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 
 /**
+ * 歌曲分享 dialog
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongShareDialog extends DialogFragment {

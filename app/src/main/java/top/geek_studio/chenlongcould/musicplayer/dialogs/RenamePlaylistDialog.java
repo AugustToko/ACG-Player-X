@@ -11,16 +11,21 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
 
 /**
+ * Dialog 用于重命名播放列表
+ *
  * @author Karim Abou Zeid (kabouzeid), Aidan Follestad (afollestad)
  */
 public class RenamePlaylistDialog extends DialogFragment {
 
+    /**
+     * TAG for {@link Bundle}
+     */
     private static final String PLAYLIST_ID = "playlist_id";
 
     @NonNull
     public static RenamePlaylistDialog create(long playlistId) {
-        RenamePlaylistDialog dialog = new RenamePlaylistDialog();
-        Bundle args = new Bundle();
+        final RenamePlaylistDialog dialog = new RenamePlaylistDialog();
+        final Bundle args = new Bundle();
         args.putLong(PLAYLIST_ID, playlistId);
         dialog.setArguments(args);
         return dialog;

@@ -29,7 +29,8 @@ import top.geek_studio.chenlongcould.musicplayer.glide.audiocover.AudioFileCover
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 
-public class SongFileAdapter extends AbsMultiSelectAdapter<SongFileAdapter.ViewHolder, File> implements FastScrollRecyclerView.SectionedAdapter {
+public class SongFileAdapter extends AbsMultiSelectAdapter<SongFileAdapter.ViewHolder, File>
+        implements FastScrollRecyclerView.SectionedAdapter {
 
     private static final int FILE = 0;
     private static final int FOLDER = 1;

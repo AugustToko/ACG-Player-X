@@ -9,6 +9,8 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import top.geek_studio.chenlongcould.musicplayer.model.lyrics.Lyrics;
 
 /**
+ * 歌词对话框
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class LyricsDialog extends DialogFragment {

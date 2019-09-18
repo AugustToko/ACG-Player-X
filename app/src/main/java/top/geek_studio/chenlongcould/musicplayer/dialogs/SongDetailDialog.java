@@ -29,6 +29,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * 歌曲详情 Dialog
+ *
  * @author Karim Abou Zeid (kabouzeid), Aidan Follestad (afollestad)
  */
 public class SongDetailDialog extends DialogFragment {

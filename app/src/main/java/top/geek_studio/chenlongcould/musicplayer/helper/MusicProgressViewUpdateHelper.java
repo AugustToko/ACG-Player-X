@@ -5,6 +5,8 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 /**
+ * 进度条
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class MusicProgressViewUpdateHelper extends Handler {
@@ -14,9 +16,36 @@ public class MusicProgressViewUpdateHelper extends Handler {
     private static final int UPDATE_INTERVAL_PLAYING = 1000;
     private static final int UPDATE_INTERVAL_PAUSED = 500;
 
+    /**
+     * 回调
+     */
     private Callback callback;
+
     private int intervalPlaying;
+
     private int intervalPaused;
+
+    /**
+     * 构造
+     *
+     * @param callback 回调
+     */
+    public MusicProgressViewUpdateHelper(Callback callback) {
+        this.callback = callback;
+        this.intervalPlaying = UPDATE_INTERVAL_PLAYING;
+        this.intervalPaused = UPDATE_INTERVAL_PAUSED;
+    }
+
+    /**
+     * 构造
+     *
+     * @param callback 回调
+     */
+    public MusicProgressViewUpdateHelper(Callback callback, int intervalPlaying, int intervalPaused) {
+        this.callback = callback;
+        this.intervalPlaying = intervalPlaying;
+        this.intervalPaused = intervalPaused;
+    }
 
     public void start() {
         queueNextRefresh(1);
@@ -24,18 +53,6 @@ public class MusicProgressViewUpdateHelper extends Handler {
 
     public void stop() {
         removeMessages(CMD_REFRESH_PROGRESS_VIEWS);
-    }
-
-    public MusicProgressViewUpdateHelper(Callback callback) {
-        this.callback = callback;
-        this.intervalPlaying = UPDATE_INTERVAL_PLAYING;
-        this.intervalPaused = UPDATE_INTERVAL_PAUSED;
-    }
-
-    public MusicProgressViewUpdateHelper(Callback callback, int intervalPlaying, int intervalPaused) {
-        this.callback = callback;
-        this.intervalPlaying = intervalPlaying;
-        this.intervalPaused = intervalPaused;
     }
 
     @Override
@@ -46,6 +63,9 @@ public class MusicProgressViewUpdateHelper extends Handler {
         }
     }
 
+    /**
+     * 刷新 view
+     * */
     private int refreshProgressViews() {
         final int progressMillis = MusicPlayerRemote.getSongProgressMillis();
         final int totalMillis = MusicPlayerRemote.getSongDurationMillis();
@@ -67,6 +87,9 @@ public class MusicProgressViewUpdateHelper extends Handler {
         sendMessageDelayed(message, delay);
     }
 
+    /**
+     * 回调
+     * */
     public interface Callback {
         void onUpdateProgressViews(int progress, int total);
     }

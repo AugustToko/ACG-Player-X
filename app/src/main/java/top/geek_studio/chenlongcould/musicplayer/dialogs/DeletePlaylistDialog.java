@@ -15,21 +15,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Dialog 删除播放列表对话框
+ *
+ * @author chenlongcould (Modify, Add notes (Chinese))
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class DeletePlaylistDialog extends DialogFragment {
 
     @NonNull
     public static DeletePlaylistDialog create(Playlist playlist) {
-        List<Playlist> list = new ArrayList<>();
+        final List<Playlist> list = new ArrayList<>();
         list.add(playlist);
         return create(list);
     }
 
     @NonNull
-    public static DeletePlaylistDialog create(List<Playlist> playlists) {
-        DeletePlaylistDialog dialog = new DeletePlaylistDialog();
-        Bundle args = new Bundle();
+    public static DeletePlaylistDialog create(final List<Playlist> playlists) {
+        final DeletePlaylistDialog dialog = new DeletePlaylistDialog();
+        final Bundle args = new Bundle();
         args.putParcelableArrayList("playlists", new ArrayList<>(playlists));
         dialog.setArguments(args);
         return dialog;
@@ -37,8 +40,7 @@ public class DeletePlaylistDialog extends DialogFragment {
 
     @NonNull
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        //noinspection unchecked
+    public Dialog onCreateDialog(final Bundle savedInstanceState) {
         final List<Playlist> playlists = getArguments().getParcelableArrayList("playlists");
         int title;
         CharSequence content;
