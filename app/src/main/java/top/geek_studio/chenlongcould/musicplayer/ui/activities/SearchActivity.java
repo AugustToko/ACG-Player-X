@@ -33,9 +33,19 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class SearchActivity extends AbsMusicServiceActivity implements SearchView.OnQueryTextListener, LoaderManager.LoaderCallbacks<List<Object>> {
+/**
+ * 搜索页面
+ *
+ * @author chenlongcould (Modify)
+ */
+public class SearchActivity extends AbsMusicServiceActivity
+        implements SearchView.OnQueryTextListener, LoaderManager.LoaderCallbacks<List<Object>> {
 
+    /**
+     * for {@link #onSaveInstanceState}
+     * */
     public static final String QUERY = "query";
+
     private static final int LOADER_ID = LoaderIds.SEARCH_ACTIVITY;
 
     @BindView(R.id.recycler_view)
@@ -83,7 +93,8 @@ public class SearchActivity extends AbsMusicServiceActivity implements SearchVie
             query = savedInstanceState.getString(QUERY);
         }
 
-        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+//        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -138,13 +149,15 @@ public class SearchActivity extends AbsMusicServiceActivity implements SearchVie
 
     private void search(@NonNull String query) {
         this.query = query;
-        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
+//        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
     public void onMediaStoreChanged() {
         super.onMediaStoreChanged();
-        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
+//        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -166,18 +179,19 @@ public class SearchActivity extends AbsMusicServiceActivity implements SearchVie
         }
     }
 
+    @NonNull
     @Override
     public Loader<List<Object>> onCreateLoader(int id, Bundle args) {
         return new AsyncSearchResultLoader(this, query);
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Object>> loader, List<Object> data) {
+    public void onLoadFinished(@NonNull Loader<List<Object>> loader, List<Object> data) {
         adapter.swapDataSet(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Object>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<Object>> loader) {
         adapter.swapDataSet(Collections.emptyList());
     }
 

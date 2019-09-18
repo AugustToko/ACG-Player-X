@@ -15,6 +15,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.afollestad.materialcab.MaterialCab;
+import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
+import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator;
+import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
+import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
+import com.kabouzeid.appthemehelper.ThemeStore;
+import com.kabouzeid.chenlongcould.musicplayer.R;
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.OrderablePlaylistSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.PlaylistSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter;
@@ -32,21 +45,9 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMu
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
-import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
-import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator;
-import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
-import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
-import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
-import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity implements CabHolder, LoaderManager.LoaderCallbacks<List<Song>> {
+public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
+        implements CabHolder, LoaderManager.LoaderCallbacks<List<Song>> {
 
     private static final int LOADER_ID = LoaderIds.PLAYLIST_DETAIL_ACTIVITY;
 
@@ -237,19 +238,20 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity impleme
         super.onDestroy();
     }
 
+    @NonNull
     @Override
     public Loader<List<Song>> onCreateLoader(int id, Bundle args) {
         return new AsyncPlaylistSongLoader(this, playlist);
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Song>> loader, List<Song> data) {
+    public void onLoadFinished(@NonNull Loader<List<Song>> loader, List<Song> data) {
         if (adapter != null)
             adapter.swapDataSet(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Song>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<Song>> loader) {
         if (adapter != null)
             adapter.swapDataSet(new ArrayList<>());
     }

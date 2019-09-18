@@ -37,7 +37,8 @@ import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
  * Do not use {@link #setContentView(int)}. Instead wrap your layout with
  * {@link #wrapSlidingMusicPanel(int)} first and then return it in {@link #createContentView()}
  */
-public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
+public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity
+        implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
 
     /**
      * TAG

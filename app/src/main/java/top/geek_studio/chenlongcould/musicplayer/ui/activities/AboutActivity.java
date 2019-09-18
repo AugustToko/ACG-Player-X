@@ -30,6 +30,7 @@ import de.psdev.licensesdialog.LicensesDialog;
 /**
  * About 页面
  *
+ * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
 @SuppressWarnings("FieldCanBeLocal")

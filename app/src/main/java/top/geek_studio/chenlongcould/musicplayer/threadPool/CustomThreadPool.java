@@ -16,9 +16,9 @@ public final class CustomThreadPool {
     private ThreadPoolExecutor mThreadPoolExec;
 
     private CustomThreadPool() {
-        int coreNum = Runtime.getRuntime().availableProcessors();
-        int maxPoolSize = coreNum * 2;
-        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
+        final int coreNum = Runtime.getRuntime().availableProcessors();
+        final int maxPoolSize = coreNum * 2;
+        final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
         mThreadPoolExec = new ThreadPoolExecutor(coreNum, maxPoolSize, KEEP_ALIVE, TimeUnit.SECONDS, workQueue);
     }
 
