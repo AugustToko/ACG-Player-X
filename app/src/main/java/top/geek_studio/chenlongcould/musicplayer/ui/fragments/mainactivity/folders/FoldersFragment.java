@@ -28,29 +28,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.afollestad.materialcab.MaterialCab;
 import com.afollestad.materialdialogs.MaterialDialog;
-import top.geek_studio.chenlongcould.musicplayer.adapter.SongFileAdapter;
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
-import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongsMenuHelper;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
-import top.geek_studio.chenlongcould.musicplayer.misc.DialogAsyncTask;
-import top.geek_studio.chenlongcould.musicplayer.misc.UpdateToastMediaScannerCompletionListener;
-import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
-import top.geek_studio.chenlongcould.musicplayer.util.FileUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
-import top.geek_studio.chenlongcould.musicplayer.views.BreadCrumbLayout;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.common.ATHToolbarActivity;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.io.File;
@@ -65,6 +48,23 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.adapter.SongFileAdapter;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
+import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongsMenuHelper;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
+import top.geek_studio.chenlongcould.musicplayer.misc.DialogAsyncTask;
+import top.geek_studio.chenlongcould.musicplayer.misc.UpdateToastMediaScannerCompletionListener;
+import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.FileUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
+import top.geek_studio.chenlongcould.musicplayer.views.BreadCrumbLayout;
 
 public class FoldersFragment extends AbsMainActivityFragment implements MainActivity.MainActivityFragmentCallbacks, CabHolder, BreadCrumbLayout.SelectionCallback, SongFileAdapter.Callbacks, AppBarLayout.OnOffsetChangedListener, LoaderManager.LoaderCallbacks<List<File>> {
 

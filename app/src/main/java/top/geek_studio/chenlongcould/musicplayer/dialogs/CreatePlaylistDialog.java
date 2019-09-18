@@ -2,21 +2,25 @@ package top.geek_studio.chenlongcould.musicplayer.dialogs;
 
 import android.app.Dialog;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import android.text.InputType;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
+
 /**
+ * Dialog 用于创建播放列表
+ *
  * @author Karim Abou Zeid (kabouzeid), Aidan Follestad (afollestad)
  */
 public class CreatePlaylistDialog extends DialogFragment {
@@ -30,16 +34,15 @@ public class CreatePlaylistDialog extends DialogFragment {
 
     @NonNull
     public static CreatePlaylistDialog create(@Nullable Song song) {
-        List<Song> list = new ArrayList<>();
-        if (song != null)
-            list.add(song);
+        final List<Song> list = new ArrayList<>();
+        if (song != null) list.add(song);
         return create(list);
     }
 
     @NonNull
     public static CreatePlaylistDialog create(List<Song> songs) {
-        CreatePlaylistDialog dialog = new CreatePlaylistDialog();
-        Bundle args = new Bundle();
+        final CreatePlaylistDialog dialog = new CreatePlaylistDialog();
+        final Bundle args = new Bundle();
         args.putParcelableArrayList(SONGS, new ArrayList<>(songs));
         dialog.setArguments(args);
         return dialog;

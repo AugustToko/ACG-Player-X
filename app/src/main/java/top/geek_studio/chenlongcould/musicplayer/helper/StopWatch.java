@@ -1,9 +1,13 @@
 package top.geek_studio.chenlongcould.musicplayer.helper;
 
+import androidx.annotation.NonNull;
+
 import java.util.Locale;
 
 /**
  * Simple thread safe stop watch.
+ *
+ * 简单的线程安全秒表。
  *
  * @author Karim Abou Zeid (kabouzeid)
  */
@@ -77,6 +81,7 @@ public class StopWatch {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return String.format(Locale.getDefault(), "%d millis", getElapsedTime());

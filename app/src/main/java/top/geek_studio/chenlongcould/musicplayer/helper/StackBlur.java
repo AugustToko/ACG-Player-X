@@ -25,14 +25,14 @@ import java.util.concurrent.Executors;
  * on the left side of the stack.
  *
  * @author Enrique López Mañas <eenriquelopez@gmail.com>
- *         http://www.neo-tech.es
- *         <p/>
- *         Author of the original algorithm: Mario Klingemann <mario.quasimondo.com>
- *         <p/>
- *         Based heavily on http://vitiy.info/Code/stackblur.cpp
- *         See http://vitiy.info/stackblur-algorithm-multi-threaded-blur-for-cpp/
- * @copyright: Enrique López Mañas
- * @license: Apache License ic_launcher.0
+ * http://www.neo-tech.es
+ * <p/>
+ * Author of the original algorithm: Mario Klingemann <mario.quasimondo.com>
+ * <p/>
+ * Based heavily on http://vitiy.info/Code/stackblur.cpp
+ * See http://vitiy.info/stackblur-algorithm-multi-threaded-blur-for-cpp/
+ * copyright: Enrique López Mañas
+ * license: Apache License ic_launcher.0
  */
 public class StackBlur {
 

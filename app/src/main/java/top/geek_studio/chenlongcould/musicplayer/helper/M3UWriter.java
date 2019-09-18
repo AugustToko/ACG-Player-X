@@ -31,7 +31,7 @@ public class M3UWriter implements M3UConstants {
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 
             bw.write(HEADER);
-            for (Song song : songs) {
+            for (final Song song : songs) {
                 bw.newLine();
                 bw.write(ENTRY + song.duration + DURATION_SEPARATOR + song.artistName + " - " + song.title);
                 bw.newLine();

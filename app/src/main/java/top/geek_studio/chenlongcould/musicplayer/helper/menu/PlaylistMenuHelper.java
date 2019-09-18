@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 用于播放列表 menu
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class PlaylistMenuHelper {

@@ -22,6 +22,8 @@ import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.RingtoneManager;
 
 /**
+ * 用于歌曲 menu
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongMenuHelper {

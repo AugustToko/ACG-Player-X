@@ -13,9 +13,14 @@ package top.geek_studio.chenlongcould.musicplayer.helper;
 
 import android.provider.MediaStore;
 
+import java.nio.file.AccessDeniedException;
+
 /**
  * Holds all of the sort orders for each list type.
  *
+ * 保存每个列表类型的所有排序顺序。
+ *
+ * @author chenlongcould (Modify)
  * @author Andrew Neal (andrewdneal@gmail.com)
  */
 public final class SortOrder {
@@ -23,7 +28,8 @@ public final class SortOrder {
     /**
      * This class is never instantiated
      */
-    public SortOrder() {
+    private SortOrder() throws Exception {
+        throw new Exception("Call private method.");
     }
 
     /**

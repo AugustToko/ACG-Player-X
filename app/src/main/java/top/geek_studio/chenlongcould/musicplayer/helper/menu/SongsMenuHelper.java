@@ -12,6 +12,8 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import java.util.List;
 
 /**
+ * 歌曲菜单帮助类
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongsMenuHelper {
