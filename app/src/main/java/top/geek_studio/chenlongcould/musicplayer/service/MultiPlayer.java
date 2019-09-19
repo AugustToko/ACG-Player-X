@@ -23,9 +23,11 @@ public class MultiPlayer implements Playback, MediaPlayer.OnErrorListener, Media
     public static final String TAG = MultiPlayer.class.getSimpleName();
 
     private MediaPlayer mCurrentMediaPlayer = new MediaPlayer();
+
     private MediaPlayer mNextMediaPlayer;
 
     private Context context;
+
     @Nullable
     private Playback.PlaybackCallbacks callbacks;
 

@@ -29,6 +29,8 @@ import androidx.core.content.ContextCompat;
 import com.kabouzeid.chenlongcould.musicplayer.BuildConfig;
 
 /**
+ * 媒体按钮监听
+ *
  * Used to control headset playback.
  * Single press: pause/resume
  * Double press: next track
