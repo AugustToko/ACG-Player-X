@@ -21,6 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
+ * Dialog 黑名单对话框
+ *
  * @author Aidan Follestad (afollestad), modified by Karim Abou Zeid
  */
 public class BlacklistFolderChooserDialog extends DialogFragment implements MaterialDialog.ListCallback {
@@ -31,7 +33,7 @@ public class BlacklistFolderChooserDialog extends DialogFragment implements Mate
 
     private FolderCallback callback;
 
-    String initialPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+    private String initialPath = Environment.getExternalStorageDirectory().getAbsolutePath();
 
     private String[] getContentsArray() {
         if (parentContents == null) {
@@ -137,7 +139,7 @@ public class BlacklistFolderChooserDialog extends DialogFragment implements Mate
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("current_path", parentFolder.getAbsolutePath());
     }

@@ -4,12 +4,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Audio.AudioColumns;
-import androidx.annotation.NonNull;
 
-import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
 
 public class PlaylistSongLoader {
 

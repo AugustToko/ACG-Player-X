@@ -14,9 +14,12 @@ import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.ShuffleAllP
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 
 /**
+ * 应用快捷方式启动 Activity
+ * <p>
+ * 用于响应快捷方式
+ *
  * @author Adrian Campos
  */
-
 public class AppShortcutLauncherActivity extends Activity {
     public static final String KEY_SHORTCUT_TYPE = "com.kabouzeid.gramophone.appshortcuts.ShortcutType";
 
@@ -32,7 +35,7 @@ public class AppShortcutLauncherActivity extends Activity {
         int shortcutType = SHORTCUT_TYPE_NONE;
 
         // Set shortcutType from the intent extras
-        Bundle extras = getIntent().getExtras();
+        final Bundle extras = getIntent().getExtras();
         if (extras != null) {
             //noinspection WrongConstant
             shortcutType = extras.getInt(KEY_SHORTCUT_TYPE, SHORTCUT_TYPE_NONE);
@@ -59,11 +62,19 @@ public class AppShortcutLauncherActivity extends Activity {
         finish();
     }
 
+    /**
+     * 启动服务, 带有一个 Playlist
+     *
+     * @param shuffleMode 播放模式
+     * @param playlist    播放列表
+     */
     private void startServiceWithPlaylist(int shuffleMode, Playlist playlist) {
-        Intent intent = new Intent(this, MusicService.class);
+        // Intent
+        final Intent intent = new Intent(this, MusicService.class);
         intent.setAction(MusicService.ACTION_PLAY_PLAYLIST);
 
-        Bundle bundle = new Bundle();
+        // 存储数据
+        final Bundle bundle = new Bundle();
         bundle.putParcelable(MusicService.INTENT_EXTRA_PLAYLIST, playlist);
         bundle.putInt(MusicService.INTENT_EXTRA_SHUFFLE_MODE, shuffleMode);
 

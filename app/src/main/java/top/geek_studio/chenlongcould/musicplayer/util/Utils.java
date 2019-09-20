@@ -46,6 +46,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * 工具类
+ *
+ * @author chenlongcould (Modify)
+ */
 @SuppressWarnings("WeakerAccess")
 public final class Utils {
 

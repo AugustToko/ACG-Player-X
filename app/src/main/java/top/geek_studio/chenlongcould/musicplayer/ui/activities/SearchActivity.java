@@ -94,7 +94,6 @@ public class SearchActivity extends AbsMusicServiceActivity
         }
 
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
-//        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
     }
 
     @Override

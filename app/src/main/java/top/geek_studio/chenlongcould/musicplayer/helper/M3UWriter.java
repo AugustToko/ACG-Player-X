@@ -13,6 +13,9 @@ import top.geek_studio.chenlongcould.musicplayer.model.AbsCustomPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 
+/**
+ * M3U 工具类
+ */
 public class M3UWriter implements M3UConstants {
 
     /**

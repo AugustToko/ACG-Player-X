@@ -27,7 +27,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
@@ -70,12 +69,33 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
  */
 public class MainActivity extends AbsSlidingMusicPanelActivity {
 
+    /**
+     * TAG
+     */
     public static final String TAG = MainActivity.class.getSimpleName();
+
+    /**
+     * 标志位, 需要展示 INTRO
+     */
     public static final int APP_INTRO_REQUEST = 100;
+
+    // ...
     public static final int PURCHASE_REQUEST = 101;
 
+    /**
+     * 展示 {@link LibraryFragment}
+     */
     private static final int LIBRARY = 0;
+
+    /**
+     * 展示 {@link FoldersFragment}
+     */
     private static final int FOLDERS = 1;
+
+    /**
+     * Drawer 菜单点击延迟, 用于点击item, 等待 Drawer 收起, 再进行操作
+     */
+    private static final short DRAWER_WAIT_TIME = 220;
 
     @BindView(R.id.navigation_view)
     NavigationView navigationView;
@@ -98,7 +118,34 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     private boolean blockRequestPermissions;
 
+    /**
+     * 用于检测两次返回
+     */
     private boolean pressBack = false;
+
+    private DrawerLayout.DrawerListener drawerListener = new DrawerLayout.DrawerListener() {
+        @Override
+        public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+            // 设置模糊位移
+            MainActivity.super.setBlur(slideOffset, false);
+            MainActivity.super.translationRootView(slideOffset, 'x');
+        }
+
+        @Override
+        public void onDrawerOpened(@NonNull View drawerView) {
+
+        }
+
+        @Override
+        public void onDrawerClosed(@NonNull View drawerView) {
+
+        }
+
+        @Override
+        public void onDrawerStateChanged(int newState) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +170,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
 
         mViewModel = ViewModelProviders.of(this).get(MyViewModel.class);
-
     }
 
     /**
@@ -171,7 +217,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     protected void onResume() {
         super.onResume();
         setUpLive2D();
-
         if (mlAppView != null) mlAppView.onResume();
     }
 
@@ -184,21 +229,29 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         mlAppView = null;
         mLive2DContent = null;
 
-        for (DialogInterface d : mViewModel.dialogs) {
+        for (final DialogInterface d : mViewModel.dialogs) {
             if (d != null) d.dismiss();
         }
 
         mViewModel.dialogs.clear();
     }
 
+    /**
+     * 音乐选择项, 用于判断加载何种 Fragment
+     *
+     * @param key {@link LibraryFragment} and {@link FoldersFragment}
+     */
     private void setMusicChooser(int key) {
+        // 非 PRO 版本禁用文件夹
         if (!App.isProVersion() && key == FOLDERS) {
             Toast.makeText(this, R.string.folder_view_is_a_pro_feature, Toast.LENGTH_LONG).show();
             startActivityForResult(new Intent(this, PurchaseActivity.class), PURCHASE_REQUEST);
             key = LIBRARY;
         }
 
+        // 更新最后选择
         PreferenceUtil.getInstance(this).setLastMusicChooser(key);
+
         switch (key) {
             case LIBRARY:
                 navigationView.setCheckedItem(R.id.nav_library);
@@ -211,12 +264,24 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
-    private void setCurrentFragment(Fragment fragment) {
+    /**
+     * 设置 Fragment
+     *
+     * @param fragment frag
+     */
+    private void setCurrentFragment(@NonNull final Fragment fragment) {
+        // 置换
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, null).commit();
+
+        // 更新
         currentFragment = (MainActivityFragmentCallbacks) fragment;
     }
 
+    /**
+     * 重置当前 Fragment
+     */
     private void restoreCurrentFragment() {
+        // 置换
         currentFragment = (MainActivityFragmentCallbacks) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
     }
 
@@ -243,42 +308,48 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     @Override
     protected View createContentView() {
-        @SuppressLint("InflateParams")
-        View contentView = getLayoutInflater().inflate(R.layout.activity_main_drawer_layout, null);
-        ViewGroup drawerContent = contentView.findViewById(R.id.drawer_content_container);
+        @SuppressLint("InflateParams") final View contentView = getLayoutInflater().inflate(R.layout.activity_main_drawer_layout, null);
+        final ViewGroup drawerContent = contentView.findViewById(R.id.drawer_content_container);
         drawerContent.addView(wrapSlidingMusicPanel(R.layout.activity_main_content));
         return contentView;
     }
 
+    /**
+     * 设置 {@link NavigationView}
+     */
     private void setUpNavigationView() {
+        // 获取强调色
         int accentColor = ThemeStore.accentColor(this);
+
+        // 设置 NavView 选中项的颜色
         NavigationViewUtil.setItemIconColors(navigationView, ATHUtil.resolveColor(this, R.attr.iconColor, ThemeStore.textColorSecondary(this)), accentColor);
         NavigationViewUtil.setItemTextColors(navigationView, ThemeStore.textColorPrimary(this), accentColor);
 
         checkSetUpPro();
+
         navigationView.setNavigationItemSelectedListener(menuItem -> {
             drawerLayout.closeDrawers();
             switch (menuItem.getItemId()) {
                 case R.id.nav_library:
-                    new Handler().postDelayed(() -> setMusicChooser(LIBRARY), 200);
+                    new Handler().postDelayed(() -> setMusicChooser(LIBRARY), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_folders:
-                    new Handler().postDelayed(() -> setMusicChooser(FOLDERS), 200);
+                    new Handler().postDelayed(() -> setMusicChooser(FOLDERS), DRAWER_WAIT_TIME);
                     break;
                 case R.id.buy_pro:
-                    new Handler().postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), 200);
+                    new Handler().postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);
                     break;
                 case R.id.action_scan:
                     new Handler().postDelayed(() -> {
                         ScanMediaFolderChooserDialog dialog = ScanMediaFolderChooserDialog.create();
                         dialog.show(getSupportFragmentManager(), "SCAN_MEDIA_FOLDER_CHOOSER");
-                    }, 200);
+                    }, DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_settings:
-                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, SettingsActivity.class)), 200);
+                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, SettingsActivity.class)), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_about:
-                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, AboutActivity.class)), 200);
+                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, AboutActivity.class)), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_data_overview:
                     // TODO: DATA OVERVIEW
@@ -292,55 +363,50 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         });
     }
 
+    /**
+     * 检查是否为专业版
+     */
     private void checkSetUpPro() {
         if (App.isProVersion()) {
             setUpPro();
         }
     }
 
+    /**
+     * 设置 PRO
+     */
     private void setUpPro() {
         navigationView.getMenu().removeGroup(R.id.navigation_drawer_menu_category_buy_pro);
     }
 
+    /**
+     * 设置 {@link DrawerLayout}
+     */
     private void setUpDrawerLayout() {
         setUpNavigationView();
 
+        // 设置覆盖颜色
         drawerLayout.setScrimColor(Color.TRANSPARENT);
-        drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
-            @Override
-            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
-                Log.d(TAG, "onDrawerSlide: " + slideOffset);
-                MainActivity.super.setBlur(slideOffset, false);
-                MainActivity.super.translationRootView(slideOffset, 'x');
-            }
-
-            @Override
-            public void onDrawerOpened(@NonNull View drawerView) {
-
-            }
-
-            @Override
-            public void onDrawerClosed(@NonNull View drawerView) {
-
-            }
-
-            @Override
-            public void onDrawerStateChanged(int newState) {
-
-            }
-        });
+        drawerLayout.addDrawerListener(drawerListener);
     }
 
+    /**
+     * 更新 HeaderView
+     */
     private void updateNavigationDrawerHeader() {
+        // 如果播放队列不为空则加载专辑图否则移除 HeaderView
         if (!MusicPlayerRemote.getPlayingQueue().isEmpty()) {
-            Song song = MusicPlayerRemote.getCurrentSong();
+            final Song song = MusicPlayerRemote.getCurrentSong();
             if (navigationDrawerHeader == null) {
                 navigationDrawerHeader = navigationView.inflateHeaderView(R.layout.navigation_drawer_header);
                 navigationDrawerHeader.setOnClickListener(v -> {
                     drawerLayout.closeDrawers();
-                    if (getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                        expandPanel();
-                    }
+                    new Handler().postDelayed(() -> {
+                        if (getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                            expandPanel();
+                        }
+                    }, DRAWER_WAIT_TIME);
+
                 });
             }
             ((TextView) navigationDrawerHeader.findViewById(R.id.title)).setText(song.title);
@@ -356,12 +422,18 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
+    /**
+     * 当媒体改变时，变更 HeaderView
+     */
     @Override
     public void onPlayingMetaChanged() {
         super.onPlayingMetaChanged();
         updateNavigationDrawerHeader();
     }
 
+    /**
+     * 当服务连接时，变更 HeaderView. 检测 Intent 传递
+     */
     @Override
     public void onServiceConnected() {
         super.onServiceConnected();
@@ -393,10 +465,12 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         if (super.handleBackPress() || (currentFragment != null && currentFragment.handleBackPress()))
             return true;
 
+        // 按两次退出
         if (!pressBack) {
             pressBack = true;
             Toast.makeText(this, "Press again to exit!", Toast.LENGTH_SHORT).show();
-            new Handler().postDelayed(() -> pressBack = false, 2000);
+            final short delayMillis = 2000;
+            new Handler().postDelayed(() -> pressBack = false, delayMillis);
             return true;
         } else {
             finish();
@@ -404,17 +478,29 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
+    /**
+     * 检测 Intent
+     *
+     * @param intent intent
+     */
     private void handlePlaybackIntent(@Nullable Intent intent) {
         if (intent == null) {
             return;
         }
 
-        Uri uri = intent.getData();
-        String mimeType = intent.getType();
+        final Uri uri = intent.getData();
+        final String mimeType = intent.getType();
         boolean handled = false;
 
+        final Bundle ext = intent.getExtras();
+        if (ext == null) {
+            Toast.makeText(this, "handlePlaybackIntent: Ext is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 检测是否来自搜索
         if (intent.getAction() != null && intent.getAction().equals(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH)) {
-            final List<Song> songs = SearchQueryHelper.getSongs(this, intent.getExtras());
+            final List<Song> songs = SearchQueryHelper.getSongs(this, ext);
             if (MusicPlayerRemote.getShuffleMode() == MusicService.SHUFFLE_MODE_SHUFFLE) {
                 MusicPlayerRemote.openAndShuffleQueue(songs, true);
             } else {

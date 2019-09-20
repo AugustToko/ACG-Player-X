@@ -7,15 +7,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
-import androidx.annotation.NonNull;
 
-import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
-import top.geek_studio.chenlongcould.musicplayer.util.FileUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
+import top.geek_studio.chenlongcould.musicplayer.util.FileUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 public class BlacklistStore extends SQLiteOpenHelper {
     private static BlacklistStore sInstance = null;

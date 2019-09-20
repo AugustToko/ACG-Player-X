@@ -27,9 +27,20 @@ import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.Util;
 
 public class AppWidgetBig extends BaseAppWidget {
+
+    /**
+     * TAG
+     */
     public static final String NAME = "app_widget_big";
 
+    /**
+     * 实例
+     */
     private static AppWidgetBig mInstance;
+
+    /**
+     * bitmap 目标
+     */
     private Target<Bitmap> target; // for cancellation
 
     public static synchronized AppWidgetBig getInstance() {
