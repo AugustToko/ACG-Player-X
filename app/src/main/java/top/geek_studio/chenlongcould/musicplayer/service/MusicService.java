@@ -702,6 +702,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
     }
 
     public void openQueue(@Nullable final List<Song> playingQueue, final int startPosition, final boolean startPlaying) {
+        // 检测数据是否合法
         if (playingQueue != null && !playingQueue.isEmpty() && startPosition >= 0 && startPosition < playingQueue.size()) {
             // it is important to copy the playing queue here first as we might add/remove songs later
             originalPlayingQueue = new ArrayList<>(playingQueue);
@@ -712,6 +713,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                 ShuffleHelper.makeShuffleList(this.playingQueue, startPosition);
                 position = 0;
             }
+
             if (startPlaying) {
                 playSongAt(position);
             } else {

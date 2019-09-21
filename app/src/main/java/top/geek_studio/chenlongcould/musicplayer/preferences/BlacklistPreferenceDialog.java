@@ -1,26 +1,37 @@
 package top.geek_studio.chenlongcould.musicplayer.preferences;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
+import android.text.Html;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
-import android.text.Html;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.dialogs.BlacklistFolderChooserDialog;
-import top.geek_studio.chenlongcould.musicplayer.provider.BlacklistStore;
 
 import java.io.File;
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.dialogs.BlacklistFolderChooserDialog;
+import top.geek_studio.chenlongcould.musicplayer.provider.BlacklistStore;
+
 /**
+ * Dialog 黑名单对话框
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class BlacklistPreferenceDialog extends DialogFragment implements BlacklistFolderChooserDialog.FolderCallback {
 
+    /**
+     * 黑名单路径表
+     */
     private List<String> paths;
 
+    /**
+     * 工厂
+     */
     public static BlacklistPreferenceDialog newInstance() {
         return new BlacklistPreferenceDialog();
     }
@@ -28,12 +39,15 @@ public class BlacklistPreferenceDialog extends DialogFragment implements Blackli
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        BlacklistFolderChooserDialog blacklistFolderChooserDialog = (BlacklistFolderChooserDialog) getChildFragmentManager().findFragmentByTag("FOLDER_CHOOSER");
+        final BlacklistFolderChooserDialog blacklistFolderChooserDialog
+                = (BlacklistFolderChooserDialog) getChildFragmentManager().findFragmentByTag("FOLDER_CHOOSER");
+
         if (blacklistFolderChooserDialog != null) {
             blacklistFolderChooserDialog.setCallback(this);
         }
 
         refreshBlacklistData();
+
         return new MaterialDialog.Builder(getContext())
                 .title(R.string.blacklist)
                 .positiveText(android.R.string.ok)
@@ -70,10 +84,18 @@ public class BlacklistPreferenceDialog extends DialogFragment implements Blackli
                 .build();
     }
 
+    /**
+     * 更新黑名单路径表
+     */
     private void refreshBlacklistData() {
+        final Context context = getContext();
+        if (context == null) return;
+
         paths = BlacklistStore.getInstance(getContext()).getPaths();
 
-        MaterialDialog dialog = (MaterialDialog) getDialog();
+        // 获取当前 fragment 中的 dialog
+        final MaterialDialog dialog = (MaterialDialog) getDialog();
+
         if (dialog != null) {
             String[] pathArray = new String[paths.size()];
             pathArray = paths.toArray(pathArray);
@@ -81,6 +103,9 @@ public class BlacklistPreferenceDialog extends DialogFragment implements Blackli
         }
     }
 
+    /**
+     * 添加黑名单路径, 并更新
+     * */
     @Override
     public void onFolderSelection(@NonNull BlacklistFolderChooserDialog folderChooserDialog, @NonNull File file) {
         BlacklistStore.getInstance(getContext()).addPath(file);

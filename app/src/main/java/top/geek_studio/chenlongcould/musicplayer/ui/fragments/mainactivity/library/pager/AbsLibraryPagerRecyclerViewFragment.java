@@ -1,5 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager;
 
+import android.app.Activity;
 import android.os.Bundle;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
@@ -24,6 +25,9 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 /**
+ * @param <A> 适配器类型
+ * @param <LM> {@link androidx.recyclerview.widget.RecyclerView.LayoutManager} 类型
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView.Adapter, LM extends RecyclerView.LayoutManager> extends AbsLibraryPagerFragment implements OnOffsetChangedListener {
@@ -43,15 +47,16 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(getLayoutRes(), container, false);
+        final View view = inflater.inflate(getLayoutRes(), container, false);
         unbinder = ButterKnife.bind(this, view);
         return view;
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // 监听
         getLibraryFragment().addOnAppBarOffsetChangedListener(this);
 
         initLayoutManager();
@@ -59,27 +64,42 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
         setUpRecyclerView();
     }
 
+    /**
+     * 设置 {@link RecyclerView}
+     */
     private void setUpRecyclerView() {
-        if (recyclerView instanceof FastScrollRecyclerView) {
-            ViewUtil.setUpFastScrollRecyclerViewColor(getActivity(), ((FastScrollRecyclerView) recyclerView), ThemeStore.accentColor(getActivity()));
+        Activity activity = getActivity();
+        if (recyclerView instanceof FastScrollRecyclerView && activity != null) {
+            // 更新颜色
+            ViewUtil.setUpFastScrollRecyclerViewColor(getActivity(), ((FastScrollRecyclerView) recyclerView), ThemeStore.accentColor(activity));
         }
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
     }
 
+    /**
+     * 刷新 {@link androidx.recyclerview.widget.RecyclerView.LayoutManager}
+     */
     protected void invalidateLayoutManager() {
         initLayoutManager();
         recyclerView.setLayoutManager(layoutManager);
     }
 
+    /**
+     * 刷新 {@link FastScrollRecyclerView.Adapter}
+     */
     protected void invalidateAdapter() {
         initAdapter();
         checkIsEmpty();
         recyclerView.setAdapter(adapter);
     }
 
+    /**
+     * 初始化适配器
+     * */
     private void initAdapter() {
         adapter = createAdapter();
+        // 数据监听
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
@@ -110,6 +130,9 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
         container.setPadding(container.getPaddingLeft(), container.getPaddingTop(), container.getPaddingRight(), getLibraryFragment().getTotalAppBarScrollingRange() + i);
     }
 
+    /**
+     * 如果歌曲为空, 设置提示文字
+     * */
     private void checkIsEmpty() {
         if (empty != null) {
             empty.setText(getEmptyMessage());
@@ -127,14 +150,22 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
         return R.layout.fragment_main_activity_recycler_view;
     }
 
+    /**
+     * 创建布局管理
+     * */
     protected abstract LM createLayoutManager();
 
+    /**
+     * 创建适配器,
+     * (子类实现)
+     * */
     @NonNull
     protected abstract A createAdapter();
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // 移除监听
         getLibraryFragment().removeOnAppBarOffsetChangedListener(this);
         unbinder.unbind();
     }

@@ -11,12 +11,6 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
  */
 public class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
 
-    /* http://stackoverflow.com/a/2888433 */
-    @Override
-    public LoaderManager getLoaderManager() {
-        return getParentFragment().getLoaderManager();
-    }
-
     public LibraryFragment getLibraryFragment() {
         return (LibraryFragment) getParentFragment();
     }
@@ -24,6 +18,7 @@ public class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        // update menu
         setHasOptionsMenu(true);
     }
 }

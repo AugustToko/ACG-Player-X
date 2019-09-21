@@ -66,6 +66,8 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 /**
  * MainActivity {@link R.layout#activity_main_drawer_layout}
+ *
+ * @author chenlongcould (Modify, add notes)
  */
 public class MainActivity extends AbsSlidingMusicPanelActivity {
 
@@ -462,6 +464,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             return true;
         }
 
+        // 处理上层及当前 Fragment 返回
         if (super.handleBackPress() || (currentFragment != null && currentFragment.handleBackPress()))
             return true;
 
@@ -479,7 +482,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     }
 
     /**
-     * 检测 Intent
+     * 检测 Intent，参考文件管理器打开 {@code .mp3} 文件
      *
      * @param intent intent
      */
@@ -489,7 +492,11 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
 
         final Uri uri = intent.getData();
+
+        // 数据媒体类型
         final String mimeType = intent.getType();
+
+        // 标志位，是否处理完数据
         boolean handled = false;
 
         final Bundle ext = intent.getExtras();
@@ -501,50 +508,63 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         // 检测是否来自搜索
         if (intent.getAction() != null && intent.getAction().equals(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH)) {
             final List<Song> songs = SearchQueryHelper.getSongs(this, ext);
-            if (MusicPlayerRemote.getShuffleMode() == MusicService.SHUFFLE_MODE_SHUFFLE) {
-                MusicPlayerRemote.openAndShuffleQueue(songs, true);
-            } else {
-                MusicPlayerRemote.openQueue(songs, 0, true);
-            }
+            MusicPlayerRemote.openQueue(songs, MusicPlayerRemote.getShuffleMode() == MusicService.SHUFFLE_MODE_SHUFFLE, true);
             handled = true;
         }
 
+        final int position = intent.getIntExtra("position", 0);
+
+        // 播放指定 URI 歌曲
         if (uri != null && uri.toString().length() > 0) {
             MusicPlayerRemote.playFromUri(uri);
             handled = true;
+
+            // 检测是否匹配到播放列表
         } else if (MediaStore.Audio.Playlists.CONTENT_TYPE.equals(mimeType)) {
             final int id = (int) parseIdFromIntent(intent, "playlistId", "playlist");
             if (id >= 0) {
-                int position = intent.getIntExtra("position", 0);
-                List<Song> songs = new ArrayList<>(PlaylistSongLoader.getPlaylistSongList(this, id));
+                final List<Song> songs = new ArrayList<>(PlaylistSongLoader.getPlaylistSongList(this, id));
                 MusicPlayerRemote.openQueue(songs, position, true);
                 handled = true;
             }
+
+            // 检测是否匹配专辑
         } else if (MediaStore.Audio.Albums.CONTENT_TYPE.equals(mimeType)) {
             final int id = (int) parseIdFromIntent(intent, "albumId", "album");
             if (id >= 0) {
-                int position = intent.getIntExtra("position", 0);
                 MusicPlayerRemote.openQueue(AlbumLoader.getAlbum(this, id).songs, position, true);
                 handled = true;
             }
+
+            // 检测是否匹配艺术家
         } else if (MediaStore.Audio.Artists.CONTENT_TYPE.equals(mimeType)) {
             final int id = (int) parseIdFromIntent(intent, "artistId", "artist");
             if (id >= 0) {
-                int position = intent.getIntExtra("position", 0);
                 MusicPlayerRemote.openQueue(ArtistLoader.getArtist(this, id).getSongs(), position, true);
                 handled = true;
             }
         }
+
+        // 如果处理到数据，执行
         if (handled) {
             setIntent(new Intent());
         }
     }
 
+    /**
+     * 获取 ID
+     *
+     * @param intent    intent
+     * @param longKey   k1
+     * @param stringKey k2
+     *
+     * @return ID
+     */
     private long parseIdFromIntent(@NonNull Intent intent, String longKey,
                                    String stringKey) {
         long id = intent.getLongExtra(longKey, -1);
         if (id < 0) {
-            String idString = intent.getStringExtra(stringKey);
+            final String idString = intent.getStringExtra(stringKey);
             if (idString != null) {
                 try {
                     id = Long.parseLong(idString);
@@ -556,18 +576,27 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         return id;
     }
 
+    /**
+     * {@link SlidingUpPanelLayout} 滑动模式回调
+     */
     @Override
     public void onPanelExpanded(View view) {
         super.onPanelExpanded(view);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
     }
 
+    /**
+     * {@link SlidingUpPanelLayout} 滑动模式回调
+     */
     @Override
     public void onPanelCollapsed(View view) {
         super.onPanelCollapsed(view);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
+    /**
+     * 检测是否需要显示 Intro {@link AppIntroActivity}
+     */
     private boolean checkShowIntro() {
         if (!PreferenceUtil.getInstance(this).introShown()) {
             PreferenceUtil.getInstance(this).setIntroShown();
@@ -579,10 +608,14 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         return false;
     }
 
+    /**
+     * 显示变更对话框
+     */
     private void showChangelog() {
         try {
-            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            final PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
             int currentVersion = pInfo.versionCode;
+            // 当版本不一致时, 显示变更对话框
             if (currentVersion != PreferenceUtil.getInstance(this).getLastChangelogVersion()) {
                 ChangelogDialog.create().show(getSupportFragmentManager(), "CHANGE_LOG_DIALOG");
             }
@@ -591,6 +624,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
+    /**
+     * 用于 Fragment 回调
+     */
     public interface MainActivityFragmentCallbacks {
         boolean handleBackPress();
     }

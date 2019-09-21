@@ -104,10 +104,21 @@ public class ViewUtil {
         return (x >= left) && (x <= right) && (y >= top) && (y <= bottom);
     }
 
+    /**
+     * 设置 {@link FastScrollRecyclerView} 颜色
+     *
+     * @param context      ctx
+     * @param recyclerView target view
+     * @param accentColor  强调色
+     */
     public static void setUpFastScrollRecyclerViewColor(Context context, FastScrollRecyclerView recyclerView, int accentColor) {
+        // 浮动窗口颜色
         recyclerView.setPopupBgColor(accentColor);
+        // 浮动窗口文字颜色
         recyclerView.setPopupTextColor(MaterialValueHelper.getPrimaryTextColor(context, ColorUtil.isColorLight(accentColor)));
+        // 缩略 bar 颜色 （FastScrollBar）
         recyclerView.setThumbColor(accentColor);
+        // FastScrollBar 轨道(背景)颜色
         recyclerView.setTrackColor(ColorUtil.withAlpha(ATHUtil.resolveColor(context, R.attr.colorControlNormal), 0.12f));
     }
 

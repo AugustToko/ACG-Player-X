@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library;
 
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,6 +12,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
@@ -51,7 +51,12 @@ import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.Util;
 
-public class LibraryFragment extends AbsMainActivityFragment implements CabHolder, MainActivity.MainActivityFragmentCallbacks, ViewPager.OnPageChangeListener, SharedPreferences.OnSharedPreferenceChangeListener {
+/**
+ * 媒体库 Fragment
+ */
+public class LibraryFragment extends AbsMainActivityFragment
+        implements CabHolder, MainActivity.MainActivityFragmentCallbacks, ViewPager.OnPageChangeListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     private Unbinder unbinder;
 
@@ -65,18 +70,19 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
     ViewPager pager;
 
     private MusicLibraryPagerAdapter pagerAdapter;
+
     private MaterialCab cab;
 
+    /**
+     * 工厂
+     */
     public static LibraryFragment newInstance() {
         return new LibraryFragment();
     }
 
-    public LibraryFragment() {
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_library, container, false);
+        final View view = inflater.inflate(R.layout.fragment_library, container, false);
         unbinder = ButterKnife.bind(this, view);
         return view;
     }
@@ -90,7 +96,7 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         PreferenceUtil.getInstance(getActivity()).registerOnSharedPreferenceChangedListener(this);
         getMainActivity().setStatusbarColorAuto();
         getMainActivity().setNavigationbarColorAuto();
@@ -100,11 +106,19 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         setUpViewPager();
     }
 
+    /**
+     * 用于更新 {@link ViewPager}, {@link android.widget.TableLayout} 页面变化
+     *
+     * @param preferences prefs
+     * @param key         prefs TAG
+     */
     @Override
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
+        // 检测是否匹配
         if (PreferenceUtil.LIBRARY_CATEGORIES.equals(key)) {
-            Fragment current = getCurrentFragment();
+            final Fragment current = getCurrentFragment();
             pagerAdapter.setCategoryInfos(PreferenceUtil.getInstance(getActivity()).getLibraryCategoryInfos());
+            // 缓存设置
             pager.setOffscreenPageLimit(pagerAdapter.getCount() - 1);
             int position = pagerAdapter.getItemPosition(current);
             if (position < 0) position = 0;
@@ -124,6 +138,9 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         getMainActivity().setSupportActionBar(toolbar);
     }
 
+    /**
+     * 设置 ViewPager
+     */
     private void setUpViewPager() {
         pagerAdapter = new MusicLibraryPagerAdapter(getActivity(), getChildFragmentManager());
         pager.setAdapter(pagerAdapter);
@@ -131,20 +148,28 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
 
         tabs.setupWithViewPager(pager);
 
-        int primaryColor = ThemeStore.primaryColor(getActivity());
-        int normalColor = ToolbarContentTintHelper.toolbarSubtitleColor(getActivity(), primaryColor);
-        int selectedColor = ToolbarContentTintHelper.toolbarTitleColor(getActivity(), primaryColor);
+        @ColorInt int primaryColor = ThemeStore.primaryColor(getActivity());
+        @ColorInt int normalColor = ToolbarContentTintHelper.toolbarSubtitleColor(getActivity(), primaryColor);
+        @ColorInt int selectedColor = ToolbarContentTintHelper.toolbarTitleColor(getActivity(), primaryColor);
+
+        // 颜色
         TabLayoutUtil.setTabIconColors(tabs, normalColor, selectedColor);
         tabs.setTabTextColors(normalColor, selectedColor);
         tabs.setSelectedTabIndicatorColor(ThemeStore.accentColor(getActivity()));
 
+        // 设置 TAB 是否可见
         updateTabVisibility();
 
+        // 恢复最后打开 app 所在页
         if (PreferenceUtil.getInstance(getContext()).rememberLastTab()) {
             pager.setCurrentItem(PreferenceUtil.getInstance(getContext()).getLastPage());
         }
+
         pager.addOnPageChangeListener(this);
 
+        /*
+         * 添加长按 Tab , 弹出 tab 排序、位置设置 dialog
+         * */
         final FragmentManager fragmentManager = getFragmentManager();
         final LibraryPreferenceDialog libraryPreferenceDialog = LibraryPreferenceDialog.newInstance();
 
@@ -162,15 +187,23 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         }
     }
 
+    /**
+     * Hide the tab bar when only a single tab is visible
+     */
     private void updateTabVisibility() {
-        // hide the tab bar when only a single tab is visible
         tabs.setVisibility(pagerAdapter.getCount() == 1 ? View.GONE : View.VISIBLE);
     }
 
+    /**
+     * 获取当前 Fragment
+     */
     public Fragment getCurrentFragment() {
         return pagerAdapter.getFragment(pager.getCurrentItem());
     }
 
+    /**
+     * 检测是否为播放列表 Fragment
+     */
     private boolean isPlaylistPage() {
         return getCurrentFragment() instanceof PlaylistsFragment;
     }
@@ -203,15 +236,22 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         if (pager == null) return;
+
+        // 如果为播放列表页面，添加按钮(添加播放列表)
         inflater.inflate(R.menu.menu_main, menu);
         if (isPlaylistPage()) {
             menu.add(0, R.id.action_new_playlist, 0, R.string.new_playlist_title);
         }
-        Fragment currentFragment = getCurrentFragment();
-        if (currentFragment instanceof AbsLibraryPagerRecyclerViewCustomGridSizeFragment && currentFragment.isAdded()) {
-            AbsLibraryPagerRecyclerViewCustomGridSizeFragment absLibraryRecyclerViewCustomGridSizeFragment = (AbsLibraryPagerRecyclerViewCustomGridSizeFragment) currentFragment;
 
-            MenuItem gridSizeItem = menu.findItem(R.id.action_grid_size);
+        /*
+         * menu 动态设置
+         * */
+        final Fragment currentFragment = getCurrentFragment();
+        if (currentFragment instanceof AbsLibraryPagerRecyclerViewCustomGridSizeFragment && currentFragment.isAdded()) {
+            final AbsLibraryPagerRecyclerViewCustomGridSizeFragment absLibraryRecyclerViewCustomGridSizeFragment
+                    = (AbsLibraryPagerRecyclerViewCustomGridSizeFragment) currentFragment;
+
+            final MenuItem gridSizeItem = menu.findItem(R.id.action_grid_size);
             if (Util.isLandscape(getResources())) {
                 gridSizeItem.setTitle(R.string.action_grid_size_land);
             }
@@ -226,7 +266,8 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
             menu.removeItem(R.id.action_colored_footers);
             menu.removeItem(R.id.action_sort_order);
         }
-        Activity activity = getActivity();
+
+        final Activity activity = getActivity();
         if (activity == null) return;
         ToolbarContentTintHelper.handleOnCreateOptionsMenu(getActivity(), toolbar, menu, ATHToolbarActivity.getToolbarBackgroundColor(toolbar));
     }
@@ -234,11 +275,14 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        Activity activity = getActivity();
+        final Activity activity = getActivity();
         if (activity == null) return;
         ToolbarContentTintHelper.handleOnPrepareOptionsMenu(activity, toolbar);
     }
 
+    /**
+     * Menu 点击
+     */
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (pager == null) return false;
@@ -273,6 +317,12 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * 设置 RecyclerView Grid
+     *
+     * @param fragment     frag
+     * @param gridSizeMenu menu
+     */
     private void setUpGridSizeMenu(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull SubMenu gridSizeMenu) {
         switch (fragment.getGridSize()) {
             case 1:
@@ -321,6 +371,12 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         }
     }
 
+    /**
+     * 处理网格大小
+     *
+     * @param fragment frag
+     * @param item     menu
+     */
     private boolean handleGridSizeMenuItem(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull MenuItem item) {
         int gridSize = 0;
         switch (item.getItemId()) {
@@ -358,10 +414,18 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         return false;
     }
 
+    /**
+     * 排序处理
+     *
+     * @param fragment frag
+     * @param sortOrderMenu 子menu, (排序)
+     * */
     private void setUpSortOrderMenu(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull SubMenu sortOrderMenu) {
-        String currentSortOrder = fragment.getSortOrder();
+        // 获取排序
+        final String currentSortOrder = fragment.getSortOrder();
         sortOrderMenu.clear();
 
+        // album
         if (fragment instanceof AlbumsFragment) {
             sortOrderMenu.add(0, R.id.action_album_sort_order_asc, 0, R.string.sort_order_a_z)
                     .setChecked(currentSortOrder.equals(SortOrder.AlbumSortOrder.ALBUM_A_Z));
@@ -371,11 +435,13 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
                     .setChecked(currentSortOrder.equals(SortOrder.AlbumSortOrder.ALBUM_ARTIST));
             sortOrderMenu.add(0, R.id.action_album_sort_order_year, 3, R.string.sort_order_year)
                     .setChecked(currentSortOrder.equals(SortOrder.AlbumSortOrder.ALBUM_YEAR));
+            // artist
         } else if (fragment instanceof ArtistsFragment) {
             sortOrderMenu.add(0, R.id.action_artist_sort_order_asc, 0, R.string.sort_order_a_z)
                     .setChecked(currentSortOrder.equals(SortOrder.ArtistSortOrder.ARTIST_A_Z));
             sortOrderMenu.add(0, R.id.action_artist_sort_order_desc, 1, R.string.sort_order_z_a)
                     .setChecked(currentSortOrder.equals(SortOrder.ArtistSortOrder.ARTIST_Z_A));
+            // song
         } else if (fragment instanceof SongsFragment) {
             sortOrderMenu.add(0, R.id.action_song_sort_order_asc, 0, R.string.sort_order_a_z)
                     .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_A_Z));
@@ -392,6 +458,12 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         sortOrderMenu.setGroupCheckable(0, true, true);
     }
 
+    /**
+     * 处理排序
+     *
+     * @param fragment frag
+     * @param item item
+     * */
     private boolean handleSortOrderMenuItem(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull MenuItem item) {
         String sortOrder = null;
         if (fragment instanceof AlbumsFragment) {
@@ -438,6 +510,7 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
             }
         }
 
+        // 更新排序
         if (sortOrder != null) {
             item.setChecked(true);
             fragment.setAndSaveSortOrder(sortOrder);
@@ -447,6 +520,9 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
         return false;
     }
 
+    /**
+     * 处理返回
+     * */
     @Override
     public boolean handleBackPress() {
         if (cab != null && cab.isActive()) {
@@ -458,8 +534,12 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        /////////
     }
 
+    /**
+     * 更新最后（打开的）一页
+     * */
     @Override
     public void onPageSelected(int position) {
         PreferenceUtil.getInstance(getActivity()).setLastPage(position);
@@ -467,5 +547,6 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
 
     @Override
     public void onPageScrollStateChanged(int state) {
+        ///////
     }
 }

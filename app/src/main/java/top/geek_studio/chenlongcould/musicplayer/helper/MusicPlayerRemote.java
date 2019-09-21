@@ -139,7 +139,7 @@ public class MusicPlayerRemote {
 
     /**
      * 封装 contextWrapper
-     * */
+     */
     @SuppressWarnings("WeakerAccess")
     public static final class ServiceToken {
         public ContextWrapper mWrappedContext;
@@ -211,11 +211,37 @@ public class MusicPlayerRemote {
     }
 
     /**
+     * 设置队列
+     *
+     * @param queue        数据源 (songs)
+     * @param needShuffle  是否随机
+     * @param startPlaying 是否播放
+     */
+    public static void openQueue(@Nullable final List<Song> queue, final boolean needShuffle, final boolean startPlaying) {
+        if (queue == null || queue.isEmpty()) return;
+
+        if (needShuffle) {
+            MusicPlayerRemote.openAndShuffleQueue(queue, startPlaying);
+        } else {
+            MusicPlayerRemote.openQueue(queue, 0, startPlaying);
+        }
+
+    }
+
+    /**
      * Async
+     * <p>
+     * 设置当前播放队列
+     *
+     * @param queue         给定播放列表 (songs) 队列
+     * @param startPosition 开始播放位置 (index)
+     * @param startPlaying  是否播放
      */
     public static void openQueue(final List<Song> queue, final int startPosition, final boolean startPlaying) {
-        if (!tryToHandleOpenPlayingQueue(queue, startPosition, startPlaying) && musicService != null) {
+        // 如果当前队列不同于给定队列
+        if (tryToHandleOpenPlayingQueue(queue, startPosition, startPlaying) && musicService != null) {
             musicService.openQueue(queue, startPosition, startPlaying);
+            // 设置随机
             if (!PreferenceUtil.getInstance(musicService).rememberShuffle()) {
                 setShuffleMode(MusicService.SHUFFLE_MODE_NONE);
             }
@@ -224,19 +250,35 @@ public class MusicPlayerRemote {
 
     /**
      * Async
+     * <p>
+     * 设置队列并随机打乱
+     *
+     * @param queue        给定播放数据 (songs)
+     * @param startPlaying 是否播放
      */
-    public static void openAndShuffleQueue(final List<Song> queue, boolean startPlaying) {
+    public static void openAndShuffleQueue(@Nullable final List<Song> queue, boolean startPlaying) {
+        if (queue == null) return;
+
         int startPosition = 0;
         if (!queue.isEmpty()) {
+            // 随机播放
             startPosition = new Random().nextInt(queue.size());
         }
 
-        if (!tryToHandleOpenPlayingQueue(queue, startPosition, startPlaying) && musicService != null) {
+        // 如果当前队列不同于给定队列
+        if (tryToHandleOpenPlayingQueue(queue, startPosition, startPlaying) && musicService != null) {
             openQueue(queue, startPosition, startPlaying);
             setShuffleMode(MusicService.SHUFFLE_MODE_SHUFFLE);
         }
     }
 
+    /**
+     * 检测队列
+     *
+     * @param queue         歌曲队列 (目前播放列表)
+     * @param startPlaying  播放 index
+     * @param startPosition 是否立即播放
+     */
     private static boolean tryToHandleOpenPlayingQueue(final List<Song> queue, final int startPosition, final boolean startPlaying) {
         if (getPlayingQueue() == queue) {
             if (startPlaying) {
@@ -244,9 +286,9 @@ public class MusicPlayerRemote {
             } else {
                 setPosition(startPosition);
             }
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     public static Song getCurrentSong() {

@@ -3,6 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import android.view.View;
 
@@ -10,6 +11,8 @@ import top.geek_studio.chenlongcould.musicplayer.interfaces.MusicServiceEventLis
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsMusicServiceActivity;
 
 /**
+ * BaseFrag
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class AbsMusicServiceFragment extends Fragment implements MusicServiceEventListener {
@@ -34,12 +37,14 @@ public class AbsMusicServiceFragment extends Fragment implements MusicServiceEve
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // 添加回调
         activity.addMusicServiceEventListener(this);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // 移除回调
         activity.removeMusicServiceEventListener(this);
     }
 
