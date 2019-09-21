@@ -67,9 +67,9 @@ public class ChangelogDialog extends DialogFragment {
 
         final WebView webView = customView.findViewById(R.id.web_view);
         try {
-            // Load from phonograph-changelog.html in the assets folder
+            // Load from acgplayer-changelog.html in the assets folder
             StringBuilder buf = new StringBuilder();
-            InputStream json = getActivity().getAssets().open("phonograph-changelog.html");
+            InputStream json = getActivity().getAssets().open("acgplayer-changelog.html");
             final BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
             String str;
             while ((str = in.readLine()) != null)

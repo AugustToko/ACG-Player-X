@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.ShuffleButtonSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter;
@@ -20,6 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 歌曲 Fragment
+ *
+ * same as {@link PlaylistsFragment}
+ *
+ * @see top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFragment<SongAdapter, GridLayoutManager> implements LoaderManager.LoaderCallbacks<List<Song>> {
@@ -29,7 +36,8 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+//        getLoaderManager().initLoader(LOADER_ID, null, this);
     }
 
     @NonNull
@@ -54,6 +62,7 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
                     usePalette,
                     getLibraryFragment());
         }
+
         return new SongAdapter(
                 getLibraryFragment().getMainActivity(),
                 dataSet,
@@ -69,7 +78,8 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     public void onMediaStoreChanged() {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
+//        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -84,7 +94,8 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     protected void setSortOrder(String sortOrder) {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
+//        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -128,23 +139,27 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
         getAdapter().notifyDataSetChanged();
     }
 
+    @NonNull
     @Override
     public Loader<List<Song>> onCreateLoader(int id, Bundle args) {
         return new AsyncSongLoader(getActivity());
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Song>> loader, List<Song> data) {
+    public void onLoadFinished(@NonNull Loader<List<Song>> loader, List<Song> data) {
         getAdapter().swapDataSet(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Song>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<Song>> loader) {
         getAdapter().swapDataSet(new ArrayList<>());
     }
 
+    /**
+     * 异步加载歌曲
+     */
     private static class AsyncSongLoader extends WrappedAsyncTaskLoader<List<Song>> {
-        public AsyncSongLoader(Context context) {
+        AsyncSongLoader(Context context) {
             super(context);
         }
 
