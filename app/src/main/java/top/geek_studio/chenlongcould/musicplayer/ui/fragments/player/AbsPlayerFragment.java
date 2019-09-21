@@ -24,6 +24,9 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFra
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 
+/**
+ * PlayerCard fragment
+ */
 public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implements Toolbar.OnMenuItemClickListener, PaletteColorHolder {
 
     private Callbacks callbacks;
@@ -45,10 +48,14 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         callbacks = null;
     }
 
+    /**
+     * Menu
+     */
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         final Song song = MusicPlayerRemote.getCurrentSong();
         switch (item.getItemId()) {
+            // TODO： 定时睡眠功能
             case R.id.action_sleep_timer:
                 new MaterialDialog.Builder(getActivity()).title("Building").content("Same as title.").show();
 //                new SleepTimerDialog().show(getFragmentManager(), "SET_SLEEP_TIMER");
@@ -89,6 +96,9 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         return false;
     }
 
+    /**
+     * (喜爱 {@link R.id#action_toggle_favorite} )开关
+     */
     protected void toggleFavorite(Song song) {
         MusicUtil.toggleFavorite(getActivity(), song);
     }
@@ -97,10 +107,20 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         return isToolbarShown;
     }
 
-    protected void setToolbarShown(boolean toolbarShown) {
+    /**
+     * 更新 FLAG
+     *
+     * @param toolbarShown toolbar 是否可见
+     */
+    protected void setToolbarShown(final boolean toolbarShown) {
         isToolbarShown = toolbarShown;
     }
 
+    /**
+     * 显示toolbar
+     *
+     * @param toolbar toolbar
+     */
     protected void showToolbar(@Nullable final View toolbar) {
         if (toolbar == null) return;
 
@@ -110,6 +130,11 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
         toolbar.animate().alpha(1f).setDuration(PlayerAlbumCoverFragment.VISIBILITY_ANIM_DURATION);
     }
 
+    /**
+     * 隐藏 ToolBar
+     *
+     * @param toolbar toolbar
+     */
     protected void hideToolbar(@Nullable final View toolbar) {
         if (toolbar == null) return;
 
