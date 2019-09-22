@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -330,6 +329,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         checkSetUpPro();
 
+        // 侧滑菜单
         navigationView.setNavigationItemSelectedListener(menuItem -> {
             drawerLayout.closeDrawers();
             switch (menuItem.getItemId()) {
@@ -356,6 +356,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     break;
                 case R.id.nav_data_overview:
                     // TODO: DATA OVERVIEW
+                    new MaterialDialog.Builder(MainActivity.this).title("Building").content("Building...").showListener(dialog -> mViewModel.dialogs.add(dialog)).show();
                     break;
                 case R.id.nav_exit:
                     stopService(new Intent(MainActivity.this, MusicService.class));

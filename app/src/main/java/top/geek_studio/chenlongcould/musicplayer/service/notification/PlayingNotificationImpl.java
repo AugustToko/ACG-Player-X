@@ -30,6 +30,9 @@ import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
+/**
+ * 通知实现类 (for below api 24)
+ */
 public class PlayingNotificationImpl extends PlayingNotification {
 
     private Target<BitmapPaletteWrapper> target;

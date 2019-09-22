@@ -1,5 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.service;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
@@ -550,6 +551,10 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         playingNotification.init(this);
     }
 
+    /**
+     * {@link PlayingNotification#update()} -> {@link PlayingNotification#updateNotifyModeAndPostNotification(Notification)}
+     */
+    @SuppressWarnings("JavadocReference")
     public void updateNotification() {
         if (playingNotification != null && getCurrentSong().id != -1) {
             playingNotification.update();
@@ -631,6 +636,9 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         }
     }
 
+    /**
+     * @see android.app.Activity#runOnUiThread(Runnable)
+     */
     public void runOnUiThread(Runnable runnable) {
         uiThreadHandler.post(runnable);
     }

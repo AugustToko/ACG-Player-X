@@ -11,6 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Phonograph.Light"
+        android:requestLegacyExternalStorage="true"
         tools:ignore="UnusedAttribute">
         <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity">
             <intent-filter>

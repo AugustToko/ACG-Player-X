@@ -8,6 +8,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.palette.graphics.Palette;
@@ -16,6 +18,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteWrapper;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
@@ -27,6 +30,9 @@ import static top.geek_studio.chenlongcould.musicplayer.service.MusicService.ACT
 import static top.geek_studio.chenlongcould.musicplayer.service.MusicService.ACTION_SKIP;
 import static top.geek_studio.chenlongcould.musicplayer.service.MusicService.ACTION_TOGGLE_PAUSE;
 
+/**
+ * 通知实现类 (for api 24 up)
+ */
 public class PlayingNotificationImpl24 extends PlayingNotification {
 
     @Override
@@ -40,12 +46,14 @@ public class PlayingNotificationImpl24 extends PlayingNotification {
         final int playButtonResId = isPlaying
                 ? R.drawable.ic_pause_white_24dp : R.drawable.ic_play_arrow_white_24dp;
 
-        Intent action = new Intent(service, MainActivity.class);
+        // PI
+        final Intent action = new Intent(service, MainActivity.class);
         action.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         final PendingIntent clickIntent = PendingIntent.getActivity(service, 0, action, 0);
 
+        // PI
         final ComponentName serviceName = new ComponentName(service, MusicService.class);
-        Intent intent = new Intent(MusicService.ACTION_QUIT);
+        final Intent intent = new Intent(MusicService.ACTION_QUIT);
         intent.setComponent(serviceName);
         final PendingIntent deleteIntent = PendingIntent.getService(service, 0, intent, 0);
 
@@ -56,7 +64,7 @@ public class PlayingNotificationImpl24 extends PlayingNotification {
                 .into(new SimpleTarget<BitmapPaletteWrapper>(bigNotificationImageSize, bigNotificationImageSize) {
                     @Override
                     public void onResourceReady(BitmapPaletteWrapper resource, GlideAnimation<? super BitmapPaletteWrapper> glideAnimation) {
-                        Palette palette = resource.getPalette();
+                        final Palette palette = resource.getPalette();
                         update(resource.getBitmap(), palette.getVibrantColor(palette.getMutedColor(Color.TRANSPARENT)));
                     }
 
@@ -65,7 +73,7 @@ public class PlayingNotificationImpl24 extends PlayingNotification {
                         update(null, Color.TRANSPARENT);
                     }
 
-                    void update(Bitmap bitmap, int color) {
+                    void update(@Nullable Bitmap bitmap, final int color) {
                         if (bitmap == null)
                             bitmap = BitmapFactory.decodeResource(service.getResources(), R.drawable.default_album_art);
                         NotificationCompat.Action playPauseAction = new NotificationCompat.Action(playButtonResId,
@@ -77,7 +85,7 @@ public class PlayingNotificationImpl24 extends PlayingNotification {
                         NotificationCompat.Action nextAction = new NotificationCompat.Action(R.drawable.ic_skip_next_white_24dp,
                                 service.getString(R.string.action_next),
                                 retrievePlaybackAction(ACTION_SKIP));
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(service, NOTIFICATION_CHANNEL_ID)
+                        final NotificationCompat.Builder builder = new NotificationCompat.Builder(service, NOTIFICATION_CHANNEL_ID)
                                 .setSmallIcon(R.drawable.ic_notification)
                                 .setSubText(song.albumName)
                                 .setLargeIcon(bitmap)
@@ -98,6 +106,7 @@ public class PlayingNotificationImpl24 extends PlayingNotification {
                                 builder.setColor(color);
                         }
 
+                        // 中断
                         if (stopped)
                             return; // notification has been stopped before loading was finished
                         updateNotifyModeAndPostNotification(builder.build());

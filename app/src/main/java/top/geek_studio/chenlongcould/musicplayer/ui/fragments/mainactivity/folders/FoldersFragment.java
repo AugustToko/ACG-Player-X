@@ -115,7 +115,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
         if (addToHistory) {
             breadCrumbs.addHistory(crumb);
         }
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     private void saveScrollPosition() {
