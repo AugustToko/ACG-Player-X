@@ -2,10 +2,16 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
+
+import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import top.geek_studio.chenlongcould.musicplayer.adapter.artist.ArtistAdapter;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
@@ -13,10 +19,6 @@ import top.geek_studio.chenlongcould.musicplayer.loader.ArtistLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Artist;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
@@ -25,10 +27,17 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     private static final int LOADER_ID = LoaderIds.ARTISTS_FRAGMENT;
 
+    private int artistCount = 0;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public String getSubTitle() {
+        return artistCount + " Artist(s)";
     }
 
     @NonNull
@@ -58,7 +67,7 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     @Override
     public void onMediaStoreChanged() {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -73,7 +82,7 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     @Override
     protected void setSortOrder(String sortOrder) {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -127,6 +136,7 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
     @Override
     public void onLoadFinished(Loader<List<Artist>> loader, List<Artist> data) {
         getAdapter().swapDataSet(data);
+        artistCount = data.size();
     }
 
 

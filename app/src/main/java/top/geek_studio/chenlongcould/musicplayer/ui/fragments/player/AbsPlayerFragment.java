@@ -64,7 +64,7 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
                 toggleFavorite(song);
                 return true;
             case R.id.action_share:
-                SongShareDialog.create(song).show(getFragmentManager(), "SHARE_SONG");
+                SongShareDialog.Companion.create(song).show(getFragmentManager(), "SHARE_SONG");
                 return true;
             case R.id.action_equalizer:
                 NavigationUtil.openEqualizer(getActivity());
@@ -84,7 +84,7 @@ public abstract class AbsPlayerFragment extends AbsMusicServiceFragment implemen
                 startActivity(intent);
                 return true;
             case R.id.action_details:
-                SongDetailDialog.create(song).show(getFragmentManager(), "SONG_DETAIL");
+                SongDetailDialog.Companion.create(song).show(getFragmentManager(), "SONG_DETAIL");
                 return true;
             case R.id.action_go_to_album:
                 NavigationUtil.goToAlbum(getActivity(), song.albumId);

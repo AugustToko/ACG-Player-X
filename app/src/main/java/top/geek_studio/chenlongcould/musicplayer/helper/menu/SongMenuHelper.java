@@ -62,7 +62,7 @@ public class SongMenuHelper {
                 activity.startActivity(tagEditorIntent);
                 return true;
             case R.id.action_details:
-                SongDetailDialog.create(song).show(activity.getSupportFragmentManager(), "SONG_DETAILS");
+                SongDetailDialog.Companion.create(song).show(activity.getSupportFragmentManager(), "SONG_DETAILS");
                 return true;
             case R.id.action_go_to_album:
                 NavigationUtil.goToAlbum(activity, song.albumId);

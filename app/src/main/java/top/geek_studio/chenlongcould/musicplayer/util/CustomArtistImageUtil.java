@@ -1,12 +1,10 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -52,7 +50,7 @@ public class CustomArtistImageUtil {
     }
 
     public void setCustomArtistImage(final Artist artist, Uri uri) {
-        Glide.with(App.getInstance())
+        Glide.with(App.Companion.getInstance())
                 .load(uri)
                 .asBitmap()
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -62,7 +60,7 @@ public class CustomArtistImageUtil {
                     public void onLoadFailed(Exception e, Drawable errorDrawable) {
                         super.onLoadFailed(e, errorDrawable);
                         e.printStackTrace();
-                        Toast.makeText(App.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(App.Companion.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -70,7 +68,7 @@ public class CustomArtistImageUtil {
                         CustomThreadPool.post(new Runnable() {
                             @Override
                             public void run() {
-                                File dir = new File(App.getInstance().getFilesDir(), FOLDER_NAME);
+                                File dir = new File(App.Companion.getInstance().getFilesDir(), FOLDER_NAME);
                                 if (!dir.exists()) {
                                     if (!dir.mkdirs()) { // create the folder
                                         return;
@@ -84,13 +82,13 @@ public class CustomArtistImageUtil {
                                     succesful = ImageUtil.resizeBitmap(resource, 2048).compress(Bitmap.CompressFormat.JPEG, 100, os);
                                     os.close();
                                 } catch (IOException e) {
-                                    Toast.makeText(App.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(App.Companion.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
                                 }
 
                                 if (succesful) {
                                     mPreferences.edit().putBoolean(getFileName(artist), true).commit();
-                                    ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
-                                    App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+                                    ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
+                                    App.Companion.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
                                 }
                             }
                         });
@@ -133,8 +131,8 @@ public class CustomArtistImageUtil {
             @Override
             public void run() {
                 mPreferences.edit().putBoolean(getFileName(artist), false).commit();
-                ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
-                App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+                ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
+                App.Companion.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
 
                 final File file = getFile(artist);
                 if (!file.exists()) {
@@ -180,7 +178,7 @@ public class CustomArtistImageUtil {
     }
 
     public static File getFile(Artist artist) {
-        File dir = new File(App.getInstance().getFilesDir(), FOLDER_NAME);
+        File dir = new File(App.Companion.getInstance().getFilesDir(), FOLDER_NAME);
         return new File(dir, getFileName(artist));
     }
 }

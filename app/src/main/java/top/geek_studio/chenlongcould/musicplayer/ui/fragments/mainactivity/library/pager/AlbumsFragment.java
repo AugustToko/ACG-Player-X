@@ -2,6 +2,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -25,10 +26,17 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
 
     private static final int LOADER_ID = LoaderIds.ALBUMS_FRAGMENT;
 
+    private int albumCount = 0;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public String getSubTitle() {
+        return albumCount + " Album(s)";
     }
 
     @Override
@@ -124,6 +132,7 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
     @Override
     public void onLoadFinished(Loader<List<Album>> loader, List<Album> data) {
         getAdapter().swapDataSet(data);
+        albumCount = data.size();
     }
 
     @Override

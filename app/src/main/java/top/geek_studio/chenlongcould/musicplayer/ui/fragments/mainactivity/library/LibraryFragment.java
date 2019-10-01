@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,6 +43,7 @@ import top.geek_studio.chenlongcould.musicplayer.preferences.LibraryPreferenceDi
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AbsLibraryPagerFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.ArtistsFragment;
@@ -57,6 +59,8 @@ import top.geek_studio.chenlongcould.musicplayer.util.Util;
 public class LibraryFragment extends AbsMainActivityFragment
         implements CabHolder, MainActivity.MainActivityFragmentCallbacks, ViewPager.OnPageChangeListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private static final String TAG = LibraryFragment.class.getSimpleName();
 
     private Unbinder unbinder;
 
@@ -142,27 +146,33 @@ public class LibraryFragment extends AbsMainActivityFragment
      * 设置 ViewPager
      */
     private void setUpViewPager() {
+        final Activity activity = getActivity();
+
+        if (activity == null) return;
+
         pagerAdapter = new MusicLibraryPagerAdapter(getActivity(), getChildFragmentManager());
         pager.setAdapter(pagerAdapter);
         pager.setOffscreenPageLimit(pagerAdapter.getCount() - 1);
 
         tabs.setupWithViewPager(pager);
 
-        @ColorInt int primaryColor = ThemeStore.primaryColor(getActivity());
-        @ColorInt int normalColor = ToolbarContentTintHelper.toolbarSubtitleColor(getActivity(), primaryColor);
-        @ColorInt int selectedColor = ToolbarContentTintHelper.toolbarTitleColor(getActivity(), primaryColor);
+        @ColorInt int primaryColor = ThemeStore.primaryColor(activity);
+        @ColorInt int normalColor = ToolbarContentTintHelper.toolbarSubtitleColor(activity, primaryColor);
+        @ColorInt int selectedColor = ToolbarContentTintHelper.toolbarTitleColor(activity, primaryColor);
 
         // 颜色
         TabLayoutUtil.setTabIconColors(tabs, normalColor, selectedColor);
         tabs.setTabTextColors(normalColor, selectedColor);
-        tabs.setSelectedTabIndicatorColor(ThemeStore.accentColor(getActivity()));
+        tabs.setSelectedTabIndicatorColor(ThemeStore.accentColor(activity));
 
         // 设置 TAB 是否可见
         updateTabVisibility();
 
         // 恢复最后打开 app 所在页
-        if (PreferenceUtil.getInstance(getContext()).rememberLastTab()) {
-            pager.setCurrentItem(PreferenceUtil.getInstance(getContext()).getLastPage());
+        if (PreferenceUtil.getInstance(activity).rememberLastTab()) {
+            final int lastIndex = PreferenceUtil.getInstance(activity).getLastPage();
+            pager.setCurrentItem(lastIndex);
+            new Handler().postDelayed(() -> updateSubTitle(getFragmentSubTitle(lastIndex)), 3000);
         }
 
         pager.addOnPageChangeListener(this);
@@ -417,9 +427,9 @@ public class LibraryFragment extends AbsMainActivityFragment
     /**
      * 排序处理
      *
-     * @param fragment frag
+     * @param fragment      frag
      * @param sortOrderMenu 子menu, (排序)
-     * */
+     */
     private void setUpSortOrderMenu(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull SubMenu sortOrderMenu) {
         // 获取排序
         final String currentSortOrder = fragment.getSortOrder();
@@ -462,8 +472,8 @@ public class LibraryFragment extends AbsMainActivityFragment
      * 处理排序
      *
      * @param fragment frag
-     * @param item item
-     * */
+     * @param item     item
+     */
     private boolean handleSortOrderMenuItem(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull MenuItem item) {
         String sortOrder = null;
         if (fragment instanceof AlbumsFragment) {
@@ -522,7 +532,7 @@ public class LibraryFragment extends AbsMainActivityFragment
 
     /**
      * 处理返回
-     * */
+     */
     @Override
     public boolean handleBackPress() {
         if (cab != null && cab.isActive()) {
@@ -532,21 +542,57 @@ public class LibraryFragment extends AbsMainActivityFragment
         return false;
     }
 
+    // --------------------------------- ViewPager -------------------------------
+
+    /**
+     * {@link ViewPager}
+     */
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
         /////////
     }
 
     /**
+     * {@link ViewPager}
+     * <p>
      * 更新最后（打开的）一页
-     * */
+     */
     @Override
     public void onPageSelected(int position) {
-        PreferenceUtil.getInstance(getActivity()).setLastPage(position);
+        final Activity activity = getActivity();
+        if (activity != null) PreferenceUtil.getInstance(getActivity()).setLastPage(position);
+
+        updateSubTitle(getFragmentSubTitle(position));
     }
 
     @Override
     public void onPageScrollStateChanged(int state) {
-        ///////
+        //...
+    }
+
+    // --------------------------------- ViewPager -------------------------------
+
+    /**
+     * 更新 subtitle
+     *
+     * @param subTitle subtitle Text
+     */
+    private void updateSubTitle(@Nullable String subTitle) {
+        if (subTitle == null) subTitle = "-";
+        toolbar.setSubtitle(subTitle);
+    }
+
+    /**
+     * 获取 Fragment 对应 subtitle
+     *
+     * @param position pager index
+     *
+     * @return subtitle
+     */
+    @NonNull
+    private String getFragmentSubTitle(final int position) {
+        final AbsLibraryPagerFragment fragment = (AbsLibraryPagerFragment) pagerAdapter.getFragment(position);
+        if (fragment == null) return "-";
+        return fragment.getSubTitle();
     }
 }

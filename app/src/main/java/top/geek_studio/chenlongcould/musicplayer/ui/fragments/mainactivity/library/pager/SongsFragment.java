@@ -2,11 +2,17 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
+import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.ShuffleButtonSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter;
@@ -15,29 +21,32 @@ import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 歌曲 Fragment
- *
+ * <p>
  * same as {@link PlaylistsFragment}
  *
- * @see top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment
- *
  * @author Karim Abou Zeid (kabouzeid)
+ * @see top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment
  */
 public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFragment<SongAdapter, GridLayoutManager> implements LoaderManager.LoaderCallbacks<List<Song>> {
 
     private static final int LOADER_ID = LoaderIds.SONGS_FRAGMENT;
 
+    private static final String TAG = SongsFragment.class.getSimpleName();
+
+    private int songCount = 0;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
-//        getLoaderManager().initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public String getSubTitle() {
+        return songCount + " Song(s)";
     }
 
     @NonNull
@@ -79,7 +88,6 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     @Override
     public void onMediaStoreChanged() {
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-//        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -95,7 +103,6 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     @Override
     protected void setSortOrder(String sortOrder) {
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-//        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -148,6 +155,8 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     @Override
     public void onLoadFinished(@NonNull Loader<List<Song>> loader, List<Song> data) {
         getAdapter().swapDataSet(data);
+        songCount = data.size();
+        Log.d(TAG, "onLoadFinished: ");
     }
 
     @Override

@@ -21,10 +21,17 @@ public class GenresFragment extends AbsLibraryPagerRecyclerViewFragment<GenreAda
 
     private static final int LOADER_ID = LoaderIds.GENRES_FRAGMENT;
 
+    private int genresCount = 0;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public String getSubTitle() {
+        return genresCount + " Genre(s)";
     }
 
     @NonNull
@@ -47,7 +54,7 @@ public class GenresFragment extends AbsLibraryPagerRecyclerViewFragment<GenreAda
 
     @Override
     public void onMediaStoreChanged() {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -59,6 +66,8 @@ public class GenresFragment extends AbsLibraryPagerRecyclerViewFragment<GenreAda
     @Override
     public void onLoadFinished(@NonNull Loader<List<Genre>> loader, List<Genre> data) {
         getAdapter().swapDataSet(data);
+        genresCount = data.size();
+
     }
 
     @Override

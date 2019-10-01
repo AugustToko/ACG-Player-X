@@ -15,9 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 抽象多选择
+ *
+ * @param <I> item type
+ * @param <VH> view holder
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public abstract class AbsMultiSelectAdapter<VH extends RecyclerView.ViewHolder, I> extends RecyclerView.Adapter<VH> implements MaterialCab.Callback {
+
     @Nullable
     private final CabHolder cabHolder;
     private MaterialCab cab;

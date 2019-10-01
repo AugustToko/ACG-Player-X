@@ -1,6 +1,8 @@
 package top.geek_studio.chenlongcould.musicplayer.dialogs;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.Toast;
@@ -27,9 +29,17 @@ public class CreatePlaylistDialog extends DialogFragment {
 
     private static final String SONGS = "songs";
 
+    private Activity activity;
+
     @NonNull
     public static CreatePlaylistDialog create() {
         return create((Song) null);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = (Activity) context;
     }
 
     @NonNull
@@ -51,7 +61,7 @@ public class CreatePlaylistDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new MaterialDialog.Builder(getActivity())
+        return new MaterialDialog.Builder(activity)
                 .title(R.string.new_playlist_title)
                 .positiveText(R.string.create_action)
                 .negativeText(android.R.string.cancel)

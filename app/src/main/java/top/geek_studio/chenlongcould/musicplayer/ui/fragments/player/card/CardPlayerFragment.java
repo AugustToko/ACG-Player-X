@@ -2,6 +2,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.card;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -9,14 +10,6 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,20 +22,15 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
-import top.geek_studio.chenlongcould.musicplayer.adapter.song.PlayingQueueAdapter;
-import top.geek_studio.chenlongcould.musicplayer.dialogs.LyricsDialog;
-import top.geek_studio.chenlongcould.musicplayer.dialogs.SongShareDialog;
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
-import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.model.lyrics.Lyrics;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
-import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.Util;
-import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
-import top.geek_studio.chenlongcould.musicplayer.views.WidthFitSquareLayout;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
@@ -52,14 +40,31 @@ import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
 import com.kabouzeid.chenlongcould.musicplayer.R;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.AbsPlayerFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.PlayerAlbumCoverFragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
+import top.geek_studio.chenlongcould.musicplayer.adapter.song.PlayingQueueAdapter;
+import top.geek_studio.chenlongcould.musicplayer.dialogs.LyricsDialog;
+import top.geek_studio.chenlongcould.musicplayer.dialogs.SongShareDialog;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
+import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.model.lyrics.Lyrics;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.AbsPlayerFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.PlayerAlbumCoverFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.Util;
+import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
+import top.geek_studio.chenlongcould.musicplayer.views.WidthFitSquareLayout;
 
+/**
+ * 卡片播放 Fragment
+ */
 public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbumCoverFragment.Callbacks, SlidingUpPanelLayout.PanelSlideListener {
 
     private Unbinder unbinder;
@@ -92,7 +97,14 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
     private RecyclerView.Adapter wrappedAdapter;
     private RecyclerViewDragDropManager recyclerViewDragDropManager;
 
+    /**
+     * 检测是否为喜爱歌曲, 然后反应到 {@link Toolbar} 上
+     */
     private AsyncTask updateIsFavoriteTask;
+
+    /**
+     * 更新歌词
+     */
     private AsyncTask updateLyricsAsyncTask;
 
     private Lyrics lyrics;
@@ -101,6 +113,7 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // 根据屏幕调整 Impl
         if (Util.isLandscape(getResources())) {
             impl = new LandscapeImpl(this);
         } else {
@@ -274,12 +287,14 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
         layoutManager.scrollToPositionWithOffset(MusicPlayerRemote.getPosition() + 1, 0);
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void updateIsFavorite() {
         if (updateIsFavoriteTask != null) updateIsFavoriteTask.cancel(false);
+
         updateIsFavoriteTask = new AsyncTask<Song, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Song... params) {
-                Activity activity = getActivity();
+                final Activity activity = getActivity();
                 if (activity != null) {
                     return MusicUtil.isFavorite(getActivity(), params[0]);
                 } else {
@@ -290,7 +305,7 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
 
             @Override
             protected void onPostExecute(Boolean isFavorite) {
-                Activity activity = getActivity();
+                final Activity activity = getActivity();
                 if (activity != null) {
                     int res = isFavorite ? R.drawable.ic_favorite_white_24dp : R.drawable.ic_favorite_border_white_24dp;
                     int color = ToolbarContentTintHelper.toolbarContentColor(activity, Color.TRANSPARENT);
@@ -303,6 +318,10 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
         }.execute(MusicPlayerRemote.getCurrentSong());
     }
 
+    /**
+     * 更新歌词
+     */
+    @SuppressLint("StaticFieldLeak")
     private void updateLyrics() {
         if (updateLyricsAsyncTask != null) updateLyricsAsyncTask.cancel(false);
         final Song song = MusicPlayerRemote.getCurrentSong();
@@ -444,17 +463,37 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
         layoutManager.scrollToPositionWithOffset(MusicPlayerRemote.getPosition() + 1, 0);
     }
 
+    /**
+     * Impl 基本音乐操作接口
+     */
     interface Impl {
+        /**
+         * 初始化
+         */
         void init();
 
+        /**
+         * 更新当前歌曲
+         */
         void updateCurrentSong(Song song);
 
+        /**
+         * 更新颜色
+         */
         void animateColorChange(final int newColor);
 
+        /**
+         * 设置 panel 专辑封面高度
+         */
         void setUpPanelAndAlbumCoverHeight();
     }
 
+    /**
+     * 基础实现 IMPL
+     * (abs)
+     */
     private static abstract class BaseImpl implements Impl {
+
         protected CardPlayerFragment fragment;
 
         public BaseImpl(CardPlayerFragment fragment) {
@@ -541,7 +580,7 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                             MusicPlayerRemote.removeFromQueue(MusicPlayerRemote.getPosition());
                             return true;
                         case R.id.action_share:
-                            SongShareDialog.create(getSong()).show(fragment.getFragmentManager(), "SONG_SHARE_DIALOG");
+                            SongShareDialog.Companion.create(getSong()).show(fragment.getFragmentManager(), "SONG_SHARE_DIALOG");
                             return true;
                     }
                     return super.onMenuItemClick(item);

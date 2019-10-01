@@ -1,7 +1,9 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager;
 
 import android.os.Bundle;
-import androidx.loader.app.LoaderManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
@@ -9,7 +11,10 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 /**
  * @author Karim Abou Zeid (kabouzeid)
  */
-public class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
+public abstract class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
+
+    private static final String TAG = AbsLibraryPagerFragment.class.getSimpleName();
+
 
     public LibraryFragment getLibraryFragment() {
         return (LibraryFragment) getParentFragment();
@@ -20,5 +25,25 @@ public class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
         super.onActivityCreated(savedInstanceState);
         // update menu
         setHasOptionsMenu(true);
+    }
+
+    /**
+     * 获取摘要信息，用于填充 {@link android.widget.Toolbar#setSubtitle(CharSequence)}
+     *
+     * @return data
+     */
+    public abstract String getSubTitle();
+
+    public class CallbackInfo<T> {
+        private List<T> callbacks = new ArrayList<>();
+
+        public List<T> getCallbacks() {
+            return callbacks;
+        }
+
+        public List<T> addCallbacks(T callback) {
+            callbacks.add(callback);
+            return callbacks;
+        }
     }
 }

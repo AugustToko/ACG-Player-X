@@ -13,6 +13,8 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsMusicServ
 /**
  * BaseFrag
  *
+ * 带有各种回调
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class AbsMusicServiceFragment extends Fragment implements MusicServiceEventListener {

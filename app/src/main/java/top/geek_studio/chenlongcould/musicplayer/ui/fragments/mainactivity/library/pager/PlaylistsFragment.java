@@ -31,11 +31,17 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
 
     private static final int LOADER_ID = LoaderIds.PLAYLISTS_FRAGMENT;
 
+    private int playlistsCount = 0;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
-//        getLoaderManager().initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public String getSubTitle() {
+        return playlistsCount + " Playlist(s)";
     }
 
     @NonNull
@@ -74,6 +80,7 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
     public void onLoadFinished(@NonNull Loader<List<Playlist>> loader, List<Playlist> data) {
         // 加载数据
         getAdapter().swapDataSet(data);
+        playlistsCount = data.size();
     }
 
     @Override

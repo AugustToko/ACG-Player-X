@@ -182,7 +182,7 @@ public class PlaylistAdapter extends AbsMultiSelectAdapter<PlaylistAdapter.ViewH
 
             for (Playlist playlist : params[0]) {
                 try {
-                    dir = PlaylistsUtil.savePlaylist(App.getInstance().getApplicationContext(), playlist).getParent();
+                    dir = PlaylistsUtil.savePlaylist(App.Companion.getInstance().getApplicationContext(), playlist).getParent();
                     successes++;
                 } catch (IOException e) {
                     failures++;
@@ -191,8 +191,8 @@ public class PlaylistAdapter extends AbsMultiSelectAdapter<PlaylistAdapter.ViewH
             }
 
             return failures == 0
-                    ? String.format(App.getInstance().getApplicationContext().getString(R.string.saved_x_playlists_to_x), successes, dir)
-                    : String.format(App.getInstance().getApplicationContext().getString(R.string.saved_x_playlists_to_x_failed_to_save_x), successes, dir, failures);
+                    ? String.format(App.Companion.getInstance().getApplicationContext().getString(R.string.saved_x_playlists_to_x), successes, dir)
+                    : String.format(App.Companion.getInstance().getApplicationContext().getString(R.string.saved_x_playlists_to_x_failed_to_save_x), successes, dir, failures);
         }
 
         @Override

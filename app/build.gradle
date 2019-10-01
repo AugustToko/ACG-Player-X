@@ -1,6 +1,8 @@
 import javax.annotation.Nullable
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 def lifecycle_version = "2.0.0"
 
@@ -138,4 +140,10 @@ dependencies {
     implementation 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
     implementation 'com.github.AdrienPoupa:jaudiotagger:2.2.3'
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    compile "androidx.core:core-ktx:+"
+    compile "androidx.lifecycle:lifecycle-viewmodel-ktx:2.0.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }

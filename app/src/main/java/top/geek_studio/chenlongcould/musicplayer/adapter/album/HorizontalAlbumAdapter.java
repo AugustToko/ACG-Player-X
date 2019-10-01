@@ -21,6 +21,8 @@ import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import java.util.List;
 
 /**
+ * 水平专辑适配器
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class HorizontalAlbumAdapter extends AlbumAdapter {

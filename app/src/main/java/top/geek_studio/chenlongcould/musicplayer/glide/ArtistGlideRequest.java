@@ -120,7 +120,7 @@ public class ArtistGlideRequest {
     }
 
     public static DrawableTypeRequest createBaseRequest(RequestManager requestManager, Artist artist, boolean noCustomImage) {
-        boolean hasCustomImage = CustomArtistImageUtil.getInstance(App.getInstance()).hasCustomArtistImage(artist);
+        boolean hasCustomImage = CustomArtistImageUtil.getInstance(App.Companion.getInstance()).hasCustomArtistImage(artist);
         if (noCustomImage || !hasCustomImage) {
             final List<AlbumCover> songs = new ArrayList<>();
             for (final Album album : artist.albums) {
@@ -134,6 +134,6 @@ public class ArtistGlideRequest {
     }
 
     private static Key createSignature(Artist artist) {
-        return ArtistSignatureUtil.getInstance(App.getInstance()).getArtistSignature(artist.getName());
+        return ArtistSignatureUtil.getInstance(App.Companion.getInstance()).getArtistSignature(artist.getName());
     }
 }

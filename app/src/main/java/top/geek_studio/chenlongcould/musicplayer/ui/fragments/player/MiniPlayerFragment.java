@@ -35,6 +35,8 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFra
 import top.geek_studio.chenlongcould.musicplayer.views.PlayPauseDrawable;
 
 /**
+ * 小播放器 (页面底部横条)
+ *
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class MiniPlayerFragment extends AbsMusicServiceFragment implements MusicProgressViewUpdateHelper.Callback {
@@ -43,13 +45,21 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
 
     @BindView(R.id.mini_player_title)
     TextView miniPlayerTitle;
+
     @BindView(R.id.mini_player_play_pause_button)
     ImageView miniPlayerPlayPauseButton;
+
     @BindView(R.id.progress_bar)
     MaterialProgressBar progressBar;
 
+    /**
+     * 播放暂停 drawable
+     */
     private PlayPauseDrawable miniPlayerPlayPauseDrawable;
 
+    /**
+     * 进度条帮助类
+     */
     private MusicProgressViewUpdateHelper progressViewUpdateHelper;
 
     @Override
@@ -69,7 +79,10 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         super.onViewCreated(view, savedInstanceState);
         unbinder = ButterKnife.bind(this, view);
 
+        // 设置触摸回调
         view.setOnTouchListener(new FlingPlayBackController(getActivity()));
+
+        // 设置迷你播放器
         setUpMiniPlayer(view);
     }
 
@@ -79,11 +92,18 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         unbinder.unbind();
     }
 
+    /**
+     * Setup miniPlayer
+     */
     private void setUpMiniPlayer(View root) {
         setUpPlayPauseButton();
-        progressBar.setProgressTintList(ColorStateList.valueOf(ThemeStore.accentColor(getActivity())));
+        // 设置进度条着色列表
+        progressBar.setSupportProgressTintList(ColorStateList.valueOf(ThemeStore.accentColor(getActivity())));
     }
 
+    /**
+     * 设置播放暂停按钮
+     * */
     private void setUpPlayPauseButton() {
         miniPlayerPlayPauseDrawable = new PlayPauseDrawable(getActivity());
         miniPlayerPlayPauseButton.setImageDrawable(miniPlayerPlayPauseDrawable);
@@ -91,6 +111,9 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         miniPlayerPlayPauseButton.setOnClickListener(new PlayPauseButtonOnClickHandler());
     }
 
+    /**
+     * 设置 title
+     * */
     private void updateSongTitle() {
         miniPlayerTitle.setText(MusicPlayerRemote.getCurrentSong().title);
     }
@@ -129,14 +152,21 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         progressViewUpdateHelper.stop();
     }
 
+    /**
+     * 触摸回调
+     * */
     private static class FlingPlayBackController implements View.OnTouchListener {
 
+        /**
+         * 手势控制
+         */
         GestureDetector flingPlayBackController;
 
         public FlingPlayBackController(Context context) {
             flingPlayBackController = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                    // 横向切歌
                     if (Math.abs(velocityX) > Math.abs(velocityY)) {
                         if (velocityX < 0) {
                             MusicPlayerRemote.playNextSong();
@@ -157,6 +187,9 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         }
     }
 
+    /**
+     * 更新播放暂停按钮
+     * */
     protected void updatePlayPauseDrawableState(boolean animate) {
         if (MusicPlayerRemote.isPlaying()) {
             miniPlayerPlayPauseDrawable.setPause(animate);

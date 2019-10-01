@@ -245,7 +245,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      */
     private void setMusicChooser(int key) {
         // 非 PRO 版本禁用文件夹
-        if (!App.isProVersion() && key == FOLDERS) {
+        if (!App.Companion.isProVersion() && key == FOLDERS) {
             Toast.makeText(this, R.string.folder_view_is_a_pro_feature, Toast.LENGTH_LONG).show();
             startActivityForResult(new Intent(this, PurchaseActivity.class), PURCHASE_REQUEST);
             key = LIBRARY;
@@ -371,7 +371,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      * 检查是否为专业版
      */
     private void checkSetUpPro() {
-        if (App.isProVersion()) {
+        if (App.Companion.isProVersion()) {
             setUpPro();
         }
     }
