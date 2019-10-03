@@ -1,4 +1,4 @@
-package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager;
+package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base;
 
 import android.os.Bundle;
 
@@ -14,7 +14,6 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 public abstract class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
 
     private static final String TAG = AbsLibraryPagerFragment.class.getSimpleName();
-
 
     public LibraryFragment getLibraryFragment() {
         return (LibraryFragment) getParentFragment();
@@ -34,16 +33,4 @@ public abstract class AbsLibraryPagerFragment extends AbsMusicServiceFragment {
      */
     public abstract String getSubTitle();
 
-    public class CallbackInfo<T> {
-        private List<T> callbacks = new ArrayList<>();
-
-        public List<T> getCallbacks() {
-            return callbacks;
-        }
-
-        public List<T> addCallbacks(T callback) {
-            callbacks.add(callback);
-            return callbacks;
-        }
-    }
 }

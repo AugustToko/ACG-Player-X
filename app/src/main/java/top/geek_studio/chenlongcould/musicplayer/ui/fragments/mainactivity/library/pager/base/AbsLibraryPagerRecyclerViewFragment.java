@@ -1,21 +1,20 @@
-package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager;
+package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-
-import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -23,14 +22,16 @@ import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
 
 /**
- * @param <A> 适配器类型
+ * @param <A>  适配器类型
  * @param <LM> {@link androidx.recyclerview.widget.RecyclerView.LayoutManager} 类型
  *
  * @author Karim Abou Zeid (kabouzeid)
  */
-public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView.Adapter, LM extends RecyclerView.LayoutManager> extends AbsLibraryPagerFragment implements OnOffsetChangedListener {
+public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView.Adapter, LM extends RecyclerView.LayoutManager>
+        extends AbsLibraryPagerFragment implements OnOffsetChangedListener {
 
     private Unbinder unbinder;
 
@@ -96,7 +97,7 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
 
     /**
      * 初始化适配器
-     * */
+     */
     private void initAdapter() {
         adapter = createAdapter();
         // 数据监听
@@ -132,7 +133,7 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
 
     /**
      * 如果歌曲为空, 设置提示文字
-     * */
+     */
     private void checkIsEmpty() {
         if (empty != null) {
             empty.setText(getEmptyMessage());
@@ -152,13 +153,13 @@ public abstract class AbsLibraryPagerRecyclerViewFragment<A extends RecyclerView
 
     /**
      * 创建布局管理
-     * */
+     */
     protected abstract LM createLayoutManager();
 
     /**
      * 创建适配器,
      * (子类实现)
-     * */
+     */
     @NonNull
     protected abstract A createAdapter();
 

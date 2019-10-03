@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +20,9 @@ import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
 import top.geek_studio.chenlongcould.musicplayer.loader.ArtistLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Artist;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 /**
@@ -29,10 +34,16 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     private int artistCount = 0;
 
+    private DataViewModel mDataViewModel;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+        final MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            mDataViewModel = activity.mViewModel;
+        }
     }
 
     @Override
@@ -127,6 +138,7 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
     }
 
 
+    @NotNull
     @Override
     public Loader<List<Artist>> onCreateLoader(int id, Bundle args) {
         return new AsyncArtistLoader(getActivity());
@@ -134,15 +146,18 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
 
     @Override
-    public void onLoadFinished(Loader<List<Artist>> loader, List<Artist> data) {
+    public void onLoadFinished(@NotNull Loader<List<Artist>> loader, List<Artist> data) {
         getAdapter().swapDataSet(data);
         artistCount = data.size();
+        mDataViewModel.putArtists(data);
     }
 
 
     @Override
-    public void onLoaderReset(Loader<List<Artist>> loader) {
-        getAdapter().swapDataSet(new ArrayList<>());
+    public void onLoaderReset(@NotNull Loader<List<Artist>> loader) {
+        List<Artist> data = new ArrayList<>();
+        getAdapter().swapDataSet(data);
+        mDataViewModel.putArtists(data);
     }
 
     private static class AsyncArtistLoader extends WrappedAsyncTaskLoader<List<Artist>> {

@@ -17,10 +17,13 @@ import top.geek_studio.chenlongcould.musicplayer.adapter.PlaylistAdapter;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
 import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.HistoryPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.LastAddedPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.MyTopTracksPlaylist;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewFragment;
 
 /**
  * 播放列表 Fragment
@@ -33,10 +36,16 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
 
     private int playlistsCount = 0;
 
+    private DataViewModel mViewModel;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+        final MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            mViewModel = activity.mViewModel;
+        }
     }
 
     @Override
@@ -81,12 +90,15 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
         // 加载数据
         getAdapter().swapDataSet(data);
         playlistsCount = data.size();
+        mViewModel.putPlaylists(data);
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<List<Playlist>> loader) {
+        List<Playlist> data = new ArrayList<>();
         // 置空
-        getAdapter().swapDataSet(new ArrayList<>());
+        getAdapter().swapDataSet(data);
+        mViewModel.putPlaylists(data);
     }
 
     /**

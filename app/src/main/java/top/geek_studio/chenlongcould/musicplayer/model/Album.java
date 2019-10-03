@@ -4,6 +4,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +72,7 @@ public class Album implements Parcelable {
         return songs != null ? songs.hashCode() : 0;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Album{" +

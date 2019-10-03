@@ -54,7 +54,7 @@ import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.SoundManag
 import top.geek_studio.chenlongcould.musicplayer.loader.AlbumLoader;
 import top.geek_studio.chenlongcould.musicplayer.loader.ArtistLoader;
 import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistSongLoader;
-import top.geek_studio.chenlongcould.musicplayer.model.MyViewModel;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
@@ -113,7 +113,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     private FrameLayout mLive2DContent;
     ////////////////// LIVE 2D ////////////////////
 
-    private MyViewModel mViewModel;
+    public DataViewModel mViewModel;
 
     @Nullable
     private View navigationDrawerHeader;
@@ -171,7 +171,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             showChangelog();
         }
 
-        mViewModel = ViewModelProviders.of(this).get(MyViewModel.class);
+        mViewModel = ViewModelProviders.of(this).get(DataViewModel.class);
     }
 
     /**

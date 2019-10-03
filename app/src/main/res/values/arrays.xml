@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="pref_home_grid_style_layout">
+        <item>@layout/item_artist</item>
+        <item>@layout/item_artist_square</item>
+        <item>@layout/item_album_card</item>
+    </array>
+</resources>

@@ -52,11 +52,12 @@ android {
         versionName '1.3.2'
         applicationIdSuffix = 'Common'
         multiDexEnabled = true
+        multiDexKeepFile file('multidex-config.txt')
     }
     signingConfigs {
         release {
             Properties properties = getProperties('/Users/karim/Documents/Phonograph/privatekeys/keystore.properties')
-            storeFile file('/Volumes/HDD/chenlongcould.jks')
+            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\chenlongcould.jks')
             keyAlias getProperty(properties, 'keyAlias')
             storePassword getProperty(properties, 'storePassword')
             keyPassword getProperty(properties, 'keyPassword')
@@ -99,6 +100,7 @@ android {
         preDexLibraries = false
         additionalParameters += '--multi-dex'
         additionalParameters += '--set-max-idx-number=50000'//每个包内方法数上限（根据实际项目配置这个数，来适配4.0-4.4一些低端机型，因为拆分的dex太大，这些低端机型加载不了dex）
+        additionalParameters += '--main-dex-list=' + '/multidex-config.txt'
         additionalParameters += '--minimal-main-dex'
     }
 }
@@ -136,8 +138,8 @@ dependencies {
     implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar') {
         transitive = true
     }
-    implementation 'com.jakewharton:butterknife:10.1.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
+    implementation 'com.jakewharton:butterknife:10.2.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
     implementation 'com.squareup.retrofit2:retrofit:2.6.1'
     implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
     implementation 'com.google.code.gson:gson:2.8.5'
@@ -151,6 +153,9 @@ dependencies {
     implementation "androidx.core:core-ktx:1.1.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.9'
 }
 repositories {
     mavenCentral()

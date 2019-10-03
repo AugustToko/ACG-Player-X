@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/recentArtistContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <top.geek_studio.chenlongcould.musicplayer.views.RetroChip
+        android:id="@+id/chipHead"
+        style="@style/Widget.MaterialComponents.Chip.Action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:textAppearance="@style/ChipFont"
+        android:textColor="?android:textColorSecondary"
+        app:chipIconTint="?iconColor"
+        app:chipStrokeColor="?dividerColor"
+        app:chipStrokeWidth="1dp"
+        app:iconStartPadding="8dp"
+        tools:chipIcon="@drawable/ic_person_white_24dp"
+        tools:text="For You" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false" />
+
+</LinearLayout>

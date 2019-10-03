@@ -5,6 +5,9 @@ import android.os.Parcelable;
 
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+/**
+ * 分类信息
+ * */
 public class CategoryInfo implements Parcelable {
     public Category category;
     public boolean visible;
@@ -40,7 +43,11 @@ public class CategoryInfo implements Parcelable {
         }
     };
 
+    /**
+     * 分类列表
+     * */
     public enum Category {
+        HOME(R.string.home),
         SONGS(R.string.songs),
         ALBUMS(R.string.albums),
         ARTISTS(R.string.artists),

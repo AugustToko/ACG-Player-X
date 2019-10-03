@@ -64,4 +64,5 @@ http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
 
     <dimen name="card_on_app_bar_side_padding">8dp</dimen>
 
+    <dimen name="icon_notification_dimen">32dp</dimen>
 </resources>

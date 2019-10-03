@@ -12,4 +12,9 @@
     <attr name="iconColor" format="color" />
     <attr name="dividerColor" format="color" />
 
+    <declare-styleable name="ColorIconsImageView">
+        <attr name="iconBackgroundColor" format="color" />
+        <attr name="icon" format="reference" />
+    </declare-styleable>
+
 </resources>

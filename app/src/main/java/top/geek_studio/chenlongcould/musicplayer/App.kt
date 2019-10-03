@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer
 
-import android.app.Application
 import android.os.Build
 import androidx.multidex.MultiDexApplication
 import com.kabouzeid.appthemehelper.ThemeStore

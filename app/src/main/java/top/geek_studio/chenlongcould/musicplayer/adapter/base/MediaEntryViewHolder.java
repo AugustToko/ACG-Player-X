@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -60,6 +61,9 @@ public class MediaEntryViewHolder extends RecyclerView.ViewHolder implements Vie
     public TextView durationText;
 
     @Nullable
+    public ImageButton playSongs;
+
+    @Nullable
     @BindView(R.id.format_text)
     public TextView formatText;
 
@@ -69,6 +73,8 @@ public class MediaEntryViewHolder extends RecyclerView.ViewHolder implements Vie
 
         itemView.setOnClickListener(this);
         itemView.setOnLongClickListener(this);
+
+        playSongs = itemView.findViewById(R.id.playSongs);
     }
 
     protected void setImageTransitionName(@NonNull String transitionName) {

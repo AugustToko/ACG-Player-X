@@ -20,6 +20,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.CategoryInfo;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.ArtistsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.GenresFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.SongsFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
@@ -103,7 +104,7 @@ public class MusicLibraryPagerAdapter extends FragmentPagerAdapter {
     }
 
     @Override
-    public void destroyItem(final ViewGroup container, final int position, final Object object) {
+    public void destroyItem(@NonNull final ViewGroup container, final int position, @NonNull final Object object) {
         super.destroyItem(container, position, object);
         final WeakReference<Fragment> mWeakFragment = mFragmentArray.get(position);
         if (mWeakFragment != null) {
@@ -148,6 +149,7 @@ public class MusicLibraryPagerAdapter extends FragmentPagerAdapter {
     }
 
     public enum MusicFragments {
+        HOME(HomeFragment.class),
         SONGS(SongsFragment.class),
         ALBUMS(AlbumsFragment.class),
         ARTISTS(ArtistsFragment.class),

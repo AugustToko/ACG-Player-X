@@ -13,8 +13,13 @@ import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
 import top.geek_studio.chenlongcould.musicplayer.loader.AlbumLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Album;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +33,16 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
 
     private int albumCount = 0;
 
+    private DataViewModel mViewModel;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+        final MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            mViewModel = activity.mViewModel;
+        }
     }
 
     @Override
@@ -75,7 +86,7 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
 
     @Override
     protected void setSortOrder(String sortOrder) {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -121,23 +132,28 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
 
     @Override
     public void onMediaStoreChanged() {
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
+    @NotNull
     @Override
     public Loader<List<Album>> onCreateLoader(int id, Bundle args) {
         return new AsyncAlbumLoader(getActivity());
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Album>> loader, List<Album> data) {
+    public void onLoadFinished(@NotNull Loader<List<Album>> loader, List<Album> data) {
         getAdapter().swapDataSet(data);
         albumCount = data.size();
+        mViewModel.putAlbums(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Album>> loader) {
-        getAdapter().swapDataSet(new ArrayList<>());
+    public void onLoaderReset(@NotNull Loader<List<Album>> loader) {
+        final List<Album> data = new ArrayList<>();
+        getAdapter().swapDataSet(data);
+        mViewModel.putAlbums(data);
+        albumCount = 0;
     }
 
     private static class AsyncAlbumLoader extends WrappedAsyncTaskLoader<List<Album>> {

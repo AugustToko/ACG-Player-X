@@ -12,6 +12,8 @@ import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
 import top.geek_studio.chenlongcould.musicplayer.loader.GenreLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Genre;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewFragment;
+
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.util.ArrayList;

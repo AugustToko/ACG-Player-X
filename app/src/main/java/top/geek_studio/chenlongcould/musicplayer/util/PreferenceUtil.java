@@ -3,9 +3,12 @@ package top.geek_studio.chenlongcould.musicplayer.util;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StyleRes;
 
@@ -92,6 +95,12 @@ public final class PreferenceUtil {
     public static final String LIBRARY_CATEGORIES = "library_categories";
 
     private static final String REMEMBER_SHUFFLE = "remember_shuffle";
+
+    public static final String HOME_ARTIST_GRID_STYLE = "home_artist_grid_style";
+
+    public static final String DOMINANT_COLOR = "dominant_color";
+
+    public static final String PROFILE_IMAGE_PATH = "profile_image_path";
 
     private static PreferenceUtil sInstance;
 
@@ -518,12 +527,16 @@ public final class PreferenceUtil {
         editor.apply();
     }
 
+    /**
+     * 获取分类信息
+     *
+     * @return 分类列表
+     * */
     public List<CategoryInfo> getLibraryCategoryInfos() {
         String data = mPreferences.getString(LIBRARY_CATEGORIES, null);
         if (data != null) {
             Gson gson = new Gson();
-            Type collectionType = new TypeToken<List<CategoryInfo>>() {
-            }.getType();
+            Type collectionType = new TypeToken<List<CategoryInfo>>() {}.getType();
 
             try {
                 return gson.fromJson(data, collectionType);
@@ -535,13 +548,39 @@ public final class PreferenceUtil {
         return getDefaultLibraryCategoryInfos();
     }
 
+    /**
+     * 获取默认分类信息
+     *
+     * @return 分类列表
+     * */
     public List<CategoryInfo> getDefaultLibraryCategoryInfos() {
-        List<CategoryInfo> defaultCategoryInfos = new ArrayList<>(5);
+        List<CategoryInfo> defaultCategoryInfos = new ArrayList<>(6);
+        defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.HOME, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.SONGS, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.ALBUMS, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.ARTISTS, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.GENRES, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.PLAYLISTS, true));
         return defaultCategoryInfos;
+    }
+
+    @LayoutRes
+    public int getHomeGridStyle(Context context) {
+        int pos = Integer.parseInt(mPreferences.getString(HOME_ARTIST_GRID_STYLE, "0"));
+        TypedArray typedArray = context.getResources().obtainTypedArray(R.array.pref_home_grid_style_layout);
+        int layoutRes = typedArray.getResourceId(pos, -1);
+        typedArray.recycle();
+        if (layoutRes == -1) {
+            return R.layout.item_artist;
+        }
+        return layoutRes;
+    }
+
+    public boolean isDominantColor() {
+        return mPreferences.getBoolean(DOMINANT_COLOR, false);
+    }
+
+    public String getProfileImage() {
+        return mPreferences.getString(PROFILE_IMAGE_PATH, "");
     }
 }

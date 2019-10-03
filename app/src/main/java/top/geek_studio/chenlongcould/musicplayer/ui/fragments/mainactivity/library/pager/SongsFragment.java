@@ -2,9 +2,9 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -19,7 +19,10 @@ import top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.LoaderIds;
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
 /**
@@ -38,10 +41,16 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     private int songCount = 0;
 
+    private DataViewModel mViewModel;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
+        final MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            mViewModel = activity.mViewModel;
+        }
     }
 
     @Override
@@ -156,12 +165,14 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     public void onLoadFinished(@NonNull Loader<List<Song>> loader, List<Song> data) {
         getAdapter().swapDataSet(data);
         songCount = data.size();
-        Log.d(TAG, "onLoadFinished: ");
+        mViewModel.putSongs(data);
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<List<Song>> loader) {
-        getAdapter().swapDataSet(new ArrayList<>());
+        List<Song> songs = new ArrayList<>();
+        getAdapter().swapDataSet(songs);
+        mViewModel.getSongData().setValue(songs);
     }
 
     /**

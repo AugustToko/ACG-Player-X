@@ -37,4 +37,21 @@
         <item name="android:transitionName" tools:ignore="NewApi">toolbar</item>
     </style>
 
+    <style name="TextViewHeadline5" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:fontFamily">@font/circular</item>
+    </style>
+
+    <style name="ChipFont" parent="TextAppearance.MaterialComponents.Chip">
+        <item name="android:fontFamily">@font/circular_std_book</item>
+    </style>
+
+    <style name="TextViewSubtitle1" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:fontFamily">@font/circular</item>
+    </style>
+
+    <style name="TextViewNormal">
+        <item name="android:fontFamily">@font/circular</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
 </resources>

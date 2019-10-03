@@ -310,4 +310,9 @@
     <string name="finish_current_music_sleep_timer">Finish last song</string>
     <string name="dialog_ringtone_title">Set ringtone</string>
     <string name="dialog_ringtone_message">Allow ACG Player X to modify audio settings</string>
+    <string name="home">Home</string>
+    <string name="welcome">Welcome</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="recent_artists">Recent Artists</string>
+    <string name="recent_albums">Recent Albums</string>
 </resources>

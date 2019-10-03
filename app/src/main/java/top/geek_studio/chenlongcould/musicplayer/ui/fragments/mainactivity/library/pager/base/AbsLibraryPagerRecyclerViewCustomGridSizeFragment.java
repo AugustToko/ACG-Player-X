@@ -1,4 +1,4 @@
-package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager;
+package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base;
 
 import android.os.Bundle;
 import androidx.annotation.LayoutRes;
@@ -12,7 +12,8 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 /**
  * @author Karim Abou Zeid (kabouzeid)
  */
-public abstract class AbsLibraryPagerRecyclerViewCustomGridSizeFragment<A extends RecyclerView.Adapter, LM extends RecyclerView.LayoutManager> extends AbsLibraryPagerRecyclerViewFragment<A, LM> {
+public abstract class AbsLibraryPagerRecyclerViewCustomGridSizeFragment<A extends RecyclerView.Adapter, LM extends RecyclerView.LayoutManager>
+        extends AbsLibraryPagerRecyclerViewFragment<A, LM> {
     private int gridSize;
     private String sortOrder;
 
