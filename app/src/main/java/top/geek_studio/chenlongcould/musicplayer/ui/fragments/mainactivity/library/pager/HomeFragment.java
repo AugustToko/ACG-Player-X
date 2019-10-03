@@ -2,12 +2,15 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,25 +19,44 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.internal.MDButton;
+import com.google.gson.Gson;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
+import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import top.geek_studio.chenlongcould.musicplayer.Constants;
 import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
+import top.geek_studio.chenlongcould.musicplayer.model.Hitokoto;
 import top.geek_studio.chenlongcould.musicplayer.model.Home;
+import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.HistoryPlaylist;
+import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.LastAddedPlaylist;
+import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.MyTopTracksPlaylist;
+import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.Compressor;
+import top.geek_studio.chenlongcould.musicplayer.util.HitokotoUtils;
+import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.OkHttpUtils;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.CircularImageView;
 
@@ -58,6 +80,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     ATEPrimaryTextView userName;
 
+    LinearLayout hitokotoView;
+
     private CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -73,6 +97,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
         userImage = view.findViewById(R.id.userImage);
         userName = view.findViewById(R.id.titleWelcome);
+        hitokotoView = view.findViewById(R.id.hitokotoView);
 
         return view;
     }
@@ -85,6 +110,31 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         if (appCompatActivity != null) {
             homeAdapter = new HomeAdapter(appCompatActivity, new ArrayList<>(), getDisplayMetrics(appCompatActivity));
             homeDataManager = new HomeDataManager(homeAdapter);
+
+            // set View click
+            view.findViewById(R.id.lastAdded).setOnClickListener(v -> NavigationUtil.goToPlaylist(appCompatActivity, new LastAddedPlaylist(appCompatActivity)));
+            view.findViewById(R.id.topPlayed).setOnClickListener(v -> NavigationUtil.goToPlaylist(appCompatActivity, new MyTopTracksPlaylist(appCompatActivity)));
+            view.findViewById(R.id.actionShuffle).setOnClickListener(v -> MusicPlayerRemote.openAndShuffleQueue(SongLoader.getAllSongs(requireActivity()), true));
+            view.findViewById(R.id.history).setOnClickListener(v -> NavigationUtil.goToPlaylist(appCompatActivity, new HistoryPlaylist(appCompatActivity)));
+
+            // first set
+            setUpHitokotoView(appCompatActivity);
+
+            hitokotoView.setOnLongClickListener(v -> {
+                MaterialDialog materialDialog = new MaterialDialog.Builder(appCompatActivity).title("Hitokoto · 一言")
+                        .content("Select a action")
+                        .negativeText("Change Me!")
+                        .onNegative(((dialog, which) -> setUpHitokotoView(appCompatActivity)))
+                        .neutralText("By Hitokoto.cn")
+                        .onNeutral((dialog, which) -> { })
+                        .build();
+                final MDButton button = materialDialog.getActionButton(DialogAction.NEUTRAL);
+                button.setEnabled(false);
+                button.setClickable(false);
+                button.setTextColor(Color.GRAY);
+                materialDialog.show();
+                return false;
+            });
         }
 
         final RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
@@ -94,6 +144,17 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         setUpUserData(appCompatActivity);
 
         setUpHomeData(appCompatActivity);
+
+    }
+
+    private void setUpHitokotoView(Activity activity) {
+        HitokotoUtils.getHitokoto(activity, data -> activity.runOnUiThread(() -> {
+            ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(data.getHitokoto());
+            ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(data.getFrom());
+            if (activity instanceof MainActivity) {
+                ((MainActivity) activity).mViewModel.HitokotoData.setValue(data);
+            }
+        }));
     }
 
     /**

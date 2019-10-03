@@ -34,6 +34,12 @@ public class DataViewModel extends ViewModel {
 
     private MutableLiveData<List<Artist>> artistsData = new MutableLiveData<>();
 
+    /**
+     * 缓存一言
+     * */
+    public MutableLiveData<Hitokoto> HitokotoData = new MutableLiveData<>();
+
+
     //////////////////////// songs /////////////////////////
 
     public void putSongs(@NonNull List<Song> songs) {
@@ -102,6 +108,14 @@ public class DataViewModel extends ViewModel {
 
     //////////////////////// playlist /////////////////////////
 
+    /**
+     * 回调
+     *
+     * @param <T> type
+     *
+     * @deprecated Use {@link top.geek_studio.chenlongcould.musicplayer.interfaces.TransListDataCallback}
+     * */
+    @Deprecated
     public interface DataUpdateCallback <T> {
         void onUpdate(List<T> data);
     }

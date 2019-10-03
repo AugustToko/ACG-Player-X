@@ -54,6 +54,8 @@
         </LinearLayout>
     </LinearLayout>
 
+    <include layout="@layout/hitokoto_bar"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -74,6 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="16dp"
+                android:foreground="?selectableItemBackground"
                 app:iconBackgroundColor="@color/md_blue_500"
                 app:srcCompat="@drawable/ic_access_time_white_24dp" />
 
@@ -98,6 +101,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="16dp"
+                android:foreground="?selectableItemBackground"
                 app:iconBackgroundColor="@color/md_red_500"
                 app:srcCompat="@drawable/ic_library_add_white_24dp" />
 
@@ -122,6 +126,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="16dp"
+                android:foreground="?selectableItemBackground"
                 app:iconBackgroundColor="@color/md_deep_purple_500"
                 app:srcCompat="@drawable/ic_trending_up_white_24dp" />
 
@@ -146,6 +151,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="16dp"
+                android:foreground="?selectableItemBackground"
                 app:iconBackgroundColor="@color/md_green_500"
                 app:srcCompat="@drawable/ic_shuffle_white_24dp" />
 
