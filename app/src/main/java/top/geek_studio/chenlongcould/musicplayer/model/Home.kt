@@ -29,7 +29,7 @@ import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter
 class Home(val priority: Int,
            @StringRes val title: Int,
            @StringRes val subTitle: Int,
-           val arrayList: ArrayList<*>,
+           val arrayList: List<*>,
            @HomeAdapter.Companion.HomeSection
            val homeSection: Int,
            @DrawableRes

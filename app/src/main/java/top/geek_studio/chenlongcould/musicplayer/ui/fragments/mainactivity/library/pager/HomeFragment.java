@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,31 +21,26 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.internal.MDButton;
-import com.google.gson.Gson;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import top.geek_studio.chenlongcould.musicplayer.Constants;
 import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import top.geek_studio.chenlongcould.musicplayer.model.Hitokoto;
 import top.geek_studio.chenlongcould.musicplayer.model.Home;
+import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.HistoryPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.LastAddedPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.MyTopTracksPlaylist;
@@ -56,7 +50,6 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 import top.geek_studio.chenlongcould.musicplayer.util.Compressor;
 import top.geek_studio.chenlongcould.musicplayer.util.HitokotoUtils;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.OkHttpUtils;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.CircularImageView;
 
@@ -126,7 +119,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                         .negativeText("Change Me!")
                         .onNegative(((dialog, which) -> setUpHitokotoView(appCompatActivity)))
                         .neutralText("By Hitokoto.cn")
-                        .onNeutral((dialog, which) -> { })
+                        .onNeutral((dialog, which) -> {
+                        })
                         .build();
                 final MDButton button = materialDialog.getActionButton(DialogAction.NEUTRAL);
                 button.setEnabled(false);
@@ -147,7 +141,12 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     }
 
-    private void setUpHitokotoView(Activity activity) {
+    /**
+     * 设置一言
+     *
+     * @param activity act
+     * */
+    private void setUpHitokotoView(@NonNull Activity activity) {
         HitokotoUtils.getHitokoto(activity, data -> activity.runOnUiThread(() -> {
             ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(data.getHitokoto());
             ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(data.getFrom());
@@ -208,56 +207,131 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 //            });
 
             // recent artists
-            activity.mViewModel.setArtistsUpdateObs(activity, data -> {
+            activity.mViewModel.setArtistsUpdateObs(activity, data -> CustomThreadPool.post(() -> {
+                if (data.size() == 0) return;
 
                 final Home home = new Home(
                         0,
                         R.string.recent_artists,
                         0,
-                        (ArrayList<?>) data,
+                        data,
                         HomeAdapter.RECENT_ARTISTS,
                         R.drawable.ic_artist_white_24dp
                 );
 
-                homeDataManager.update(home);
-            });
+                homeDataManager.update(activity, home);
+            }));
 
             // recent albums
-            activity.mViewModel.setAlbumsUpdateObs(activity, data -> {
+            activity.mViewModel.setAlbumsUpdateObs(activity, data -> CustomThreadPool.post(() -> {
+                if (data.size() == 0) return;
 
-                Home home = new Home(
+                final Home home = new Home(
                         1,
                         R.string.recent_albums,
                         0,
-                        (ArrayList<?>) data,
+                        data,
                         HomeAdapter.RECENT_ALBUMS,
                         R.drawable.ic_album_white_24dp
                 );
 
-                homeDataManager.update(home);
-            });
+                homeDataManager.update(activity, home);
+            }));
 
-//            // playlists
-//            activity.mViewModel.setPlaylistsUpdateObs(activity, data -> {
-//                Log.d(TAG, "setUpHomeData playlist count: " + data.size());
-//
-//                // do sth
-//                homesData.remove(4);
-//                homesData.add(4, new Home(
-//                        4,
-//                        R.string.playlists,
-//                        0,
-//                        (ArrayList<?>) data,
-//                        HomeAdapter.PLAYLISTS,
-//                        R.drawable.ic_bookmark_music_white_24dp
-//                ));
-//                homeAdapter.swapData(homesData);
-//            });
+            // playlists
+            activity.mViewModel.setPlaylistsUpdateObs(activity, data -> CustomThreadPool.post(() -> {
+                if (data.size() == 0) return;
+
+                final List<Playlist> playlists = new ArrayList<>();
+
+                for (Playlist p : data) {
+                    // ID 判断, 小于 0 为自创 playlist, 参考 AbsSmartPlaylist
+                    if (p.id > 0) playlists.add(p);
+                }
+
+                final Home home = new Home(
+                        4,
+                        R.string.playlists,
+                        0,
+                        playlists,
+                        HomeAdapter.PLAYLISTS,
+                        R.drawable.ic_playlist_add_white_24dp
+                );
+
+                homeDataManager.update(activity, home);
+            }));
 
             // other data listener
         }
 
     }
+
+//    @Nullable
+//    public static String stringMD5(String input) {
+//
+//        try {
+//
+//            // 拿到一个MD5转换器（如果想要SHA1参数换成”SHA1”）
+//
+//            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+//
+//
+//            // 输入的字符串转换成字节数组
+//
+//            byte[] inputByteArray = input.getBytes();
+//
+//
+//            // inputByteArray是输入字符串转换得到的字节数组
+//
+//            messageDigest.update(inputByteArray);
+//
+//
+//            // 转换并返回结果，也是字节数组，包含16个元素
+//
+//            byte[] resultByteArray = messageDigest.digest();
+//
+//
+//            // 字符数组转换成字符串返回
+//
+//            return byteArrayToHex(resultByteArray);
+//
+//
+//        } catch (NoSuchAlgorithmException e) {
+//
+//            return null;
+//        }
+//
+//    }
+//
+//    public static String byteArrayToHex(byte[] byteArray) {
+//
+//        // 首先初始化一个字符数组，用来存放每个16进制字符
+//
+//        char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+//
+//
+//        // new一个字符数组，这个就是用来组成结果字符串的（解释一下：一个byte是八位二进制，也就是2位十六进制字符（2的8次方等于16的2次方））
+//
+//        char[] resultCharArray = new char[byteArray.length * 2];
+//
+//
+//        // 遍历字节数组，通过位运算（位运算效率高），转换成字符放到字符数组中去
+//
+//        int index = 0;
+//
+//        for (byte b : byteArray) {
+//
+//            resultCharArray[index++] = hexDigits[b >>> 4 & 0xf];
+//
+//            resultCharArray[index++] = hexDigits[b & 0xf];
+//
+//        }
+//
+//        // 字符数组组合成字符串返回
+//
+//        return new String(resultCharArray);
+//
+//    }
 
     private DisplayMetrics getDisplayMetrics(@NonNull Activity activity) {
         final Display display = activity.getWindowManager().getDefaultDisplay();
@@ -282,13 +356,17 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
         private Home recentAlbum;
 
+        private Home recentPlaylist;
+
         private HomeAdapter adapter;
 
         HomeDataManager(HomeAdapter adapter) {
             this.adapter = adapter;
         }
 
-        public void update(@NonNull Home home) {
+        public void update(@NonNull final Activity activity, @NonNull Home home) {
+            boolean need = false;
+
             if (home.getHomeSection() == HomeAdapter.RECENT_ALBUMS) {
                 if (recentAlbum != null) {
                     if (isSame(home, recentAlbum)) return;
@@ -297,7 +375,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 }
                 recentAlbum = home;
                 homeList.add(home);
-                adapter.swapData(new ArrayList<>(homeList));
+                need = true;
             }
 
             if (home.getHomeSection() == HomeAdapter.RECENT_ARTISTS) {
@@ -307,8 +385,53 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 }
                 recentArtist = home;
                 homeList.add(home);
-                adapter.swapData(new ArrayList<>(homeList));
+                need = true;
             }
+
+            if (home.getHomeSection() == HomeAdapter.PLAYLISTS) {
+//                if (recentPlaylist != null) {
+//
+//                    final List<?> old = recentPlaylist.getArrayList();
+//                    final List<?> newList = home.getArrayList();
+//
+//                    if (old.size() == newList.size()) {
+//                        for (int i = 0; i < old.size(); i++) {
+//                            final Playlist o = (Playlist) old.get4LastFM(i);
+//                            final Playlist n = (Playlist) newList.get4LastFM(i);
+//
+//                            if (o.modifyDate != n.modifyDate) {
+//                                need = true;
+//                                homeList.remove(recentPlaylist);
+//                                recentPlaylist = home;
+//                                homeList.add(home);
+//                                break;
+//                            } else {
+//                                need = false;
+//                            }
+//                        }
+//                    } else {
+//                        need = true;
+//                        homeList.remove(recentPlaylist);
+//                        recentPlaylist = home;
+//                        homeList.add(home);
+//                    }
+//
+//                } else {
+//                    need = true;
+//                    recentPlaylist = home;
+//                    homeList.add(home);
+//                }
+                if (recentPlaylist != null) {
+                    homeList.remove(recentPlaylist);
+                }
+
+                need = true;
+                recentPlaylist = home;
+                homeList.add(home);
+
+            }
+
+            if (need) activity.runOnUiThread(() -> adapter.swapData(new ArrayList<>(homeList)));
         }
 
         private boolean isSame(Home h1, Home h2) {

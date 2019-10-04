@@ -172,7 +172,7 @@ public class SongPlayCountStore extends SQLiteOpenHelper {
         // begin the transaction
         database.beginTransaction();
 
-        // get the cursor of this content inside the transaction
+        // get4LastFM the cursor of this content inside the transaction
         final Cursor cursor = database.query(SongPlayCountColumns.NAME, null, WHERE_ID_EQUALS,
                 new String[]{stringId}, null, null, null);
 
@@ -285,7 +285,7 @@ public class SongPlayCountStore extends SQLiteOpenHelper {
     }
 
     /**
-     * This updates all the results for the getTopPlayedResults so that we can get an
+     * This updates all the results for the getTopPlayedResults so that we can get4LastFM an
      * accurate list of the top played results
      */
     private synchronized void updateResults() {
@@ -302,7 +302,7 @@ public class SongPlayCountStore extends SQLiteOpenHelper {
         database.delete(SongPlayCountColumns.NAME, SongPlayCountColumns.LAST_UPDATED_WEEK_INDEX
                 + " < " + oldestWeekWeCareAbout, null);
 
-        // get the remaining rows
+        // get4LastFM the remaining rows
         Cursor cursor = database.query(SongPlayCountColumns.NAME,
                 new String[]{SongPlayCountColumns.ID},
                 null, null, null, null, null);

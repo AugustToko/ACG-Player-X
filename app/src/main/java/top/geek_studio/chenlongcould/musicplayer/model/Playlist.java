@@ -2,22 +2,35 @@ package top.geek_studio.chenlongcould.musicplayer.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class Playlist implements Parcelable {
+    private static final String TAG = Playlist.class.getSimpleName();
+
     public final int id;
     public final String name;
+    public final long modifyDate;
 
-    public Playlist(final int id, final String name) {
+    public Playlist(final int id, final String name, final long modifyDate) {
         this.id = id;
         this.name = name;
+        this.modifyDate = modifyDate;
+
+//        Log.d(TAG, "Playlist: date : " + new Date(modifyDate));
     }
 
     public Playlist() {
         this.id = -1;
         this.name = "";
+        this.modifyDate = 0;
     }
 
     @Override
@@ -39,6 +52,7 @@ public class Playlist implements Parcelable {
         return result;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Playlist{" +
@@ -57,11 +71,13 @@ public class Playlist implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(this.id);
         dest.writeString(this.name);
+        dest.writeLong(this.modifyDate);
     }
 
     protected Playlist(Parcel in) {
         this.id = in.readInt();
         this.name = in.readString();
+        this.modifyDate = in.readLong();
     }
 
     public static final Creator<Playlist> CREATOR = new Creator<Playlist>() {

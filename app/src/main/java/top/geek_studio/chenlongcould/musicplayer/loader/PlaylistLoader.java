@@ -125,7 +125,8 @@ public class PlaylistLoader {
         final int id = cursor.getInt(0);
         // playlist name
         final String name = cursor.getString(1);
-        return new Playlist(id, name);
+        final long modifyDate = cursor.getLong(cursor.getColumnIndexOrThrow(PlaylistsColumns.DATE_MODIFIED));
+        return new Playlist(id, name, modifyDate);
     }
 
     /**
@@ -145,7 +146,9 @@ public class PlaylistLoader {
                             /* 0 */
                             BaseColumns._ID,
                             /* 1 */
-                            PlaylistsColumns.NAME
+                            PlaylistsColumns.NAME,
+                            /* ? */
+                            PlaylistsColumns.DATE_MODIFIED
                     }, selection, values, MediaStore.Audio.Playlists.DEFAULT_SORT_ORDER);
         } catch (SecurityException e) {
             return null;

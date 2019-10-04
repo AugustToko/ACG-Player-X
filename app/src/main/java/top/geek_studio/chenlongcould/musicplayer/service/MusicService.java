@@ -1332,7 +1332,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         @Override
         public void onChange(boolean selfChange) {
             // if a change is detected, remove any scheduled callback
-            // then post a new one. This is intended to prevent closely
+            // then post4LastFM a new one. This is intended to prevent closely
             // spaced events from generating multiple refresh calls
             mHandler.removeCallbacks(this);
             mHandler.postDelayed(this, REFRESH_DELAY);

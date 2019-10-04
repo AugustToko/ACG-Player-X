@@ -2,13 +2,12 @@ package top.geek_studio.chenlongcould.musicplayer.lastfm.rest.service;
 
 import androidx.annotation.Nullable;
 
-import top.geek_studio.chenlongcould.musicplayer.lastfm.rest.model.LastFmAlbum;
-import top.geek_studio.chenlongcould.musicplayer.lastfm.rest.model.LastFmArtist;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Query;
+import top.geek_studio.chenlongcould.musicplayer.lastfm.rest.model.LastFmAlbum;
+import top.geek_studio.chenlongcould.musicplayer.lastfm.rest.model.LastFmArtist;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)

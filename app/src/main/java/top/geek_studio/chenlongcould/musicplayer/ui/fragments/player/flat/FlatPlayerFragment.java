@@ -421,7 +421,7 @@ public class FlatPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                 break;
             case ANCHORED:
                 //noinspection ConstantConditions
-                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED); // this fixes a bug where the panel would get stuck for some reason
+                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED); // this fixes a bug where the panel would get4LastFM stuck for some reason
                 break;
         }
     }

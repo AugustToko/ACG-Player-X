@@ -39,7 +39,6 @@ public class DataViewModel extends ViewModel {
      * */
     public MutableLiveData<Hitokoto> HitokotoData = new MutableLiveData<>();
 
-
     //////////////////////// songs /////////////////////////
 
     public void putSongs(@NonNull List<Song> songs) {

@@ -149,14 +149,12 @@ public class SearchActivity extends AbsMusicServiceActivity
     private void search(@NonNull String query) {
         this.query = query;
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-//        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
     public void onMediaStoreChanged() {
         super.onMediaStoreChanged();
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-//        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override

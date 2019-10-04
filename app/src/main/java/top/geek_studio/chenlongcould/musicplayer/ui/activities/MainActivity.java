@@ -59,6 +59,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
@@ -93,6 +94,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      * 展示 {@link FoldersFragment}
      */
     private static final int FOLDERS = 1;
+
+    private static final int NET_SEARCH = 2;
 
     /**
      * Drawer 菜单点击延迟, 用于点击item, 等待 Drawer 收起, 再进行操作
@@ -263,6 +266,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 navigationView.setCheckedItem(R.id.nav_folders);
                 setCurrentFragment(FoldersFragment.newInstance(this));
                 break;
+            case NET_SEARCH:
+                navigationView.setCheckedItem(R.id.nav_net_search);
+                setCurrentFragment(NetSearchFragment.newInstance());
         }
     }
 
@@ -338,6 +344,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     break;
                 case R.id.nav_folders:
                     new Handler().postDelayed(() -> setMusicChooser(FOLDERS), DRAWER_WAIT_TIME);
+                    break;
+                case R.id.nav_net_search:
+                    new Handler().postDelayed(() -> setMusicChooser(NET_SEARCH), DRAWER_WAIT_TIME);
                     break;
                 case R.id.buy_pro:
                     new Handler().postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);

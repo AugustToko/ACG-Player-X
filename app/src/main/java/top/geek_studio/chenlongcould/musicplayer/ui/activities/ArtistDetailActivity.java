@@ -66,6 +66,8 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
  */
 public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implements PaletteColorHolder, CabHolder, LoaderManager.LoaderCallbacks<Artist> {
 
+    private static final String TAG = ArtistDetailActivity.class.getSimpleName();
+
     private static final int LOADER_ID = LoaderIds.ARTIST_DETAIL_ACTIVITY;
     private static final int REQUEST_CODE_SELECT_IMAGE = 1000;
 
@@ -141,7 +143,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
         setUpToolbar();
         setUpViews();
 
-        getSupportLoaderManager().initLoader(LOADER_ID, getIntent().getExtras(), this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, getIntent().getExtras(), this);
     }
 
     @Override
@@ -202,7 +204,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
     }
 
     private void reload() {
-        getSupportLoaderManager().restartLoader(LOADER_ID, getIntent().getExtras(), this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, getIntent().getExtras(), this);
     }
 
     private void loadBiography() {
@@ -218,6 +220,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
                     @Override
                     public void onResponse(@NonNull Call<LastFmArtist> call, @NonNull Response<LastFmArtist> response) {
                         final LastFmArtist lastFmArtist = response.body();
+
                         if (lastFmArtist != null && lastFmArtist.getArtist() != null) {
                             final String bioContent = lastFmArtist.getArtist().getBio().getContent();
                             if (bioContent != null && !bioContent.trim().isEmpty()) {

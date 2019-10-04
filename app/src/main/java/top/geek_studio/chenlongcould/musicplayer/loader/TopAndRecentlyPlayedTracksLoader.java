@@ -76,7 +76,7 @@ public class TopAndRecentlyPlayedTracksLoader {
 
     @Nullable
     private static SortedLongCursor makeRecentTracksCursorImpl(@NonNull final Context context) {
-        // first get the top results ids from the internal database
+        // first get4LastFM the top results ids from the internal database
         Cursor songs = HistoryStore.getInstance(context).queryRecentIds();
 
         try {
@@ -91,7 +91,7 @@ public class TopAndRecentlyPlayedTracksLoader {
 
     @Nullable
     private static SortedLongCursor makeTopTracksCursorImpl(@NonNull final Context context) {
-        // first get the top results ids from the internal database
+        // first get4LastFM the top results ids from the internal database
         Cursor songs = SongPlayCountStore.getInstance(context).getTopPlayedResults(NUMBER_OF_TOP_TRACKS);
 
         try {
@@ -129,7 +129,7 @@ public class TopAndRecentlyPlayedTracksLoader {
 
             selection.append(")");
 
-            // get a list of songs with the data given the selection statement
+            // get4LastFM a list of songs with the data given the selection statement
             Cursor songCursor = SongLoader.makeSongCursor(context, selection.toString(), null);
             if (songCursor != null) {
                 // now return the wrapped TopTracksCursor to handle sorting given order

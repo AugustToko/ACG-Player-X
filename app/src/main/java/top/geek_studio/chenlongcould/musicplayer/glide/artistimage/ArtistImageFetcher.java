@@ -38,7 +38,7 @@ public class ArtistImageFetcher implements DataFetcher<InputStream> {
 
     @Override
     public String getId() {
-        Log.d("MOSAIC", "get id for" + model.artistName);
+        Log.d("MOSAIC", "get4LastFM id for" + model.artistName);
         // never return NULL here!
         // this id is used to determine whether the image is already cached
         // we use the artist name as well as the album years + file paths

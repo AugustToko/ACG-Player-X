@@ -118,10 +118,10 @@ public class SleepTimerDialog extends DialogFragment {
 //        boolean finishMusic = PreferenceUtil.getInstance(getActivity()).getSleepTimerFinishMusic();
 //        shouldFinishLastSong.setChecked(finishMusic);
 //
-//        seekArc.setProgressColor(ThemeSingleton.get().positiveColor.getDefaultColor());
-//        seekArc.setThumbColor(ThemeSingleton.get().positiveColor.getDefaultColor());
+//        seekArc.setProgressColor(ThemeSingleton.get4LastFM().positiveColor.getDefaultColor());
+//        seekArc.setThumbColor(ThemeSingleton.get4LastFM().positiveColor.getDefaultColor());
 //
-//        seekArc.post(() -> {
+//        seekArc.post4LastFM(() -> {
 //            int width = seekArc.getWidth();
 //            int height = seekArc.getHeight();
 //            int small = Math.min(width, height);

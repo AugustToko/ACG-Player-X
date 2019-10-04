@@ -85,6 +85,8 @@ class HomeAdapter(
 
     private inner class AlbumViewHolder(view: View) : AbsHomeViewItem(view) {
         fun bindView(home: Home) {
+            if (home.arrayList.isEmpty()) return
+
             recyclerView.apply {
                 adapter = AlbumFullWidthAdapter(activity, home.arrayList as ArrayList<Album>, displayMetrics)
             }
@@ -95,6 +97,8 @@ class HomeAdapter(
 
     private inner class ArtistViewHolder(view: View) : AbsHomeViewItem(view) {
         fun bindView(home: Home) {
+            if (home.arrayList.isEmpty()) return
+
             recyclerView.apply {
                 layoutManager = GridLayoutManager(activity, 1, GridLayoutManager.HORIZONTAL, false)
                 val artistAdapter = ArtistAdapter(activity, home.arrayList as ArrayList<Artist>, PreferenceUtil.getInstance(activity).getHomeGridStyle(context!!), false, null)
@@ -107,6 +111,8 @@ class HomeAdapter(
 
     private inner class PlaylistViewHolder(view: View) : AbsHomeViewItem(view) {
         fun bindView(home: Home) {
+            if (home.arrayList.isEmpty()) return
+
             val songs = PlaylistSongLoader.getPlaylistSongList(activity, (home.arrayList[0] as Playlist).id)
             recyclerView.apply {
                 val songAdapter = SongAdapter(activity, songs as List<Song>?, R.layout.item_album_card, false, null)

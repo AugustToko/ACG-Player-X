@@ -21,6 +21,7 @@ public class LastFmArtist {
     public static class Artist {
         @Expose
         private List<Image> image = new ArrayList<>();
+
         @Expose
         private Bio bio;
 
@@ -54,9 +55,11 @@ public class LastFmArtist {
         }
 
         public static class Image {
+
             @SerializedName("#text")
             @Expose
             private String Text;
+
             @Expose
             private String size;
 

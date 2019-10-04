@@ -12,7 +12,7 @@ import java.util.List;
 
 public abstract class AbsCustomPlaylist extends Playlist {
     public AbsCustomPlaylist(int id, String name) {
-        super(id, name);
+        super(id, name, 0L);
     }
 
     public AbsCustomPlaylist() {

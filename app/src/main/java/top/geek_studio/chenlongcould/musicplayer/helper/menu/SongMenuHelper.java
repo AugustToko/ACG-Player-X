@@ -1,19 +1,21 @@
 package top.geek_studio.chenlongcould.musicplayer.helper.menu;
 
 import android.content.Intent;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
+
+import com.kabouzeid.chenlongcould.musicplayer.R;
+
 import top.geek_studio.chenlongcould.musicplayer.dialogs.AddToPlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.DeleteSongsDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.SongDetailDialog;
-import top.geek_studio.chenlongcould.musicplayer.interfaces.PaletteColorHolder;
-import com.kabouzeid.chenlongcould.musicplayer.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.PaletteColorHolder;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.AbsTagEditorActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.tageditor.SongTagEditorActivity;
@@ -27,8 +29,26 @@ import top.geek_studio.chenlongcould.musicplayer.util.RingtoneManager;
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class SongMenuHelper {
+
+    /**
+     * For {@link top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter}
+     */
     public static final int MENU_RES = R.menu.menu_item_song;
 
+    /**
+     * For {@link top.geek_studio.chenlongcould.musicplayer.adapter.song.NetSearchSongAdapter}
+     */
+    public static final int NET_MENU_RES = R.menu.menu_item_net_song;
+
+    /**
+     * 检测匹配到的 menuItem
+     *
+     * @param activity   act
+     * @param song       song
+     * @param menuItemId id
+     *
+     * @return bool
+     */
     public static boolean handleMenuClick(@NonNull FragmentActivity activity, @NonNull Song song, int menuItemId) {
         switch (menuItemId) {
             case R.id.action_set_as_ringtone:

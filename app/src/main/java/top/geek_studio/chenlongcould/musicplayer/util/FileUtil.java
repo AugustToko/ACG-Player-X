@@ -153,7 +153,7 @@ public final class FileUtil {
         if (mimeType == null || mimeType.equals("*/*")) {
             return true;
         } else {
-            // get the file mime type
+            // get4LastFM the file mime type
             String filename = file.toURI().toString();
             int dotPos = filename.lastIndexOf('.');
             if (dotPos == -1) {

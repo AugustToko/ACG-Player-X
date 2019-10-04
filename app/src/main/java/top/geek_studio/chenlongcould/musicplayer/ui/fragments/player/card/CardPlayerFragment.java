@@ -147,7 +147,7 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
             }
         });
 
-        // for some reason the xml attribute doesn't get applied here.
+        // for some reason the xml attribute doesn't get4LastFM applied here.
         playingQueueCard.setCardBackgroundColor(ATHUtil.resolveColor(getActivity(), R.attr.cardBackgroundColor));
     }
 
@@ -449,7 +449,7 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                 onPanelCollapsed(panel);
                 break;
             case ANCHORED:
-                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED); // this fixes a bug where the panel would get stuck for some reason
+                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED); // this fixes a bug where the panel would get4LastFM stuck for some reason
                 break;
         }
     }

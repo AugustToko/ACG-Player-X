@@ -36,6 +36,7 @@ import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Album;
 import top.geek_studio.chenlongcould.musicplayer.model.Artist;
 import top.geek_studio.chenlongcould.musicplayer.model.Genre;
+import top.geek_studio.chenlongcould.musicplayer.model.NetSearchSong;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.model.lyrics.AbsSynchronizedLyrics;
@@ -141,6 +142,21 @@ public class MusicUtil {
         return MusicUtil.buildInfoString(
                 song.artistName,
                 song.albumName
+        );
+    }
+
+    /**
+     * 获取歌曲信息
+     *
+     * @param song song
+     *
+     * @return info
+     */
+    @NonNull
+    public static String getSongInfoString(@NonNull final NetSearchSong.ResultBean.SongsBean song) {
+        return MusicUtil.buildInfoString(
+                song.getArtists().get(0).getName(),
+                song.getAlbum().getName()
         );
     }
 
@@ -377,7 +393,7 @@ public class MusicUtil {
                     try { // File.delete can throw a security exception
                         final File f = new File(name);
                         if (!f.delete()) {
-                            // I'm not sure if we'd ever get here (deletion would
+                            // I'm not sure if we'd ever get4LastFM here (deletion would
                             // have to fail, but no exception thrown)
                             Log.e("MusicUtils", "Failed to delete file " + name);
                         }

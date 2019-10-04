@@ -291,7 +291,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
                     realtimeBlurView.setVisibility(View.VISIBLE);
                 break;
             case ANCHORED:
-                collapsePanel(); // this fixes a bug where the panel would get stuck for some reason
+                collapsePanel(); // this fixes a bug where the panel would get4LastFM stuck for some reason
                 break;
         }
     }

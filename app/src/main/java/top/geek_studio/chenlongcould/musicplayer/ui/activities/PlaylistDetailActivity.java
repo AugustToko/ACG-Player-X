@@ -199,7 +199,7 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
             }
         }
 
-        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     private void checkIsEmpty() {

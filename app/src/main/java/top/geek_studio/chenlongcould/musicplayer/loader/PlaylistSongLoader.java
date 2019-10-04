@@ -4,24 +4,24 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Audio.AudioColumns;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
 
 public class PlaylistSongLoader {
 
+    private static final String TAG = "PlaylistSongLoader";
+
     @NonNull
     public static List<PlaylistSong> getPlaylistSongList(@NonNull final Context context, final int playlistId) {
+
         List<PlaylistSong> songs = new ArrayList<>();
-        Cursor cursor = makePlaylistSongCursor(context, playlistId);
+        final Cursor cursor = makePlaylistSongCursor(context, playlistId);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -72,6 +72,8 @@ public class PlaylistSongLoader {
                     }, SongLoader.BASE_SELECTION, null,
                     MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
         } catch (SecurityException e) {
+            return null;
+        } catch (IllegalStateException e) {
             return null;
         }
     }

@@ -8,7 +8,7 @@ import java.util.List;
 public class ArtistImage {
     public final String artistName;
 
-    // filePath to get the image of the artist
+    // filePath to get4LastFM the image of the artist
     public final List<AlbumCover> albumCovers;
 
     public ArtistImage(String artistName, final List<AlbumCover> albumCovers) {

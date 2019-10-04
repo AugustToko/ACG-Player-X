@@ -26,24 +26,28 @@ import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
  */
 public class HitokotoUtils {
 
+    private static final String TAG = HitokotoUtils.class.getSimpleName();
+
     public static void getHitokoto(@NonNull final Activity activity, @NonNull final TransDataCallback<Hitokoto> callback) {
-        CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(Constants.HITOKOTO_URL, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show();
-            }
+        CustomThreadPool.post(() -> {
+            OkHttpUtils.getInstance().get(Constants.HITOKOTO_URL, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    activity.runOnUiThread(() -> Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show());
+                }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                final ResponseBody responseBody = response.body();
-                if (responseBody == null) return;
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    final ResponseBody responseBody = response.body();
+                    if (responseBody == null) return;
 
-                final Gson gson = new Gson();
-                final Hitokoto hitokoto = gson.fromJson(responseBody.string(), Hitokoto.class);
+                    final Gson gson = new Gson();
+                    final Hitokoto hitokoto = gson.fromJson(responseBody.string(), Hitokoto.class);
 
-                callback.onTrans(hitokoto);
-            }
-        }));
+                    callback.onTrans(hitokoto);
+                }
+            });
+        });
     }
 
 }

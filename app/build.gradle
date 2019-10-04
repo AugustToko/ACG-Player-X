@@ -48,8 +48,8 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 159
-        versionName '1.4.1'
+        versionCode 160
+        versionName '1.4.3'
         applicationIdSuffix = 'Common'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
