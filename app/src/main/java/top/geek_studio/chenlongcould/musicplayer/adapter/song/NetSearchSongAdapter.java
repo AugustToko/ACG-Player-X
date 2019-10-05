@@ -1,32 +1,43 @@
 package top.geek_studio.chenlongcould.musicplayer.adapter.song;
 
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.afollestad.materialcab.MaterialCab;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.adapter.MusicCommentAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
-import top.geek_studio.chenlongcould.musicplayer.glide.NetSongGlideRequest;
-import top.geek_studio.chenlongcould.musicplayer.glide.PhonographColoredTarget;
+import top.geek_studio.chenlongcould.musicplayer.glide.UrlGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
+import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
+import top.geek_studio.chenlongcould.musicplayer.model.NetMusicComment;
 import top.geek_studio.chenlongcould.musicplayer.model.NetSearchSong.ResultBean.SongsBean;
+import top.geek_studio.chenlongcould.musicplayer.model.NetSong;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.MatDialogUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NetPlayerUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
@@ -70,7 +81,6 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
         fragment = netSearchFragment;
     }
 
-
     public void swapDataSet(List<SongsBean> dataSet) {
         this.dataSet = dataSet;
         notifyDataSetChanged();
@@ -99,6 +109,8 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
+        holder.image.setTag(R.string.app_name, position);
+
         final SongsBean song = dataSet.get(position);
 
         boolean isChecked = isChecked(song);
@@ -126,33 +138,51 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 //        if (holder.formatText != null)
 //            holder.formatText.setText(song.data.substring(song.data.lastIndexOf(".") + 1));
 
-        loadAlbumCover(song, holder);
-    }
-
-//    private void setColors(int color, ViewHolder holder) {
-//        if (holder.paletteColorContainer != null) {
-//            holder.paletteColorContainer.setBackgroundColor(color);
-//            if (holder.title != null) {
-//                holder.title.setTextColor(MaterialValueHelper.getPrimaryTextColor(activity, ColorUtil.isColorLight(color)));
-//            }
-//            if (holder.text != null) {
-//                holder.text.setTextColor(MaterialValueHelper.getSecondaryTextColor(activity, ColorUtil.isColorLight(color)));
-//            }
-//        }
-//    }
-
-    private void loadAlbumCover(SongsBean song, final ViewHolder holder) {
         if (holder.image == null) return;
 
-        NetPlayerUtil.getNetSong(activity, song, data -> activity.runOnUiThread(() ->
-                NetSongGlideRequest.Builder.from(Glide.with(activity), data.getSongs().get(0))
-                        .generatePalette(activity).build()
-                        .into(new PhonographColoredTarget(holder.image) {
-                            @Override
-                            public void onColorReady(int color) {
-                            }
-                        })));
+        NetPlayerUtil.getNetSongDetail(activity, song.getId(), new TransDataCallback<NetSong>() {
+            @Override
+            public void onTrans(NetSong data) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        UrlGlideRequest.Builder.from(Glide.with(activity), new UrlGlideRequest.UrlAndId((int) data.getSongs().get(0).getId()
+                                , data.getSongs().get(0).getAl().getPicUrl()))
+                                .asBitmap()
+                                .build()
+                                .into(new SimpleTarget<Bitmap>() {
+                                    @Override
+                                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                                        if (position != (Integer) holder.image.getTag(R.string.app_name)) {
+                                            holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art));
+                                            return;
+                                        }
 
+                                        holder.image.setImageBitmap(resource);
+                                    }
+
+                                    @Override
+                                    public void onStart() {
+                                        super.onStart();
+                                        holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art));
+                                    }
+                                });
+                    }
+                });
+            }
+
+            @Override
+            public void onError() {
+                activity.runOnUiThread(() -> holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art)));
+            }
+        });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        super.onViewRecycled(holder);
+        if (holder.image == null) return;
+        holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art));
     }
 
     protected String getSongTitle(SongsBean song) {
@@ -257,15 +287,45 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
         boolean onSongMenuItemClick(MenuItem item) {
             if (image != null && image.getVisibility() == View.VISIBLE) {
+                //noinspection SwitchStatementWithTooFewBranches
                 switch (item.getItemId()) {
-                    case R.id.action_go_to_album:
-//                        Pair[] albumPairs = new Pair[]{
-//                                Pair.create(image, activity.getResources().getString(R.string.transition_album_art))
-//                        };
-//                        NavigationUtil.goToAlbum(activity, getSong().albumId, albumPairs);
+                    case R.id.action_comment: {
+                        NetPlayerUtil.getSongComment(activity, (int) getSong().getId(), new TransDataCallback<NetMusicComment>() {
+                            @Override
+                            public void onTrans(NetMusicComment data) {
+                                activity.runOnUiThread(() -> {
+
+                                    if (data.getHotComments().size() == 0) {
+                                        Toast.makeText(activity, "The song doesn't have any hot comments!", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    final MusicCommentAdapter adapter = new MusicCommentAdapter(activity, data.getHotComments(), R.layout.item_music_comment);
+
+                                    final MaterialDialog dialog = new MaterialDialog.Builder(activity)
+                                            .title(activity.getString(R.string.hot_comment))
+                                            .adapter(adapter, new LinearLayoutManager(activity))
+                                            .negativeText("Close")
+                                            .onNegative((dialog1, which) -> dialog1.dismiss())
+                                            .neutralText("Power by https://api.a632079.me")
+                                            .onNeutral((dialog1, which) -> {
+                                            })
+                                            .build();
+                                    MatDialogUtil.setNeutralButtonDisnable(dialog);
+                                    dialog.show();
+                                });
+                            }
+
+                            @Override
+                            public void onError() {
+
+                            }
+                        });
                         return true;
+                    }
                 }
             }
+
             return false;
         }
 

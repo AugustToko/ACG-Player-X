@@ -3,37 +3,29 @@ package top.geek_studio.chenlongcould.musicplayer.model;
 import java.util.List;
 
 /**
+ * For https://api.crypto-studio.com
+ *
  * @author : chenlongcould
  * @date : 2019/10/04/16
  */
 public class NetSong {
 
     /**
-     * songs : [{"id":28391863,"url":"https://v1.hitokoto.cn/nm/redirect/music/28391863","name":"可能世界论","artists":["赤髪","なゆごろう"],"album":{"id":2786207,"name":"melt away","picture":"https://p3.music.126.net/mFv_ofD6eq7WiU0SALOanQ==/109951163179315560.jpg?param=300y300"},"type":"song","status":200,"lyric":{"base":"[00:00.000] 作曲 : 赤髪\n[00:01.000] 作词 : 赤髪\n[00:23.34]遠く 遠く 記憶の奥に沈めた\n[00:34.04]思い出を 掬い（すくい）上げる\n[00:44.88]拙い（つたない） 会話 慣れない姿に頬を染め\n[00:55.74]賑わう（にぎわう）方へ ゆっくりと歩くんだ\n[01:06.82]終わる夕暮れ 空を見上げ 近づく影\n[01:17.71]ほら ほら 手が触れ合って 気づけば\n[01:26.98]不器用に握った\n[01:33.71]高く空に 打ち上がり 咲いた\n[01:43.51]一瞬だけ キミを照らして 消えるんだ\n[01:56.33]嬉しそうにはしゃぐ横顔に\n[02:06.33]見惚れ焼きつく 記憶をぎゅっと\n[02:11.92]いつまでも 強く 強く この手握っていて\n[02:29.87]ひとつ ひとつ 描かれた歴史の欠片を\n[02:40.48]記憶へ沈め 抱きしめて 眠った\n[02:51.04]通り雨を 追いかけるように キミが現れ（あらわれ）\n[03:02.10]傘に入れてあげるよ 微笑み 頬を伝う雨\n[03:18.58]すべて世界がスローに写る（うつる）程\n[03:28.16]キミの言葉は 私への愛で満ちていて\n[03:39.95]抗う隙さえ与える間もなく\n[03:49.95]触れる息は 心もとなく 弱って\n[03:57.09]薄く 薄く キミが消えていく\n[04:06.74]キミが消えていく\n[04:12.59]流れる雨\n[04:22.74]止めどなく溢れ\n[04:41.55]土砂降りの雨はキミを通りぬけ\n[04:51.35]遠くの空は 嘘みたいに晴れていく\n[05:02.95]この世界がすべて書き換わり\n[05:13.10]キミの存在 記憶 すべて 消し去っても\n[05:20.70]消せない 消せない はしゃぐ笑顔\n[05:25.46]消せはしない キミを想っている\n[05:31.90]\n","translate":"[by:希Home-0869]\n[00:23.34]沉浸在遥远的记忆深处\n[00:34.04]从其中掬出一捧回忆\n[00:44.88]笨拙的交谈  因还未能习惯的姿态  双颊染上绯红\n[00:55.74]慢步走向那热闹的地方\n[01:06.82]抬头仰望夕阳   渐渐靠近的身影\n[01:17.71]你看  发现触碰到一起的双手\n[01:26.98]没志气的握紧\n[01:33.71]高空中升起盛开的烟火\n[01:43.51]瞬间照亮你的脸庞又转瞬消失不见\n[01:56.33]看上去很开心欢喜的你的侧脸\n[02:06.33]恍惚的注视着你  将这记忆铭记于心\n[02:11.92]无论何时都会紧紧握住这双手\n[02:29.87]一片一片     将描绘往昔的断片\n[02:40.48]沉入记忆  拥紧而眠\n[02:51.04]想要追赶阵雨时  你悄然出现\n[03:02.10]我来给你撑伞吧   雨水沿着笑脸低落\n[03:18.58]整个世界仿佛都缓慢下来\n[03:28.16]你的话语中充满了对我的爱\n[03:39.95]连反抗的时间都不曾给过我\n[03:49.95]相触的气息  心跳微弱\n[03:57.09]逐渐稀薄   你就这样消失\n[04:06.74]你就这样消失\n[04:12.59]流淌的雨水\n[04:22.74]不停的流下\n[04:41.55]倾盆大雨淋透你的身体\n[04:51.35]遥远的天空  不真实的开始放晴\n[05:02.95]这个世界已经重新书写\n[05:13.10]即使你的存在 你的记忆 全部消逝\n[05:20.70]欢笑的笑颜  永远不会消失\n[05:25.46]对你的想念  永远不会消失\n"}}]
-     * ids : ["28391863"]
+     * songs : [{"name":"海阔天空","id":347230,"pst":0,"t":0,"ar":[{"id":11127,"name":"Beyond","tns":[],"alias":[]}],"alia":[],"pop":100,"st":0,"rt":"600902000004240302","fee":8,"v":31,"crbt":null,"cf":"","al":{"id":34209,"name":"海阔天空","picUrl":"https://p1.music.126.net/QHw-RuMwfQkmgtiyRpGs0Q==/102254581395219.jpg","tns":[],"pic":102254581395219},"dt":326348,"h":{"br":320000,"fid":0,"size":13070578,"vd":0.109906},"m":{"br":160000,"fid":0,"size":6549371,"vd":0.272218},"l":{"br":96000,"fid":0,"size":3940469,"vd":0.228837},"a":null,"cd":"1","no":1,"rtUrl":null,"ftype":0,"rtUrls":[],"djId":0,"copyright":1,"s_id":0,"mark":0,"mv":376199,"rtype":0,"rurl":null,"mst":9,"cp":7002,"publishTime":746812800000},{"name":"Crown of the Loser","id":347231,"pst":0,"t":0,"ar":[{"id":11171,"name":"Beyond Cure","tns":[],"alias":[]}],"alia":[],"pop":5,"st":0,"rt":"","fee":8,"v":13,"crbt":null,"cf":"","al":{"id":34210,"name":"Your Head Smells Good","picUrl":"https://p1.music.126.net/uOAROZ8Ia72yvcmfMIg_Uw==/125344325570003.jpg","tns":["你的头闻起来好香"],"pic":125344325570003},"dt":162120,"h":{"br":320000,"fid":0,"size":6487814,"vd":-28400},"m":{"br":192000,"fid":0,"size":3892705,"vd":-26199},"l":{"br":128000,"fid":0,"size":2595151,"vd":-25000},"a":null,"cd":"1","no":2,"rtUrl":null,"ftype":0,"rtUrls":[],"djId":0,"copyright":2,"s_id":0,"mark":0,"mv":0,"rtype":0,"rurl":null,"mst":9,"cp":1400821,"publishTime":1277481600000}]
+     * privileges : [{"id":347230,"fee":0,"payed":0,"st":-100,"pl":0,"dl":0,"sp":7,"cp":1,"subp":1,"cs":false,"maxbr":999000,"fl":0,"toast":false,"flag":256,"preSell":false},{"id":347231,"fee":0,"payed":0,"st":-100,"pl":0,"dl":0,"sp":7,"cp":1,"subp":1,"cs":false,"maxbr":999000,"fl":0,"toast":false,"flag":256,"preSell":false}]
      * code : 200
-     * message : ok
      */
 
-    private int code;
-    private String message;
+    private long code;
     private List<SongsBean> songs;
-    private List<String> ids;
+    private List<PrivilegesBean> privileges;
 
-    public int getCode() {
+    public long getCode() {
         return code;
     }
 
-    public void setCode(int code) {
+    public void setCode(long code) {
         this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public List<SongsBean> getSongs() {
@@ -44,50 +36,86 @@ public class NetSong {
         this.songs = songs;
     }
 
-    public List<String> getIds() {
-        return ids;
+    public List<PrivilegesBean> getPrivileges() {
+        return privileges;
     }
 
-    public void setIds(List<String> ids) {
-        this.ids = ids;
+    public void setPrivileges(List<PrivilegesBean> privileges) {
+        this.privileges = privileges;
     }
 
     public static class SongsBean {
         /**
-         * id : 28391863
-         * url : https://v1.hitokoto.cn/nm/redirect/music/28391863
-         * name : 可能世界论
-         * artists : ["赤髪","なゆごろう"]
-         * album : {"id":2786207,"name":"melt away","picture":"https://p3.music.126.net/mFv_ofD6eq7WiU0SALOanQ==/109951163179315560.jpg?param=300y300"}
-         * type : song
-         * status : 200
-         * lyric : {"base":"[00:00.000] 作曲 : 赤髪\n[00:01.000] 作词 : 赤髪\n[00:23.34]遠く 遠く 記憶の奥に沈めた\n[00:34.04]思い出を 掬い（すくい）上げる\n[00:44.88]拙い（つたない） 会話 慣れない姿に頬を染め\n[00:55.74]賑わう（にぎわう）方へ ゆっくりと歩くんだ\n[01:06.82]終わる夕暮れ 空を見上げ 近づく影\n[01:17.71]ほら ほら 手が触れ合って 気づけば\n[01:26.98]不器用に握った\n[01:33.71]高く空に 打ち上がり 咲いた\n[01:43.51]一瞬だけ キミを照らして 消えるんだ\n[01:56.33]嬉しそうにはしゃぐ横顔に\n[02:06.33]見惚れ焼きつく 記憶をぎゅっと\n[02:11.92]いつまでも 強く 強く この手握っていて\n[02:29.87]ひとつ ひとつ 描かれた歴史の欠片を\n[02:40.48]記憶へ沈め 抱きしめて 眠った\n[02:51.04]通り雨を 追いかけるように キミが現れ（あらわれ）\n[03:02.10]傘に入れてあげるよ 微笑み 頬を伝う雨\n[03:18.58]すべて世界がスローに写る（うつる）程\n[03:28.16]キミの言葉は 私への愛で満ちていて\n[03:39.95]抗う隙さえ与える間もなく\n[03:49.95]触れる息は 心もとなく 弱って\n[03:57.09]薄く 薄く キミが消えていく\n[04:06.74]キミが消えていく\n[04:12.59]流れる雨\n[04:22.74]止めどなく溢れ\n[04:41.55]土砂降りの雨はキミを通りぬけ\n[04:51.35]遠くの空は 嘘みたいに晴れていく\n[05:02.95]この世界がすべて書き換わり\n[05:13.10]キミの存在 記憶 すべて 消し去っても\n[05:20.70]消せない 消せない はしゃぐ笑顔\n[05:25.46]消せはしない キミを想っている\n[05:31.90]\n","translate":"[by:希Home-0869]\n[00:23.34]沉浸在遥远的记忆深处\n[00:34.04]从其中掬出一捧回忆\n[00:44.88]笨拙的交谈  因还未能习惯的姿态  双颊染上绯红\n[00:55.74]慢步走向那热闹的地方\n[01:06.82]抬头仰望夕阳   渐渐靠近的身影\n[01:17.71]你看  发现触碰到一起的双手\n[01:26.98]没志气的握紧\n[01:33.71]高空中升起盛开的烟火\n[01:43.51]瞬间照亮你的脸庞又转瞬消失不见\n[01:56.33]看上去很开心欢喜的你的侧脸\n[02:06.33]恍惚的注视着你  将这记忆铭记于心\n[02:11.92]无论何时都会紧紧握住这双手\n[02:29.87]一片一片     将描绘往昔的断片\n[02:40.48]沉入记忆  拥紧而眠\n[02:51.04]想要追赶阵雨时  你悄然出现\n[03:02.10]我来给你撑伞吧   雨水沿着笑脸低落\n[03:18.58]整个世界仿佛都缓慢下来\n[03:28.16]你的话语中充满了对我的爱\n[03:39.95]连反抗的时间都不曾给过我\n[03:49.95]相触的气息  心跳微弱\n[03:57.09]逐渐稀薄   你就这样消失\n[04:06.74]你就这样消失\n[04:12.59]流淌的雨水\n[04:22.74]不停的流下\n[04:41.55]倾盆大雨淋透你的身体\n[04:51.35]遥远的天空  不真实的开始放晴\n[05:02.95]这个世界已经重新书写\n[05:13.10]即使你的存在 你的记忆 全部消逝\n[05:20.70]欢笑的笑颜  永远不会消失\n[05:25.46]对你的想念  永远不会消失\n"}
+         * name : 海阔天空
+         * id : 347230
+         * pst : 0
+         * t : 0
+         * ar : [{"id":11127,"name":"Beyond","tns":[],"alias":[]}]
+         * alia : []
+         * pop : 100
+         * st : 0
+         * rt : 600902000004240302
+         * fee : 8
+         * v : 31
+         * crbt : null
+         * cf :
+         * al : {"id":34209,"name":"海阔天空","picUrl":"https://p1.music.126.net/QHw-RuMwfQkmgtiyRpGs0Q==/102254581395219.jpg","tns":[],"pic":102254581395219}
+         * dt : 326348
+         * h : {"br":320000,"fid":0,"size":13070578,"vd":0.109906}
+         * m : {"br":160000,"fid":0,"size":6549371,"vd":0.272218}
+         * l : {"br":96000,"fid":0,"size":3940469,"vd":0.228837}
+         * a : null
+         * cd : 1
+         * no : 1
+         * rtUrl : null
+         * ftype : 0
+         * rtUrls : []
+         * djId : 0
+         * copyright : 1
+         * s_id : 0
+         * mark : 0
+         * mv : 376199
+         * rtype : 0
+         * rurl : null
+         * mst : 9
+         * cp : 7002
+         * publishTime : 746812800000
          */
 
-        private int id;
-        private String url;
         private String name;
-        private AlbumBean album;
-        private String type;
-        private int status;
-        private LyricBean lyric;
-        private List<String> artists;
-
-        public int getId() {
-            return id;
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
+        private long id;
+        private long pst;
+        private long t;
+        private long pop;
+        private long st;
+        private String rt;
+        private long fee;
+        private long v;
+        private Object crbt;
+        private String cf;
+        private AlBean al;
+        private long dt;
+        private HBean h;
+        private MBean m;
+        private LBean l;
+        private Object a;
+        private String cd;
+        private long no;
+        private Object rtUrl;
+        private long ftype;
+        private long djId;
+        private long copyright;
+        private long s_id;
+        private long mark;
+        private long mv;
+        private long rtype;
+        private Object rurl;
+        private long mst;
+        private long cp;
+        private long publishTime;
+        private List<ArBean> ar;
+        private List<?> alia;
+        private List<?> rtUrls;
 
         public String getName() {
             return name;
@@ -97,62 +125,290 @@ public class NetSong {
             this.name = name;
         }
 
-        public AlbumBean getAlbum() {
-            return album;
+        public long getId() {
+            return id;
         }
 
-        public void setAlbum(AlbumBean album) {
-            this.album = album;
+        public void setId(long id) {
+            this.id = id;
         }
 
-        public String getType() {
-            return type;
+        public long getPst() {
+            return pst;
         }
 
-        public void setType(String type) {
-            this.type = type;
+        public void setPst(long pst) {
+            this.pst = pst;
         }
 
-        public int getStatus() {
-            return status;
+        public long getT() {
+            return t;
         }
 
-        public void setStatus(int status) {
-            this.status = status;
+        public void setT(long t) {
+            this.t = t;
         }
 
-        public LyricBean getLyric() {
-            return lyric;
+        public long getPop() {
+            return pop;
         }
 
-        public void setLyric(LyricBean lyric) {
-            this.lyric = lyric;
+        public void setPop(long pop) {
+            this.pop = pop;
         }
 
-        public List<String> getArtists() {
-            return artists;
+        public long getSt() {
+            return st;
         }
 
-        public void setArtists(List<String> artists) {
-            this.artists = artists;
+        public void setSt(long st) {
+            this.st = st;
         }
 
-        public static class AlbumBean {
+        public String getRt() {
+            return rt;
+        }
+
+        public void setRt(String rt) {
+            this.rt = rt;
+        }
+
+        public long getFee() {
+            return fee;
+        }
+
+        public void setFee(long fee) {
+            this.fee = fee;
+        }
+
+        public long getV() {
+            return v;
+        }
+
+        public void setV(long v) {
+            this.v = v;
+        }
+
+        public Object getCrbt() {
+            return crbt;
+        }
+
+        public void setCrbt(Object crbt) {
+            this.crbt = crbt;
+        }
+
+        public String getCf() {
+            return cf;
+        }
+
+        public void setCf(String cf) {
+            this.cf = cf;
+        }
+
+        public AlBean getAl() {
+            return al;
+        }
+
+        public void setAl(AlBean al) {
+            this.al = al;
+        }
+
+        public long getDt() {
+            return dt;
+        }
+
+        public void setDt(long dt) {
+            this.dt = dt;
+        }
+
+        public HBean getH() {
+            return h;
+        }
+
+        public void setH(HBean h) {
+            this.h = h;
+        }
+
+        public MBean getM() {
+            return m;
+        }
+
+        public void setM(MBean m) {
+            this.m = m;
+        }
+
+        public LBean getL() {
+            return l;
+        }
+
+        public void setL(LBean l) {
+            this.l = l;
+        }
+
+        public Object getA() {
+            return a;
+        }
+
+        public void setA(Object a) {
+            this.a = a;
+        }
+
+        public String getCd() {
+            return cd;
+        }
+
+        public void setCd(String cd) {
+            this.cd = cd;
+        }
+
+        public long getNo() {
+            return no;
+        }
+
+        public void setNo(long no) {
+            this.no = no;
+        }
+
+        public Object getRtUrl() {
+            return rtUrl;
+        }
+
+        public void setRtUrl(Object rtUrl) {
+            this.rtUrl = rtUrl;
+        }
+
+        public long getFtype() {
+            return ftype;
+        }
+
+        public void setFtype(long ftype) {
+            this.ftype = ftype;
+        }
+
+        public long getDjId() {
+            return djId;
+        }
+
+        public void setDjId(long djId) {
+            this.djId = djId;
+        }
+
+        public long getCopyright() {
+            return copyright;
+        }
+
+        public void setCopyright(long copyright) {
+            this.copyright = copyright;
+        }
+
+        public long getS_id() {
+            return s_id;
+        }
+
+        public void setS_id(long s_id) {
+            this.s_id = s_id;
+        }
+
+        public long getMark() {
+            return mark;
+        }
+
+        public void setMark(long mark) {
+            this.mark = mark;
+        }
+
+        public long getMv() {
+            return mv;
+        }
+
+        public void setMv(long mv) {
+            this.mv = mv;
+        }
+
+        public long getRtype() {
+            return rtype;
+        }
+
+        public void setRtype(long rtype) {
+            this.rtype = rtype;
+        }
+
+        public Object getRurl() {
+            return rurl;
+        }
+
+        public void setRurl(Object rurl) {
+            this.rurl = rurl;
+        }
+
+        public long getMst() {
+            return mst;
+        }
+
+        public void setMst(long mst) {
+            this.mst = mst;
+        }
+
+        public long getCp() {
+            return cp;
+        }
+
+        public void setCp(long cp) {
+            this.cp = cp;
+        }
+
+        public long getPublishTime() {
+            return publishTime;
+        }
+
+        public void setPublishTime(long publishTime) {
+            this.publishTime = publishTime;
+        }
+
+        public List<ArBean> getAr() {
+            return ar;
+        }
+
+        public void setAr(List<ArBean> ar) {
+            this.ar = ar;
+        }
+
+        public List<?> getAlia() {
+            return alia;
+        }
+
+        public void setAlia(List<?> alia) {
+            this.alia = alia;
+        }
+
+        public List<?> getRtUrls() {
+            return rtUrls;
+        }
+
+        public void setRtUrls(List<?> rtUrls) {
+            this.rtUrls = rtUrls;
+        }
+
+        public static class AlBean {
             /**
-             * id : 2786207
-             * name : melt away
-             * picture : https://p3.music.126.net/mFv_ofD6eq7WiU0SALOanQ==/109951163179315560.jpg?param=300y300
+             * id : 34209
+             * name : 海阔天空
+             * picUrl : https://p1.music.126.net/QHw-RuMwfQkmgtiyRpGs0Q==/102254581395219.jpg
+             * tns : []
+             * pic : 102254581395219
              */
 
-            private int id;
+            private long id;
             private String name;
-            private String picture;
+            private String picUrl;
+            private long pic;
+            private List<?> tns;
 
-            public int getId() {
+            public long getId() {
                 return id;
             }
 
-            public void setId(int id) {
+            public void setId(long id) {
                 this.id = id;
             }
 
@@ -164,102 +420,369 @@ public class NetSong {
                 this.name = name;
             }
 
-            public String getPicture() {
-                return picture;
+            public String getPicUrl() {
+                return picUrl;
             }
 
-            public void setPicture(String picture) {
-                this.picture = picture;
+            public void setPicUrl(String picUrl) {
+                this.picUrl = picUrl;
+            }
+
+            public long getPic() {
+                return pic;
+            }
+
+            public void setPic(long pic) {
+                this.pic = pic;
+            }
+
+            public List<?> getTns() {
+                return tns;
+            }
+
+            public void setTns(List<?> tns) {
+                this.tns = tns;
             }
         }
 
-        public static class LyricBean {
+        public static class HBean {
             /**
-             * base : [00:00.000] 作曲 : 赤髪
-             [00:01.000] 作词 : 赤髪
-             [00:23.34]遠く 遠く 記憶の奥に沈めた
-             [00:34.04]思い出を 掬い（すくい）上げる
-             [00:44.88]拙い（つたない） 会話 慣れない姿に頬を染め
-             [00:55.74]賑わう（にぎわう）方へ ゆっくりと歩くんだ
-             [01:06.82]終わる夕暮れ 空を見上げ 近づく影
-             [01:17.71]ほら ほら 手が触れ合って 気づけば
-             [01:26.98]不器用に握った
-             [01:33.71]高く空に 打ち上がり 咲いた
-             [01:43.51]一瞬だけ キミを照らして 消えるんだ
-             [01:56.33]嬉しそうにはしゃぐ横顔に
-             [02:06.33]見惚れ焼きつく 記憶をぎゅっと
-             [02:11.92]いつまでも 強く 強く この手握っていて
-             [02:29.87]ひとつ ひとつ 描かれた歴史の欠片を
-             [02:40.48]記憶へ沈め 抱きしめて 眠った
-             [02:51.04]通り雨を 追いかけるように キミが現れ（あらわれ）
-             [03:02.10]傘に入れてあげるよ 微笑み 頬を伝う雨
-             [03:18.58]すべて世界がスローに写る（うつる）程
-             [03:28.16]キミの言葉は 私への愛で満ちていて
-             [03:39.95]抗う隙さえ与える間もなく
-             [03:49.95]触れる息は 心もとなく 弱って
-             [03:57.09]薄く 薄く キミが消えていく
-             [04:06.74]キミが消えていく
-             [04:12.59]流れる雨
-             [04:22.74]止めどなく溢れ
-             [04:41.55]土砂降りの雨はキミを通りぬけ
-             [04:51.35]遠くの空は 嘘みたいに晴れていく
-             [05:02.95]この世界がすべて書き換わり
-             [05:13.10]キミの存在 記憶 すべて 消し去っても
-             [05:20.70]消せない 消せない はしゃぐ笑顔
-             [05:25.46]消せはしない キミを想っている
-             [05:31.90]
-             * translate : [by:希Home-0869]
-             [00:23.34]沉浸在遥远的记忆深处
-             [00:34.04]从其中掬出一捧回忆
-             [00:44.88]笨拙的交谈  因还未能习惯的姿态  双颊染上绯红
-             [00:55.74]慢步走向那热闹的地方
-             [01:06.82]抬头仰望夕阳   渐渐靠近的身影
-             [01:17.71]你看  发现触碰到一起的双手
-             [01:26.98]没志气的握紧
-             [01:33.71]高空中升起盛开的烟火
-             [01:43.51]瞬间照亮你的脸庞又转瞬消失不见
-             [01:56.33]看上去很开心欢喜的你的侧脸
-             [02:06.33]恍惚的注视着你  将这记忆铭记于心
-             [02:11.92]无论何时都会紧紧握住这双手
-             [02:29.87]一片一片     将描绘往昔的断片
-             [02:40.48]沉入记忆  拥紧而眠
-             [02:51.04]想要追赶阵雨时  你悄然出现
-             [03:02.10]我来给你撑伞吧   雨水沿着笑脸低落
-             [03:18.58]整个世界仿佛都缓慢下来
-             [03:28.16]你的话语中充满了对我的爱
-             [03:39.95]连反抗的时间都不曾给过我
-             [03:49.95]相触的气息  心跳微弱
-             [03:57.09]逐渐稀薄   你就这样消失
-             [04:06.74]你就这样消失
-             [04:12.59]流淌的雨水
-             [04:22.74]不停的流下
-             [04:41.55]倾盆大雨淋透你的身体
-             [04:51.35]遥远的天空  不真实的开始放晴
-             [05:02.95]这个世界已经重新书写
-             [05:13.10]即使你的存在 你的记忆 全部消逝
-             [05:20.70]欢笑的笑颜  永远不会消失
-             [05:25.46]对你的想念  永远不会消失
-
+             * br : 320000
+             * fid : 0
+             * size : 13070578
+             * vd : 0.109906
              */
 
-            private String base;
-            private String translate;
+            private long br;
+            private long fid;
+            private long size;
+            private double vd;
 
-            public String getBase() {
-                return base;
+            public long getBr() {
+                return br;
             }
 
-            public void setBase(String base) {
-                this.base = base;
+            public void setBr(long br) {
+                this.br = br;
             }
 
-            public String getTranslate() {
-                return translate;
+            public long getFid() {
+                return fid;
             }
 
-            public void setTranslate(String translate) {
-                this.translate = translate;
+            public void setFid(long fid) {
+                this.fid = fid;
             }
+
+            public long getSize() {
+                return size;
+            }
+
+            public void setSize(long size) {
+                this.size = size;
+            }
+
+            public double getVd() {
+                return vd;
+            }
+
+            public void setVd(double vd) {
+                this.vd = vd;
+            }
+        }
+
+        public static class MBean {
+            /**
+             * br : 160000
+             * fid : 0
+             * size : 6549371
+             * vd : 0.272218
+             */
+
+            private long br;
+            private long fid;
+            private long size;
+            private double vd;
+
+            public long getBr() {
+                return br;
+            }
+
+            public void setBr(long br) {
+                this.br = br;
+            }
+
+            public long getFid() {
+                return fid;
+            }
+
+            public void setFid(long fid) {
+                this.fid = fid;
+            }
+
+            public long getSize() {
+                return size;
+            }
+
+            public void setSize(long size) {
+                this.size = size;
+            }
+
+            public double getVd() {
+                return vd;
+            }
+
+            public void setVd(double vd) {
+                this.vd = vd;
+            }
+        }
+
+        public static class LBean {
+            /**
+             * br : 96000
+             * fid : 0
+             * size : 3940469
+             * vd : 0.228837
+             */
+
+            private long br;
+            private long fid;
+            private long size;
+            private double vd;
+
+            public long getBr() {
+                return br;
+            }
+
+            public void setBr(long br) {
+                this.br = br;
+            }
+
+            public long getFid() {
+                return fid;
+            }
+
+            public void setFid(long fid) {
+                this.fid = fid;
+            }
+
+            public long getSize() {
+                return size;
+            }
+
+            public void setSize(long size) {
+                this.size = size;
+            }
+
+            public double getVd() {
+                return vd;
+            }
+
+            public void setVd(double vd) {
+                this.vd = vd;
+            }
+        }
+
+        public static class ArBean {
+            /**
+             * id : 11127
+             * name : Beyond
+             * tns : []
+             * alias : []
+             */
+
+            private long id;
+            private String name;
+            private List<?> tns;
+            private List<?> alias;
+
+            public long getId() {
+                return id;
+            }
+
+            public void setId(long id) {
+                this.id = id;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public List<?> getTns() {
+                return tns;
+            }
+
+            public void setTns(List<?> tns) {
+                this.tns = tns;
+            }
+
+            public List<?> getAlias() {
+                return alias;
+            }
+
+            public void setAlias(List<?> alias) {
+                this.alias = alias;
+            }
+        }
+    }
+
+    public static class PrivilegesBean {
+        /**
+         * id : 347230
+         * fee : 0
+         * payed : 0
+         * st : -100
+         * pl : 0
+         * dl : 0
+         * sp : 7
+         * cp : 1
+         * subp : 1
+         * cs : false
+         * maxbr : 999000
+         * fl : 0
+         * toast : false
+         * flag : 256
+         * preSell : false
+         */
+
+        private long id;
+        private long fee;
+        private long payed;
+        private long st;
+        private long pl;
+        private long dl;
+        private long sp;
+        private long cp;
+        private long subp;
+        private boolean cs;
+        private long maxbr;
+        private long fl;
+        private boolean toast;
+        private long flag;
+        private boolean preSell;
+
+        public long getId() {
+            return id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+        public long getFee() {
+            return fee;
+        }
+
+        public void setFee(long fee) {
+            this.fee = fee;
+        }
+
+        public long getPayed() {
+            return payed;
+        }
+
+        public void setPayed(long payed) {
+            this.payed = payed;
+        }
+
+        public long getSt() {
+            return st;
+        }
+
+        public void setSt(long st) {
+            this.st = st;
+        }
+
+        public long getPl() {
+            return pl;
+        }
+
+        public void setPl(long pl) {
+            this.pl = pl;
+        }
+
+        public long getDl() {
+            return dl;
+        }
+
+        public void setDl(long dl) {
+            this.dl = dl;
+        }
+
+        public long getSp() {
+            return sp;
+        }
+
+        public void setSp(long sp) {
+            this.sp = sp;
+        }
+
+        public long getCp() {
+            return cp;
+        }
+
+        public void setCp(long cp) {
+            this.cp = cp;
+        }
+
+        public long getSubp() {
+            return subp;
+        }
+
+        public void setSubp(long subp) {
+            this.subp = subp;
+        }
+
+        public boolean isCs() {
+            return cs;
+        }
+
+        public void setCs(boolean cs) {
+            this.cs = cs;
+        }
+
+        public long getMaxbr() {
+            return maxbr;
+        }
+
+        public void setMaxbr(long maxbr) {
+            this.maxbr = maxbr;
+        }
+
+        public long getFl() {
+            return fl;
+        }
+
+        public void setFl(long fl) {
+            this.fl = fl;
+        }
+
+        public boolean isToast() {
+            return toast;
+        }
+
+        public void setToast(boolean toast) {
+            this.toast = toast;
+        }
+
+        public long getFlag() {
+            return flag;
+        }
+
+        public void setFlag(long flag) {
+            this.flag = flag;
+        }
+
+        public boolean isPreSell() {
+            return preSell;
+        }
+
+        public void setPreSell(boolean preSell) {
+            this.preSell = preSell;
         }
     }
 }

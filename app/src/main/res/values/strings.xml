@@ -316,4 +316,6 @@
     <string name="recent_artists">Recent Artists</string>
     <string name="recent_albums">Recent Albums</string>
     <string name="power_by_https_i_a632079_me">Power by https://i.a632079.me</string>
+    <string name="comment">Comment</string>
+    <string name="hot_comment">Hot Comment</string>
 </resources>

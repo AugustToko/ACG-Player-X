@@ -1,13 +1,19 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
 import android.app.Activity;
-import android.widget.Toast;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.google.gson.Gson;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -28,26 +34,69 @@ public class HitokotoUtils {
 
     private static final String TAG = HitokotoUtils.class.getSimpleName();
 
+    /**
+     * 获取保存路径
+     */
+    public static String getSaveFilePath(Context context) {
+        return context.getFilesDir().getAbsolutePath() + File.separator + "hitokoto";
+    }
+
     public static void getHitokoto(@NonNull final Activity activity, @NonNull final TransDataCallback<Hitokoto> callback) {
-        CustomThreadPool.post(() -> {
-            OkHttpUtils.getInstance().get(Constants.HITOKOTO_URL, new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    activity.runOnUiThread(() -> Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show());
+        CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(Constants.HITOKOTO_URL, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onError();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final ResponseBody responseBody = response.body();
+                if (responseBody == null) return;
+
+                final Gson gson = new Gson();
+                final Hitokoto hitokoto = gson.fromJson(responseBody.string(), Hitokoto.class);
+
+                callback.onTrans(hitokoto);
+            }
+        }));
+    }
+
+    @WorkerThread
+    public static void saveHitokoFile(@NonNull Activity activity, @NonNull Hitokoto data) {
+        try {
+            final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(HitokotoUtils.getSaveFilePath(activity)));
+            oos.writeObject(data);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @WorkerThread
+    public static Hitokoto readHitokoFile(@NonNull Activity activity) {
+        final File hitokotoFile = new File(getSaveFilePath(activity));
+
+        if (hitokotoFile.exists() && hitokotoFile.isFile()) {
+            ObjectInputStream ois = null;
+            try {
+                ois = new ObjectInputStream(new FileInputStream(hitokotoFile));
+                return (Hitokoto) ois.readObject();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return null;
+            } finally {
+                try {
+                    if (ois != null) ois.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    final ResponseBody responseBody = response.body();
-                    if (responseBody == null) return;
-
-                    final Gson gson = new Gson();
-                    final Hitokoto hitokoto = gson.fromJson(responseBody.string(), Hitokoto.class);
-
-                    callback.onTrans(hitokoto);
-                }
-            });
-        });
+            }
+        } else {
+            return null;
+        }
     }
 
 }

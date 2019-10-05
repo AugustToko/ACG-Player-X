@@ -6,4 +6,5 @@ package top.geek_studio.chenlongcould.musicplayer.interfaces;
  */
 public interface TransDataCallback<T> {
     void onTrans(T data);
+    void onError();
 }

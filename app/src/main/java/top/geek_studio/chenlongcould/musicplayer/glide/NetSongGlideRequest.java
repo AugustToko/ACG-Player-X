@@ -100,9 +100,9 @@ public class NetSongGlideRequest {
 
     public static DrawableTypeRequest createBaseRequest(RequestManager requestManager, NetSong.SongsBean song) {
 //        if (ignoreMediaStore) {
-            return requestManager.load(song.getAlbum().getPicture());
+            return requestManager.load(song.getAl().getPicUrl());
 //        } else {
-//            return requestManager.loadFromMediaStore(MusicUtil.getMediaStoreAlbumCoverUri(song.albumId));
+//            return requestManager.loadFromMediaStore(MusicUtil.getMediaStoreAlbumCoverUri(d.albumId));
 //        }
     }
 

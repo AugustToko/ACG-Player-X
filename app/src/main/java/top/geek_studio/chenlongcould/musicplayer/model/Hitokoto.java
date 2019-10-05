@@ -1,10 +1,14 @@
 package top.geek_studio.chenlongcould.musicplayer.model;
 
+import java.io.Serializable;
+
 /**
  * @author : chenlongcould
  * @date : 2019/10/03/20
  */
-public class Hitokoto {
+public class Hitokoto implements Serializable {
+
+    private static final long serialVersionUID = -3081503851443306445L;
 
     /**
      * id : 4432

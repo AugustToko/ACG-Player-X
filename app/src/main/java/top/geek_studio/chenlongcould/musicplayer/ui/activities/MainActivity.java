@@ -215,24 +215,24 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mlAppView.onPause();
+//        mlAppView.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        setUpLive2D();
+//        setUpLive2D();
         if (mlAppView != null) mlAppView.onResume();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        FileManager.clear();
-        SoundManager.release();
-        mLive2DContent.removeAllViews();
-        mlAppView = null;
-        mLive2DContent = null;
+//        FileManager.clear();
+//        SoundManager.release();
+//        mLive2DContent.removeAllViews();
+//        mlAppView = null;
+//        mLive2DContent = null;
 
         for (final DialogInterface d : mViewModel.dialogs) {
             if (d != null) d.dismiss();

@@ -43,13 +43,12 @@ import top.geek_studio.chenlongcould.musicplayer.preferences.LibraryPreferenceDi
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.ArtistsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.SongsFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.Util;
@@ -583,6 +582,8 @@ public class LibraryFragment extends AbsMainActivityFragment
      * @param subTitle subtitle Text
      */
     private void updateSubTitle(@Nullable String subTitle) {
+        if (toolbar == null) return;
+
         if (subTitle == null) subTitle = "-";
         toolbar.setSubtitle(subTitle);
     }
