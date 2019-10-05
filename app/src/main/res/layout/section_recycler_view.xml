@@ -19,7 +19,7 @@
         app:chipStrokeColor="?dividerColor"
         app:chipStrokeWidth="1dp"
         app:iconStartPadding="8dp"
-        tools:chipIcon="@drawable/ic_person_white_24dp"
+        app:chipIcon="@drawable/ic_person_white_24dp"
         tools:text="For You" />
 
     <androidx.recyclerview.widget.RecyclerView

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,6 +30,8 @@ import com.kabouzeid.appthemehelper.common.ATHToolbarActivity;
 import com.kabouzeid.appthemehelper.util.TabLayoutUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
 import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import org.jetbrains.annotations.NotNull;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -73,6 +76,8 @@ public class LibraryFragment extends AbsMainActivityFragment
     @BindView(R.id.pager)
     ViewPager pager;
 
+    private ViewGroup root;
+
     private MusicLibraryPagerAdapter pagerAdapter;
 
     private MaterialCab cab;
@@ -87,6 +92,7 @@ public class LibraryFragment extends AbsMainActivityFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_library, container, false);
+        root = (ViewGroup) view;
         unbinder = ButterKnife.bind(this, view);
         return view;
     }
@@ -243,7 +249,7 @@ public class LibraryFragment extends AbsMainActivityFragment
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NotNull Menu menu, @NotNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         if (pager == null) return;
 
@@ -554,6 +560,14 @@ public class LibraryFragment extends AbsMainActivityFragment
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
         /////////
+
+//        if (position == 0) {
+//            appbar.setAlpha(positionOffset);
+//            if (positionOffset == 0) appbar.setVisibility(View.GONE);
+//            else appbar.setVisibility(View.VISIBLE);
+//        } else {
+//            appbar.setAlpha(1);
+//        }
     }
 
     /**

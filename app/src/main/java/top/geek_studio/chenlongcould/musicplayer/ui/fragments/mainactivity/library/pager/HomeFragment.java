@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,13 +25,11 @@ import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -56,6 +55,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.MatDialogUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.CircularImageView;
+import top.geek_studio.chenlongcould.musicplayer.views.RetroChip;
 
 /**
  * HomePage
@@ -79,6 +79,12 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     LinearLayout hitokotoView;
 
+    @BindView(R.id.hitokotoChipHead)
+    RetroChip hitokotoHead;
+
+    @BindView(R.id.userInfoContainer)
+    LinearLayout userInfoContainer;
+
     private CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -90,7 +96,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_home, container, false);
-        unbinder = ButterKnife.bind(view);
+        unbinder = ButterKnife.bind(this, view);
 
         userImage = view.findViewById(R.id.userImage);
         userName = view.findViewById(R.id.titleWelcome);
@@ -130,6 +136,11 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 materialDialog.show();
                 return false;
             });
+
+            userInfoContainer.setOnClickListener(v -> {
+                MaterialDialog dialog = new MaterialDialog.Builder(appCompatActivity).title("Building").content("Building").build();
+                dialog.show();
+            });
         }
 
         final RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
@@ -152,8 +163,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             Hitokoto hitokoto;
             if ((hitokoto = HitokotoUtils.readHitokoFile(activity)) != null) {
                 getActivity().runOnUiThread(() -> {
-                    ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(hitokoto.getHitokoto());
-                    ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(hitokoto.getFrom());
+                    putIntoHitokotoView(hitokoto);
                     if (activity instanceof MainActivity) {
                         ((MainActivity) activity).mViewModel.HitokotoData.setValue(hitokoto);
                     }
@@ -167,14 +177,13 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     /**
      * 从网络中获取一言
-     * */
+     */
     private void loadHitokoFromNet(Activity activity) {
         HitokotoUtils.getHitokoto(activity, new TransDataCallback<Hitokoto>() {
             @Override
             public void onTrans(Hitokoto data) {
                 activity.runOnUiThread(() -> {
-                    ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(data.getHitokoto());
-                    ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(data.getFrom());
+                    putIntoHitokotoView(data);
                     if (activity instanceof MainActivity) {
                         ((MainActivity) activity).mViewModel.HitokotoData.setValue(data);
                     }
@@ -188,6 +197,13 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 activity.runOnUiThread(() -> Toast.makeText(activity, "Get Hitokoto -> Error", Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    @UiThread
+    private void putIntoHitokotoView(@NonNull Hitokoto data) {
+        ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(data.getHitokoto());
+        ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(data.getCreator());
+        hitokotoHead.setText(data.getFrom());
     }
 
     /**

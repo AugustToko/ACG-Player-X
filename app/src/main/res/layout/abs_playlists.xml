@@ -16,10 +16,11 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="24dp"
-        android:paddingTop="10dp"
+        android:paddingTop="24dp"
         android:paddingEnd="24dp"
         android:paddingBottom="10dp"
-        tools:background="#C7C0C0">
+        tools:background="#C7C0C0"
+        android:background="?selectableItemBackground">
 
         <top.geek_studio.chenlongcould.musicplayer.views.CircularImageView
             android:id="@+id/userImage"
