@@ -1,4 +1,13 @@
 # ACG Player X
+
+## 酷安: https://www.coolapk.com/apk/209705
+## MIUI http://app.mi.com/details?id=top.geek_studio.chenlongcould.musicplayer.Common
+
+## ℃_C
+## chenlongcould
+## Geek Studio
+## Crypto Studio
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE.txt)
 
 # This is new version of ACG Player
@@ -7,5 +16,8 @@
 **A material designed local music player for Android.**
 
 ![Screenshots](./art/art.jpg?raw=true)
+
+<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/app/other_files/screen_shots/Promotional%20picture/Promotional%20picture_00036.png" hspace="10">
+<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/screenshots/TOTAL_en%20(0-00-00-00).png">
 
 base on [Phonograph](https://github.com/kabouzeid/Phonograph)
