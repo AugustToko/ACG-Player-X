@@ -44,6 +44,8 @@ public class DataViewModel extends ViewModel {
 
     public MutableLiveData<FirebaseUser> userData = new MutableLiveData<>();
 
+    public MutableLiveData<Boolean> allowUseNetPlayer = new MutableLiveData<>();
+
     //////////////////////// songs /////////////////////////
 
     public void putSongs(@NonNull List<Song> songs) {

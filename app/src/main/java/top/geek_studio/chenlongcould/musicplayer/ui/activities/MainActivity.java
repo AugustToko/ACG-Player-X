@@ -74,6 +74,7 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.RemoteConfigUtil;
 
 /**
  * MainActivity {@link R.layout#activity_main_drawer_layout}
@@ -187,6 +188,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
 
         mViewModel = ViewModelProviders.of(this).get(DataViewModel.class);
+
+        RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
     }
 
     /**
@@ -288,6 +291,13 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 targetFrag = FoldersFragment.newInstance(this);
                 break;
             case NET_SEARCH:
+                // 检测服务是否可以访问
+                if (mViewModel != null && mViewModel.allowUseNetPlayer.getValue() != null
+                        && !mViewModel.allowUseNetPlayer.getValue()){
+                    Toast.makeText(this, "Not Allow!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 navigationView.setCheckedItem(R.id.nav_net_search);
 
                 if (currentFragment instanceof NetSearchFragment) return;
@@ -727,11 +737,13 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 //                        new AuthUI.IdpConfig.FacebookBuilder().build(),
 //                        new AuthUI.IdpConfig.TwitterBuilder().build()
         );
+
         startActivityForResult(
                 AuthUI.getInstance()
                         .createSignInIntentBuilder()
                         .setAvailableProviders(providers)
                         .setLogo(R.mipmap.ic_launcher_round)      // Set logo drawable
+                        .setTheme(PreferenceUtil.getInstance(getApplicationContext()).getGeneralTheme())
                         .setTosAndPrivacyPolicyUrls(
                                 "https://example.com/terms.html",
                                 "https://example.com/privacy.html")
@@ -753,6 +765,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      */
     public interface MainActivityFragmentCallbacks {
         boolean handleBackPress();
+
         void hide(@Nullable AnimatorListenerAdapter adapter);
     }
 }

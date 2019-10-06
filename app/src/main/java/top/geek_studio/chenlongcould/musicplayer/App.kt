@@ -32,7 +32,6 @@ class App : MultiDexApplication() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             DynamicShortcutManager(this).initDynamicShortcuts()
         }
-
     }
 
 
