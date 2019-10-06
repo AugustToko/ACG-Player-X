@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders;
 
 
+import android.animation.AnimatorListenerAdapter;
 import android.app.Dialog;
 import android.content.Context;
 import android.media.MediaScannerConnection;
@@ -66,7 +67,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.BreadCrumbLayout;
 
-public class FoldersFragment extends AbsMainActivityFragment implements MainActivity.MainActivityFragmentCallbacks, CabHolder, BreadCrumbLayout.SelectionCallback, SongFileAdapter.Callbacks, AppBarLayout.OnOffsetChangedListener, LoaderManager.LoaderCallbacks<List<File>> {
+public class FoldersFragment extends AbsMainActivityFragment implements CabHolder, BreadCrumbLayout.SelectionCallback, SongFileAdapter.Callbacks, AppBarLayout.OnOffsetChangedListener, LoaderManager.LoaderCallbacks<List<File>> {
 
     private static final int LOADER_ID = LoaderIds.FOLDERS_FRAGMENT;
 
@@ -89,6 +90,8 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
     AppBarLayout appbar;
     @BindView(R.id.recycler_view)
     FastScrollRecyclerView recyclerView;
+
+    private ViewGroup root;
 
     private SongFileAdapter adapter;
     private MaterialCab cab;
@@ -150,6 +153,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_folder, container, false);
+        root = (ViewGroup) view;
         unbinder = ButterKnife.bind(this, view);
         return view;
     }
@@ -231,6 +235,13 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void hide(@Nullable AnimatorListenerAdapter adapter) {
+        if (root != null) {
+            root.animate().alphaBy(100).alpha(0).setListener(adapter).start();
+        }
     }
 
     @NonNull

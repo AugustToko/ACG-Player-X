@@ -1,5 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -60,7 +62,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.Util;
  * 媒体库 Fragment
  */
 public class LibraryFragment extends AbsMainActivityFragment
-        implements CabHolder, MainActivity.MainActivityFragmentCallbacks, ViewPager.OnPageChangeListener,
+        implements CabHolder, ViewPager.OnPageChangeListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = LibraryFragment.class.getSimpleName();
@@ -550,6 +552,13 @@ public class LibraryFragment extends AbsMainActivityFragment
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void hide(@Nullable AnimatorListenerAdapter adapter) {
+        if (root != null) {
+            root.animate().alphaBy(100).alpha(0).setListener(adapter).start();
+        }
     }
 
     // --------------------------------- ViewPager -------------------------------

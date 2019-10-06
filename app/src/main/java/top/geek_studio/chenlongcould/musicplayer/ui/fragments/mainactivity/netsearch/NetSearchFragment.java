@@ -1,5 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch;
 
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -17,12 +18,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.gson.Gson;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
@@ -33,20 +32,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.NetSearchSongAdapter;
-import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
 import top.geek_studio.chenlongcould.musicplayer.model.NetSearchSong;
-import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.NetPlayerUtil;
-import top.geek_studio.chenlongcould.musicplayer.util.OkHttpUtils;
 
 /**
  * 网络搜索页面
@@ -54,7 +45,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.OkHttpUtils;
  * @author : chenlongcould
  * @date : 2019/10/04/14
  */
-public class NetSearchFragment extends AbsMainActivityFragment implements MainActivity.MainActivityFragmentCallbacks {
+public class NetSearchFragment extends AbsMainActivityFragment {
 
     private static final String TAG = NetSearchFragment.class.getSimpleName();
 
@@ -84,12 +75,14 @@ public class NetSearchFragment extends AbsMainActivityFragment implements MainAc
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    public static Fragment newInstance() {
+    private ViewGroup root;
+
+    public static NetSearchFragment newInstance() {
         return new NetSearchFragment();
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         initPlayer();
     }
@@ -98,7 +91,7 @@ public class NetSearchFragment extends AbsMainActivityFragment implements MainAc
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_net_search, container, false);
-
+        root = (ViewGroup) view;
         unbinder = ButterKnife.bind(this, view);
 
         fastScrollRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -261,6 +254,13 @@ public class NetSearchFragment extends AbsMainActivityFragment implements MainAc
     @Override
     public boolean handleBackPress() {
         return false;
+    }
+
+    @Override
+    public void hide(@Nullable AnimatorListenerAdapter adapter) {
+        if (root != null) {
+            root.animate().alphaBy(100).alpha(0).setListener(adapter).start();
+        }
     }
 
     @UiThread

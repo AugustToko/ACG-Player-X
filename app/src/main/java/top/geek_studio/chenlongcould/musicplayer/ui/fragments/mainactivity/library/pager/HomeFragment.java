@@ -2,6 +2,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -16,10 +17,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
@@ -85,6 +89,18 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     @BindView(R.id.userInfoContainer)
     LinearLayout userInfoContainer;
 
+    /**
+     * 监听 UserData
+     */
+    private Observer<FirebaseUser> userObserver = firebaseUser -> {
+        if (firebaseUser == null) {
+            setUpUserData();
+        }
+    };
+
+    /**
+     * Disp
+     */
     private CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -109,7 +125,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
+        final MainActivity appCompatActivity = (MainActivity) getActivity();
+
         if (appCompatActivity != null) {
             homeAdapter = new HomeAdapter(appCompatActivity, new ArrayList<>(), getDisplayMetrics(appCompatActivity));
             homeDataManager = new HomeDataManager(homeAdapter);
@@ -138,16 +155,36 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             });
 
             userInfoContainer.setOnClickListener(v -> {
-                MaterialDialog dialog = new MaterialDialog.Builder(appCompatActivity).title("Building").content("Building").build();
-                dialog.show();
+                MainActivity mainActivity = getLibraryFragment().getMainActivity();
+                if (mainActivity.mViewModel.userData.getValue() != null) {
+                    new MaterialDialog.Builder(mainActivity)
+                            .title("User Info")
+                            .content(mainActivity.mViewModel.userData.getValue().getDisplayName())
+                            .negativeText("Logout")
+                            .onNegative((dialog, which) -> mainActivity.logout())
+                            .show();
+                } else {
+                    mainActivity.startLoginActivity();
+                }
             });
+
+            // 监听 userData, 同时设置 User
+
+            appCompatActivity.mViewModel.userData.observeForever(userObserver);
+
+            final FirebaseUser user = appCompatActivity.mViewModel.userData.getValue();
+
+            if (user != null) {
+                setUpUserData(user);
+            } else {
+                setUpUserData();
+            }
+
         }
 
         final RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(appCompatActivity));
         recyclerView.setAdapter(homeAdapter);
-
-        setUpUserData(appCompatActivity);
 
         setUpHomeData(appCompatActivity);
 
@@ -177,6 +214,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     /**
      * 从网络中获取一言
+     *
+     * @param activity activity
      */
     private void loadHitokoFromNet(Activity activity) {
         HitokotoUtils.getHitokoto(activity, new TransDataCallback<Hitokoto>() {
@@ -184,9 +223,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             public void onTrans(Hitokoto data) {
                 activity.runOnUiThread(() -> {
                     putIntoHitokotoView(data);
-                    if (activity instanceof MainActivity) {
-                        ((MainActivity) activity).mViewModel.HitokotoData.setValue(data);
-                    }
+                    getLibraryFragment().getMainActivity().mViewModel.HitokotoData.setValue(data);
                 });
 
                 HitokotoUtils.saveHitokoFile(activity, data);
@@ -207,11 +244,10 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     }
 
     /**
-     * 设置用户信息
-     *
-     * @param appCompatActivity activity
+     * 设置用户信息 (Default)
      */
-    private void setUpUserData(@Nullable AppCompatActivity appCompatActivity) {
+    private void setUpUserData() {
+        final AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
         if (appCompatActivity == null) return;
 
         final File userImageFile = new File(PreferenceUtil.getInstance(requireContext()).getProfileImage(), Constants.USER_PROFILE);
@@ -237,6 +273,22 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         }
 
         userName.setText("User");
+
+    }
+
+    /**
+     * 设置 用户信息
+     *
+     * @param userData data
+     */
+    public void setUpUserData(@Nullable FirebaseUser userData) {
+        if (userData == null) {
+            setUpUserData();
+        } else {
+            userName.setText(userData.getDisplayName());
+            Uri uri = userData.getPhotoUrl();
+            if (uri != null) Glide.with(getActivity()).load(userData.getPhotoUrl()).into(userImage);
+        }
     }
 
     private void setUpHomeData(@Nullable AppCompatActivity appCompatActivity) {
@@ -394,6 +446,9 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).mViewModel.userData.removeObserver(userObserver);
+        }
     }
 
     /**

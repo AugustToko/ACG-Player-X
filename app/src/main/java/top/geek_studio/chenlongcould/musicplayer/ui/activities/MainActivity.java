@@ -1,5 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,7 +31,12 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseUiException;
+import com.firebase.ui.auth.IdpResponse;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
@@ -37,6 +44,7 @@ import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
@@ -59,9 +67,11 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 
@@ -76,6 +86,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      * TAG
      */
     public static final String TAG = MainActivity.class.getSimpleName();
+
+    public static final int RC_SIGN_IN = 102;
 
     /**
      * 标志位, 需要展示 INTRO
@@ -257,18 +269,44 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         // 更新最后选择
         PreferenceUtil.getInstance(this).setLastMusicChooser(key);
 
+        AbsMainActivityFragment targetFrag = null;
+
         switch (key) {
             case LIBRARY:
                 navigationView.setCheckedItem(R.id.nav_library);
-                setCurrentFragment(LibraryFragment.newInstance());
+                targetFrag = LibraryFragment.newInstance();
                 break;
             case FOLDERS:
                 navigationView.setCheckedItem(R.id.nav_folders);
-                setCurrentFragment(FoldersFragment.newInstance(this));
+                targetFrag = FoldersFragment.newInstance(this);
                 break;
             case NET_SEARCH:
                 navigationView.setCheckedItem(R.id.nav_net_search);
-                setCurrentFragment(NetSearchFragment.newInstance());
+                targetFrag = NetSearchFragment.newInstance();
+                break;
+        }
+
+        if (targetFrag != null) {
+            final AbsMainActivityFragment finalTargetFrag = targetFrag;
+
+            if (currentFragment != null) {
+                currentFragment.hide(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        super.onAnimationCancel(animation);
+                        setCurrentFragment(finalTargetFrag);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        setCurrentFragment(finalTargetFrag);
+                    }
+                });
+            } else {
+                setCurrentFragment(finalTargetFrag);
+            }
+
         }
     }
 
@@ -295,18 +333,54 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == APP_INTRO_REQUEST) {
-            blockRequestPermissions = false;
-            if (!hasPermissions()) {
-                requestPermissions();
-            }
-            checkSetUpPro(); // good chance that pro version check was delayed on first start
-        } else if (requestCode == PURCHASE_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                checkSetUpPro();
-            }
+        Log.d(TAG, "onActivityResult: " + requestCode + " " + resultCode);
+
+        switch (requestCode) {
+            case APP_INTRO_REQUEST:
+                blockRequestPermissions = false;
+                if (!hasPermissions()) {
+                    requestPermissions();
+                }
+                checkSetUpPro(); // good chance that pro version check was delayed on first start
+
+                break;
+            case PURCHASE_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    checkSetUpPro();
+                }
+                break;
+            case RC_SIGN_IN:
+                IdpResponse response = IdpResponse.fromResultIntent(data);
+                if (resultCode == RESULT_OK) {
+                    Log.d(TAG, "onActivityResult: OK");
+                    // Successfully signed in
+                    final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user != null) {
+                        mViewModel.userData.postValue(user);
+
+                        if (currentFragment instanceof LibraryFragment) {
+                            final Fragment fragment = ((LibraryFragment) currentFragment).getCurrentFragment();
+                            if (fragment instanceof HomeFragment) {
+                                ((HomeFragment) fragment).setUpUserData(user);
+                            }
+                        }
+                    }
+                } else {
+                    // Sign in failed. If response is null the user canceled the
+                    // sign-in flow using the back button. Otherwise check
+                    // response.getError().getErrorCode() and handle the error.
+                    // ...
+                    Log.d(TAG, "onActivityResult: Failed");
+                    if (response != null) {
+                        FirebaseUiException exception = response.getError();
+                        if (exception != null) {
+                            Toast.makeText(this, exception.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                break;
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -635,10 +709,40 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
+    public void startLoginActivity() {
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build(),
+                new AuthUI.IdpConfig.PhoneBuilder().build()
+//                        new AuthUI.IdpConfig.GoogleBuilder().build(),
+//                        new AuthUI.IdpConfig.FacebookBuilder().build(),
+//                        new AuthUI.IdpConfig.TwitterBuilder().build()
+        );
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .setLogo(R.mipmap.ic_launcher_round)      // Set logo drawable
+                        .setTosAndPrivacyPolicyUrls(
+                                "https://example.com/terms.html",
+                                "https://example.com/privacy.html")
+                        .build(),
+                MainActivity.RC_SIGN_IN);
+    }
+
+    /**
+     * 退出登陆
+     */
+    public void logout() {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(task -> mViewModel.userData.setValue(null));
+    }
+
     /**
      * 用于 Fragment 回调
      */
     public interface MainActivityFragmentCallbacks {
         boolean handleBackPress();
+        void hide(@Nullable AnimatorListenerAdapter adapter);
     }
 }

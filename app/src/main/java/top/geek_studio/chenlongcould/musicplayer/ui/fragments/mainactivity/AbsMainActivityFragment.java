@@ -13,7 +13,7 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
  *
  * @author Karim Abou Zeid (kabouzeid)
  */
-public abstract class AbsMainActivityFragment extends Fragment {
+public abstract class AbsMainActivityFragment extends Fragment implements MainActivity.MainActivityFragmentCallbacks {
 
     public MainActivity getMainActivity() {
         return (MainActivity) getActivity();

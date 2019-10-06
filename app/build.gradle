@@ -158,7 +158,14 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.9'
     // Okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
+    // firebase
+    implementation 'com.google.firebase:firebase-analytics:17.2.0'
+    implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
+    implementation 'com.google.firebase:firebase-auth:19.1.0'
+    implementation 'com.google.firebase:firebase-database:19.1.0'
 }
 repositories {
     mavenCentral()
 }
+
+apply plugin: 'com.google.gms.google-services'
