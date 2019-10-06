@@ -32,6 +32,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -155,6 +156,23 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             });
 
             userInfoContainer.setOnClickListener(v -> {
+
+                //                try {
+//                    //包名
+//                    String pkName = appCompatActivity.getPackageName();
+//                    //versionName
+//                    String versionName = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionName;
+//                    //versionCode
+//                    int versionCode = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionCode;
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+
+                if ("zh-CN".equals(Locale.getDefault().getCountry()) && !appCompatActivity.getPackageName().toLowerCase().contains("debug")) {
+                    Toast.makeText(appCompatActivity, "Service is not available in your country/area.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 MainActivity mainActivity = getLibraryFragment().getMainActivity();
                 if (mainActivity.mViewModel.userData.getValue() != null) {
                     new MaterialDialog.Builder(mainActivity)

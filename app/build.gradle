@@ -1,8 +1,10 @@
 import javax.annotation.Nullable
 
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
+apply plugin: 'io.fabric'
 
 def lifecycle_version = "2.0.0"
 
@@ -48,8 +50,8 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 161
-        versionName '1.4.4'
+        versionCode 163
+        versionName '1.4.6'
         applicationIdSuffix = 'Common'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
@@ -159,10 +161,13 @@ dependencies {
     // Okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     // firebase
+    implementation 'com.google.firebase:firebase-core:17.2.0'
     implementation 'com.google.firebase:firebase-analytics:17.2.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
     implementation 'com.google.firebase:firebase-auth:19.1.0'
     implementation 'com.google.firebase:firebase-database:19.1.0'
+    implementation 'com.google.firebase:firebase-perf:19.0.0'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 }
 repositories {
     mavenCentral()

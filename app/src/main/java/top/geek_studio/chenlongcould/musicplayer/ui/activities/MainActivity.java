@@ -259,6 +259,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      * @param key {@link LibraryFragment} and {@link FoldersFragment}
      */
     private void setMusicChooser(int key) {
+
         // 非 PRO 版本禁用文件夹
         if (!App.Companion.isProVersion() && key == FOLDERS) {
             Toast.makeText(this, R.string.folder_view_is_a_pro_feature, Toast.LENGTH_LONG).show();
@@ -274,14 +275,23 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         switch (key) {
             case LIBRARY:
                 navigationView.setCheckedItem(R.id.nav_library);
+
+                if (currentFragment instanceof LibraryFragment) return;
+
                 targetFrag = LibraryFragment.newInstance();
                 break;
             case FOLDERS:
                 navigationView.setCheckedItem(R.id.nav_folders);
+
+                if (currentFragment instanceof FoldersFragment) return;
+
                 targetFrag = FoldersFragment.newInstance(this);
                 break;
             case NET_SEARCH:
                 navigationView.setCheckedItem(R.id.nav_net_search);
+
+                if (currentFragment instanceof NetSearchFragment) return;
+
                 targetFrag = NetSearchFragment.newInstance();
                 break;
         }
