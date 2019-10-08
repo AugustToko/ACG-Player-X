@@ -34,6 +34,9 @@ import com.bumptech.glide.Glide;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseUiException;
 import com.firebase.ui.auth.IdpResponse;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -72,6 +75,7 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folde
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic.SongPicFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.RemoteConfigUtil;
@@ -109,6 +113,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     private static final int FOLDERS = 1;
 
     private static final int NET_SEARCH = 2;
+
+    private static final int YUEPIC = 4;
 
     /**
      * Drawer 菜单点击延迟, 用于点击item, 等待 Drawer 收起, 再进行操作
@@ -190,6 +196,11 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         mViewModel = ViewModelProviders.of(this).get(DataViewModel.class);
 
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
+
+        if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
+            GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this);
+            Toast.makeText(this, "Google Play Services is not available!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -277,38 +288,45 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         switch (key) {
             case LIBRARY:
-                navigationView.setCheckedItem(R.id.nav_library);
+//                if (currentFragment instanceof LibraryFragment) return;
 
-                if (currentFragment instanceof LibraryFragment) return;
+                navigationView.setCheckedItem(R.id.nav_library);
 
                 targetFrag = LibraryFragment.newInstance();
                 break;
             case FOLDERS:
-                navigationView.setCheckedItem(R.id.nav_folders);
+//                if (currentFragment instanceof FoldersFragment) return;
 
-                if (currentFragment instanceof FoldersFragment) return;
+                navigationView.setCheckedItem(R.id.nav_folders);
 
                 targetFrag = FoldersFragment.newInstance(this);
                 break;
             case NET_SEARCH:
+//                if (currentFragment instanceof NetSearchFragment) return;
+
                 // 检测服务是否可以访问
                 if (mViewModel != null && mViewModel.allowUseNetPlayer.getValue() != null
-                        && !mViewModel.allowUseNetPlayer.getValue()){
+                        && !mViewModel.allowUseNetPlayer.getValue()) {
                     Toast.makeText(this, "Not Allow!", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 navigationView.setCheckedItem(R.id.nav_net_search);
 
-                if (currentFragment instanceof NetSearchFragment) return;
-
                 targetFrag = NetSearchFragment.newInstance();
+                break;
+            case YUEPIC:
+                navigationView.setCheckedItem(R.id.nav_yuepic);
+
+                targetFrag = SongPicFragment.newInstance();
+
                 break;
         }
 
         if (targetFrag != null) {
-            final AbsMainActivityFragment finalTargetFrag = targetFrag;
+//            setCurrentFragment(targetFrag);
 
+            final AbsMainActivityFragment finalTargetFrag = targetFrag;
             if (currentFragment != null) {
                 currentFragment.hide(new AnimatorListenerAdapter() {
                     @Override
@@ -337,7 +355,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      */
     private void setCurrentFragment(@NonNull final Fragment fragment) {
         // 置换
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, null).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment, null)
+                .commit();
 
         // 更新
         currentFragment = (MainActivityFragmentCallbacks) fragment;
@@ -441,6 +462,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     break;
                 case R.id.nav_net_search:
                     new Handler().postDelayed(() -> setMusicChooser(NET_SEARCH), DRAWER_WAIT_TIME);
+                    break;
+                case R.id.nav_yuepic:
+                    new Handler().postDelayed(() -> setMusicChooser(YUEPIC), DRAWER_WAIT_TIME);
                     break;
                 case R.id.buy_pro:
                     new Handler().postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);
@@ -767,5 +791,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         boolean handleBackPress();
 
         void hide(@Nullable AnimatorListenerAdapter adapter);
+
+        void show(@Nullable AnimatorListenerAdapter adapter);
     }
 }

@@ -13,6 +13,8 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.LinkedList;
 import java.util.List;
 
+import top.geek_studio.chenlongcould.musicplayer.model.yuepic.YuePic;
+
 /**
  * ViewModel
  *
@@ -43,6 +45,8 @@ public class DataViewModel extends ViewModel {
     public MutableLiveData<Hitokoto> HitokotoData = new MutableLiveData<>();
 
     public MutableLiveData<FirebaseUser> userData = new MutableLiveData<>();
+
+    public MutableLiveData<YuePic> yuePicData = new MutableLiveData<>();
 
     public MutableLiveData<Boolean> allowUseNetPlayer = new MutableLiveData<>();
 

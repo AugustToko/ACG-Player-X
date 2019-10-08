@@ -19,11 +19,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.transition.Fade;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,8 +78,6 @@ public class NetSearchFragment extends AbsMainActivityFragment {
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    private ViewGroup root;
-
     public static NetSearchFragment newInstance() {
         return new NetSearchFragment();
     }
@@ -87,11 +88,14 @@ public class NetSearchFragment extends AbsMainActivityFragment {
         initPlayer();
     }
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    protected ViewGroup createRootView(@NonNull @NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final Fade fade = new Fade();
+        fade.setDuration(300);
+        setEnterTransition(fade);
+
         final View view = inflater.inflate(R.layout.fragment_net_search, container, false);
-        root = (ViewGroup) view;
+
         unbinder = ButterKnife.bind(this, view);
 
         fastScrollRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -110,7 +114,12 @@ public class NetSearchFragment extends AbsMainActivityFragment {
         progressBar.animate().alpha(0).setDuration(0).start();
         progressBar.setClickable(false);
 
-        return view;
+        return (ViewGroup) view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        // ...
     }
 
     private synchronized void initPlayer() {
@@ -254,13 +263,6 @@ public class NetSearchFragment extends AbsMainActivityFragment {
     @Override
     public boolean handleBackPress() {
         return false;
-    }
-
-    @Override
-    public void hide(@Nullable AnimatorListenerAdapter adapter) {
-        if (root != null) {
-            root.animate().alphaBy(100).alpha(0).setListener(adapter).start();
-        }
     }
 
     @UiThread

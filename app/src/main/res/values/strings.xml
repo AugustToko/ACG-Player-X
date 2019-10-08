@@ -318,4 +318,10 @@
     <string name="power_by_https_i_a632079_me">Power by https://i.a632079.me</string>
     <string name="comment">Comment</string>
     <string name="hot_comment">Hot Comment</string>
+    <string name="hitokoto">Hitokoto</string>
+    <string name="weiranteam">WeiRanTeam</string>
+    <string name="nil">nil</string>
+    <string name="yuepic">YuePic</string>
+    <string name="netsearch">NetSearch</string>
+    <string name="data_overview">Data overview</string>
 </resources>

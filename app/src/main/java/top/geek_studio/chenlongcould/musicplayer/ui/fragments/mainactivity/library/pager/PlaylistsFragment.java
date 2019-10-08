@@ -50,7 +50,9 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
 
     @Override
     public String getSubTitle() {
-        return playlistsCount + " Playlist(s)";
+        // TODO: use context.getString(int id);
+        if (isAdded()) return playlistsCount + " Playlist(s)";
+        else  return playlistsCount + " Playlist(s)";
     }
 
     @NonNull

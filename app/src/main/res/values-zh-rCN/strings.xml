@@ -298,4 +298,7 @@
     <string name="sort_order_album">专辑</string>
     <string name="sort_order_year">年份</string>
     <string name="home">主页</string>
+    <string name="yuepic">乐图</string>
+    <string name="netsearch">网络搜索</string>
+    <string name="data_overview">数据概览</string>
 </resources>

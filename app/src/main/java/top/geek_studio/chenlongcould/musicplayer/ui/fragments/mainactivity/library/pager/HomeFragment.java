@@ -28,11 +28,12 @@ import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -55,7 +56,7 @@ import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.base.AbsLibraryPagerFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.Compressor;
-import top.geek_studio.chenlongcould.musicplayer.util.HitokotoUtils;
+import top.geek_studio.chenlongcould.musicplayer.util.HitokotoUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.MatDialogUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
@@ -106,7 +107,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     @Override
     public String getSubTitle() {
-        return "Home";
+        if (isAdded()) return getString(R.string.home);
+        else return "-";
     }
 
     @Nullable
@@ -126,7 +128,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final MainActivity appCompatActivity = (MainActivity) getActivity();
+        final MainActivity appCompatActivity = getLibraryFragment().getMainActivity();
 
         if (appCompatActivity != null) {
             homeAdapter = new HomeAdapter(appCompatActivity, new ArrayList<>(), getDisplayMetrics(appCompatActivity));
@@ -157,7 +159,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
             userInfoContainer.setOnClickListener(v -> {
 
-                //                try {
+//                try {
 //                    //包名
 //                    String pkName = appCompatActivity.getPackageName();
 //                    //versionName
@@ -168,12 +170,12 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 //                    e.printStackTrace();
 //                }
 
-                if ("zh-CN".equals(Locale.getDefault().getCountry()) && !appCompatActivity.getPackageName().toLowerCase().contains("debug")) {
-                    Toast.makeText(appCompatActivity, "Service is not available in your country/area.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+//                if ("zh-rCN".equals(Locale.getDefault().getCountry()) && !appCompatActivity.getPackageName().toLowerCase().contains("debug")) {
+//                    Toast.makeText(appCompatActivity, "Service is not available in your country/area.", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
 
-                MainActivity mainActivity = getLibraryFragment().getMainActivity();
+                final MainActivity mainActivity = getLibraryFragment().getMainActivity();
                 if (mainActivity.mViewModel.userData.getValue() != null) {
                     new MaterialDialog.Builder(mainActivity)
                             .title("User Info")
@@ -213,11 +215,18 @@ public class HomeFragment extends AbsLibraryPagerFragment {
      *
      * @param activity act
      */
+    // TODO: Check date
     private void setUpHitokotoView(@NonNull Activity activity) {
+        final Hitokoto h = getLibraryFragment().getMainActivity().mViewModel.HitokotoData.getValue();
+        if (h != null) {
+            putIntoHitokotoView(h);
+            return;
+        }
+
         CustomThreadPool.post(() -> {
             Hitokoto hitokoto;
-            if ((hitokoto = HitokotoUtils.readHitokoFile(activity)) != null) {
-                getActivity().runOnUiThread(() -> {
+            if ((hitokoto = HitokotoUtil.readHitokoFile(activity)) != null) {
+                getLibraryFragment().getMainActivity().runOnUiThread(() -> {
                     putIntoHitokotoView(hitokoto);
                     if (activity instanceof MainActivity) {
                         ((MainActivity) activity).mViewModel.HitokotoData.setValue(hitokoto);
@@ -236,20 +245,18 @@ public class HomeFragment extends AbsLibraryPagerFragment {
      * @param activity activity
      */
     private void loadHitokoFromNet(Activity activity) {
-        HitokotoUtils.getHitokoto(activity, new TransDataCallback<Hitokoto>() {
+        HitokotoUtil.getHitokoto(activity, new TransDataCallback<Hitokoto>() {
             @Override
-            public void onTrans(Hitokoto data) {
-                activity.runOnUiThread(() -> {
-                    putIntoHitokotoView(data);
-                    getLibraryFragment().getMainActivity().mViewModel.HitokotoData.setValue(data);
-                });
+            public void onTrans(@NotNull Hitokoto data) {
+                putIntoHitokotoView(data);
+                getLibraryFragment().getMainActivity().mViewModel.HitokotoData.setValue(data);
 
-                HitokotoUtils.saveHitokoFile(activity, data);
+                CustomThreadPool.post(() -> HitokotoUtil.saveHitokoFile(activity, data));
             }
 
             @Override
             public void onError() {
-                activity.runOnUiThread(() -> Toast.makeText(activity, "Get Hitokoto -> Error", Toast.LENGTH_SHORT).show());
+                Toast.makeText(activity, "Get Hitokoto -> Error", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -309,9 +316,8 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         }
     }
 
-    private void setUpHomeData(@Nullable AppCompatActivity appCompatActivity) {
+    private void setUpHomeData(@Nullable MainActivity activity) {
 
-        final MainActivity activity = (MainActivity) appCompatActivity;
         if (activity != null) {
 //            activity.mViewModel.setSongsUpdateObs(activity, data -> {
 //                // do sth
@@ -487,7 +493,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             this.adapter = adapter;
         }
 
-        public void update(@NonNull final Activity activity, @NonNull Home home) {
+        public synchronized void update(@NonNull final Activity activity, @NonNull Home home) {
             boolean need = false;
 
             if (home.getHomeSection() == HomeAdapter.RECENT_ALBUMS) {
@@ -554,7 +560,9 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
             }
 
-            if (need) activity.runOnUiThread(() -> adapter.swapData(new ArrayList<>(homeList)));
+            if (need) {
+                activity.runOnUiThread(() -> adapter.swapData(new ArrayList<>(homeList)));
+            }
         }
 
         private boolean isSame(Home h1, Home h2) {

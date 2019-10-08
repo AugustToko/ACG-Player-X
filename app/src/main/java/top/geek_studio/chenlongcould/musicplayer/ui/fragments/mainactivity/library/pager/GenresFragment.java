@@ -33,7 +33,9 @@ public class GenresFragment extends AbsLibraryPagerRecyclerViewFragment<GenreAda
 
     @Override
     public String getSubTitle() {
-        return genresCount + " Genre(s)";
+        // TODO: use context.getString(int id);
+        if (isAdded())return genresCount + " Genre(s)";
+        else return genresCount + " Genre(s)";
     }
 
     @NonNull

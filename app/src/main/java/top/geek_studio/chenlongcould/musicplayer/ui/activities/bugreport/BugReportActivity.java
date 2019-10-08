@@ -97,7 +97,7 @@ public class BugReportActivity extends AbsThemeActivity {
     @BindView(R.id.button_send)
     FloatingActionButton sendFab;
 
-    private static final String ISSUE_TRACKER_LINK = "https://github.com/kabouzeid/Phonograph";
+    private static final String ISSUE_TRACKER_LINK = "https://github.com/Crypto-Android-Apps/ACG-Player-X";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -262,7 +262,7 @@ public class BugReportActivity extends AbsThemeActivity {
         String bugDescription = inputDescription.getText().toString();
 
         Report report = new Report(bugTitle, bugDescription, deviceInfo, new ExtraInfo());
-        GithubTarget target = new GithubTarget("kabouzeid", "Phonograph");
+        GithubTarget target = new GithubTarget("Crypto-Android-Apps", "ACG-Player-X");
 
         ReportIssueAsyncTask.report(this, report, target, login);
     }

@@ -47,7 +47,9 @@ public class AlbumsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
 
     @Override
     public String getSubTitle() {
-        return albumCount + " Album(s)";
+        // TODO: use context.getString(int id);
+        if (isAdded()) return albumCount + " Album(s)";
+        else return albumCount + " Album(s)";
     }
 
     @Override

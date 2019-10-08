@@ -36,10 +36,11 @@ import de.psdev.licensesdialog.LicensesDialog;
 @SuppressWarnings("FieldCanBeLocal")
 public class AboutActivity extends AbsBaseActivity implements View.OnClickListener {
 
-    private static String GITHUB = "https://github.com/AugustToko/ACG-Player-X";
+    private static String GITHUB = "https://github.com/Crypto-Android-Apps/ACG-Player-X";
 
     private static String TWITTER = "https://twitter.com/chenlongcould";
-    private static String WEBSITE = "https://geek-cloud.top";
+
+    private static String WEBSITE = "https://www.crypto-studio.com/";
 
     private static String AIDAN_FOLLESTAD_GOOGLE_PLUS = "https://google.com/+AidanFollestad";
     private static String AIDAN_FOLLESTAD_GITHUB = "https://github.com/afollestad";
@@ -56,6 +57,10 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
 
     private static String ADRIAN_TWITTER = "https://twitter.com/froschgames";
     private static String ADRIAN_WEBSITE = "https://froschgames.com/";
+
+    private static String HITOKOTO_WEBSITE = "https://hitokoto.cn/";
+
+    private static String WEIRAN_WEBSITE = "https://weiran.org.cn/";
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -103,6 +108,10 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
     AppCompatButton adrianTwitter;
     @BindView(R.id.adrian_website)
     AppCompatButton adrianWebsite;
+    @BindView(R.id.hitokoto_website)
+    AppCompatButton hitokotoWebsite;
+    @BindView(R.id.weiran_website)
+    AppCompatButton weiranWebsite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +166,8 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
         eugeneCheungWebsite.setOnClickListener(this);
         adrianTwitter.setOnClickListener(this);
         adrianWebsite.setOnClickListener(this);
+        hitokotoWebsite.setOnClickListener(this);
+        weiranWebsite.setOnClickListener(this);
     }
 
     @Override
@@ -229,6 +240,10 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
             openUrl(ADRIAN_TWITTER);
         } else if (v == adrianWebsite) {
             openUrl(ADRIAN_WEBSITE);
+        } else if (v == hitokotoWebsite) {
+            openUrl(HITOKOTO_WEBSITE);
+        } else if (v == weiranWebsite) {
+            openUrl(WEIRAN_WEBSITE);
         }
     }
 

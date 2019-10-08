@@ -1,32 +1,11 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
-import android.content.Context;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import top.geek_studio.chenlongcould.musicplayer.App;
 
 public class OkHttpUtils {
     private static OkHttpUtils okHttpUtil;
@@ -75,7 +54,6 @@ public class OkHttpUtils {
         final Request request = new Request.Builder().url(urlString).method("POST", formBody).build();
         okHttpClient.newCall(request).enqueue(callback);
     }
-
 
 //    // get4LastFM 请求
 //    public void get4LastFM(String urlString, Callback callback) {

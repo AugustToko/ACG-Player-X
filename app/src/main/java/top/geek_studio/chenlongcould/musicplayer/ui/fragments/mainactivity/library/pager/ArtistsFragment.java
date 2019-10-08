@@ -48,7 +48,9 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     @Override
     public String getSubTitle() {
-        return artistCount + " Artist(s)";
+        // TODO: use context.getString(int id);
+        if (isAdded()) return artistCount + " Artist(s)";
+        else return artistCount + " Artist(s)";
     }
 
     @NonNull

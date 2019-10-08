@@ -17,7 +17,11 @@
                 <item
                     android:id="@+id/nav_net_search"
                     android:icon="@drawable/ic_search_white_24dp"
-                    android:title="NetSearch" />
+                    android:title="@string/netsearch" />
+                <item
+                    android:id="@+id/nav_yuepic"
+                    android:icon="@drawable/ic_photo_white_24dp"
+                    android:title="@string/yuepic" />
             </group>
         </menu>
     </item>
@@ -28,7 +32,7 @@
                 <item
                     android:id="@+id/nav_data_overview"
                     android:icon="@drawable/ic_data_usage_white_24dp"
-                    android:title="Data overview" />
+                    android:title="@string/data_overview" />
 
                 <item
                     android:id="@+id/action_scan"

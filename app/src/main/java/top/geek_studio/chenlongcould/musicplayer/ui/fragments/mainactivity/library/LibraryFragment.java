@@ -1,13 +1,11 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library;
 
-import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.transition.Fade;
 import androidx.viewpager.widget.ViewPager;
 
 import com.afollestad.materialcab.MaterialCab;
@@ -45,7 +44,6 @@ import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.preferences.LibraryPreferenceDialog;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.SearchActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.AlbumsFragment;
@@ -92,11 +90,15 @@ public class LibraryFragment extends AbsMainActivityFragment
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    protected ViewGroup createRootView(@NonNull @NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final Fade fade = new Fade();
+        fade.setDuration(300);
+        setEnterTransition(fade);
+
         final View view = inflater.inflate(R.layout.fragment_library, container, false);
         root = (ViewGroup) view;
         unbinder = ButterKnife.bind(this, view);
-        return view;
+        return (ViewGroup) view;
     }
 
     @Override
@@ -180,6 +182,8 @@ public class LibraryFragment extends AbsMainActivityFragment
         if (PreferenceUtil.getInstance(activity).rememberLastTab()) {
             final int lastIndex = PreferenceUtil.getInstance(activity).getLastPage();
             pager.setCurrentItem(lastIndex);
+
+            // TODO: 延迟操作导致 fragment 状态不可靠
             new Handler().postDelayed(() -> updateSubTitle(getFragmentSubTitle(lastIndex)), 3000);
         }
 
@@ -552,13 +556,6 @@ public class LibraryFragment extends AbsMainActivityFragment
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void hide(@Nullable AnimatorListenerAdapter adapter) {
-        if (root != null) {
-            root.animate().alphaBy(100).alpha(0).setListener(adapter).start();
-        }
     }
 
     // --------------------------------- ViewPager -------------------------------

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/pic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/default_album_art"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp" />
+
+    <ImageView
+        android:id="@+id/ramp"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:contentDescription="@string/nil"
+        android:src="@drawable/shadow_up"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView
+        android:id="@+id/yuePicAuthorName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingLeft="20dp"
+        android:paddingEnd="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="20dp"
+        android:text="@string/app_name"
+        android:textAppearance="@style/TextViewHeadline5"
+        app:layout_constraintBottom_toTopOf="@+id/yuePicUrl"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView
+        android:id="@+id/yuePicUrl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:alpha="0.75"
+        android:autoLink="all"
+        android:ellipsize="end"
+        android:linksClickable="true"
+        android:paddingStart="20dp"
+        android:paddingLeft="20dp"
+        android:paddingEnd="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="20dp"
+        android:text="@string/welcome"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/changeImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_margin="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_shuffle_black_24dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

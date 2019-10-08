@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -55,7 +54,9 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     public String getSubTitle() {
-        return songCount + " Song(s)";
+        // TODO: use context.getString(int id);
+        if (isAdded()) return songCount + " Song(s)";
+        else return songCount + " Song(s)";
     }
 
     @NonNull

@@ -169,7 +169,8 @@
             android:minHeight="@dimen/md_listitem_height"
             android:orientation="horizontal"
             android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            android:paddingRight="16dp"
+            android:visibility="gone">
 
             <top.geek_studio.chenlongcould.musicplayer.views.IconImageView
                 android:id="@+id/icon_donate"
