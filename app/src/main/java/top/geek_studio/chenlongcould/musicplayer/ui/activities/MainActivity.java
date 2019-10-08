@@ -76,6 +76,7 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic.SongPicFragment;
+import top.geek_studio.chenlongcould.musicplayer.util.CSutil;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.RemoteConfigUtil;
@@ -196,6 +197,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         mViewModel = ViewModelProviders.of(this).get(DataViewModel.class);
 
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
+
+        CSutil.checkUpdate(this);
 
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this);

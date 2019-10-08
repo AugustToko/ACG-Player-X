@@ -217,7 +217,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
 
         NetPlayerUtil.search(getActivity(), key, new TransDataCallback<NetSearchSong>() {
             @Override
-            public void onTrans(NetSearchSong data) {
+            public void onTrans(@NotNull NetSearchSong data) {
                 adapter = new NetSearchSongAdapter(getMainActivity(), NetSearchFragment.this, data.getResult().getSongs(), R.layout.item_list, false, null);
 
                 getMainActivity().runOnUiThread(() -> {
