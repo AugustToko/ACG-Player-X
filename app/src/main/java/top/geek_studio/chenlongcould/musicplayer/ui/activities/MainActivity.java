@@ -138,6 +138,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
     public DataViewModel mViewModel;
 
+    public Handler handler;
+
     @Nullable
     private View navigationDrawerHeader;
 
@@ -199,6 +201,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
 
         CSutil.checkUpdate(this);
+
+        handler = new Handler();
 
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this);

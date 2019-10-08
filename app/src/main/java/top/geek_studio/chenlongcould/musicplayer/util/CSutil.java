@@ -9,8 +9,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.kabouzeid.appthemehelper.color.MaterialColor;
-
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -79,6 +77,7 @@ public class CSutil {
      * 获取当前本地apk的版本
      *
      * @param mContext ctx
+     *
      * @return version
      */
     public static int getVersionCode(Context mContext) {

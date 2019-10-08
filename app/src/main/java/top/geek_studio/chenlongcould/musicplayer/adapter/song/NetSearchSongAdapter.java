@@ -22,6 +22,8 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.kabouzeid.chenlongcould.musicplayer.R;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 import top.geek_studio.chenlongcould.musicplayer.adapter.MusicCommentAdapter;
@@ -81,7 +83,7 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
         fragment = netSearchFragment;
     }
 
-    public void swapDataSet(List<SongsBean> dataSet) {
+    public void swapDataSet(@NonNull List<SongsBean> dataSet) {
         this.dataSet = dataSet;
         notifyDataSetChanged();
     }
@@ -142,7 +144,7 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
         NetPlayerUtil.getNetSongDetail(activity, song.getId(), new TransDataCallback<NetSong>() {
             @Override
-            public void onTrans(NetSong data) {
+            public void onTrans(@NotNull NetSong data) {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -195,6 +197,7 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
     @Override
     public int getItemCount() {
+        if (dataSet == null) return 0;
         return dataSet.size();
     }
 
@@ -292,7 +295,7 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
                     case R.id.action_comment: {
                         NetPlayerUtil.getSongComment(activity, (int) getSong().getId(), new TransDataCallback<NetMusicComment>() {
                             @Override
-                            public void onTrans(NetMusicComment data) {
+                            public void onTrans(@NotNull NetMusicComment data) {
                                 activity.runOnUiThread(() -> {
 
                                     if (data.getHotComments().size() == 0) {

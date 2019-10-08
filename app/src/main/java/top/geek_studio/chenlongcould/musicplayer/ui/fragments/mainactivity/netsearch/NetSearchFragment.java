@@ -228,7 +228,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
 
             @Override
             public void onError() {
-                getActivity().runOnUiThread(() -> progressBar.animate().alpha(0).setDuration(1000).start());
+                getMainActivity().runOnUiThread(() -> progressBar.animate().alpha(0).setDuration(1000).start());
             }
         });
 

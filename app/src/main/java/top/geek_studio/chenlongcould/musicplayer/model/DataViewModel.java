@@ -50,6 +50,8 @@ public class DataViewModel extends ViewModel {
 
     public MutableLiveData<Boolean> allowUseNetPlayer = new MutableLiveData<>();
 
+    public MutableLiveData<Boolean> allowGetYuePic = new MutableLiveData<>();
+
     //////////////////////// songs /////////////////////////
 
     public void putSongs(@NonNull List<Song> songs) {

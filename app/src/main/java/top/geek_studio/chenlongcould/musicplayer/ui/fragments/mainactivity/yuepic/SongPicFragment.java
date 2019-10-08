@@ -1,10 +1,12 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,6 +27,7 @@ import butterknife.Unbinder;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
 import top.geek_studio.chenlongcould.musicplayer.model.yuepic.YuePic;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
+import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.YuePicUtil;
 
@@ -61,7 +64,16 @@ public class SongPicFragment extends AbsMainActivityFragment {
         final View view = inflater.inflate(R.layout.fragment_yuepic, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        changeImageButton.setOnClickListener(v -> loadYuePicFromNet());
+        changeImageButton.setOnClickListener(v -> {
+            final Boolean allow = getMainActivity().mViewModel.allowGetYuePic.getValue();
+            
+            if (allow == null || allow) {
+                loadYuePicFromNet();
+            } else {
+                Toast.makeText(getMainActivity(), "Wait...", Toast.LENGTH_SHORT).show();
+            }
+            
+        });
 
         return (ViewGroup) view;
     }
@@ -100,14 +112,19 @@ public class SongPicFragment extends AbsMainActivityFragment {
                 // TODO: Check date
                 putIntoView(data);
                 getMainActivity().mViewModel.yuePicData.setValue(data);
+                // 每隔 3s 允许获取一次
+                getMainActivity().mViewModel.allowGetYuePic.setValue(false);
+                getMainActivity().handler.postDelayed(() -> getMainActivity().mViewModel.allowGetYuePic.setValue(true), 3000);
 
                 // save file
                 CustomThreadPool.post(() -> YuePicUtil.saveYuePicFile(getMainActivity(), data));
+
             }
 
             @Override
             public void onError() {
                 // ...
+                getMainActivity().runOnUiThread(() -> Toast.makeText(getMainActivity(), "Get YuePic -> Error!", Toast.LENGTH_SHORT).show());
             }
         });
     }

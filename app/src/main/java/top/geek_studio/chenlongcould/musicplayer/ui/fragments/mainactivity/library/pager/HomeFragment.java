@@ -79,17 +79,30 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     private HomeDataManager homeDataManager;
 
+    @BindView(R.id.userImage)
     CircularImageView userImage;
 
+    @BindView(R.id.userName)
     ATEPrimaryTextView userName;
 
+    @BindView(R.id.userInfoContainer)
+    LinearLayout userInfoContainer;
+
+    ///////////////////// HITOKOTO VIEW /////////////////
+
+    @BindView(R.id.hitokotoView)
     LinearLayout hitokotoView;
+
+    @BindView(R.id.hitokoto)
+    ATEPrimaryTextView hitokotoText;
+
+    @BindView(R.id.hitokotoFrom)
+    ATESecondaryTextView hitikotoFrom;
 
     @BindView(R.id.hitokotoChipHead)
     RetroChip hitokotoHead;
 
-    @BindView(R.id.userInfoContainer)
-    LinearLayout userInfoContainer;
+    ///////////////////// HITOKOTO VIEW /////////////////
 
     /**
      * 监听 UserData
@@ -108,7 +121,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     @Override
     public String getSubTitle() {
         if (isAdded()) return getString(R.string.home);
-        else return "-";
+        else return "Home";
     }
 
     @Nullable
@@ -116,11 +129,6 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_home, container, false);
         unbinder = ButterKnife.bind(this, view);
-
-        userImage = view.findViewById(R.id.userImage);
-        userName = view.findViewById(R.id.titleWelcome);
-        hitokotoView = view.findViewById(R.id.hitokotoView);
-
         return view;
     }
 
@@ -175,11 +183,13 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 //                    return;
 //                }
 
+
                 final MainActivity mainActivity = getLibraryFragment().getMainActivity();
-                if (mainActivity.mViewModel.userData.getValue() != null) {
+                FirebaseUser user = mainActivity.mViewModel.userData.getValue();
+                if (user != null && user.getDisplayName() != null) {
                     new MaterialDialog.Builder(mainActivity)
                             .title("User Info")
-                            .content(mainActivity.mViewModel.userData.getValue().getDisplayName())
+                            .content(user.getDisplayName())
                             .negativeText("Logout")
                             .onNegative((dialog, which) -> mainActivity.logout())
                             .show();
@@ -263,8 +273,10 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     @UiThread
     private void putIntoHitokotoView(@NonNull Hitokoto data) {
-        ((ATEPrimaryTextView) hitokotoView.findViewById(R.id.hitokoto)).setText(data.getHitokoto());
-        ((ATESecondaryTextView) hitokotoView.findViewById(R.id.hitokotoFrom)).setText(data.getCreator());
+        if (!isAdded()) return;
+
+        hitokotoText.setText(data.getHitokoto());
+        hitikotoFrom.setText(data.getCreator());
         hitokotoHead.setText(data.getFrom());
     }
 
