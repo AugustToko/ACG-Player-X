@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic;
 
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,9 +26,8 @@ import butterknife.Unbinder;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
 import top.geek_studio.chenlongcould.musicplayer.model.yuepic.YuePic;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
-import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
-import top.geek_studio.chenlongcould.musicplayer.util.YuePicUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.openimage.YuePicUtil;
 
 /**
  * HomePage
@@ -66,20 +64,21 @@ public class SongPicFragment extends AbsMainActivityFragment {
 
         changeImageButton.setOnClickListener(v -> {
             final Boolean allow = getMainActivity().mViewModel.allowGetYuePic.getValue();
-            
+
             if (allow == null || allow) {
                 loadYuePicFromNet();
             } else {
                 Toast.makeText(getMainActivity(), "Wait...", Toast.LENGTH_SHORT).show();
             }
-            
+
         });
 
         return (ViewGroup) view;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
         setUpYuePic();
     }
 
@@ -111,10 +110,16 @@ public class SongPicFragment extends AbsMainActivityFragment {
             public void onTrans(@NonNull YuePic data) {
                 // TODO: Check date
                 putIntoView(data);
+
+
+
                 getMainActivity().mViewModel.yuePicData.setValue(data);
                 // 每隔 3s 允许获取一次
                 getMainActivity().mViewModel.allowGetYuePic.setValue(false);
-                getMainActivity().handler.postDelayed(() -> getMainActivity().mViewModel.allowGetYuePic.setValue(true), 3000);
+                getMainActivity().handler.postDelayed(() -> {
+                    if (getMainActivity().mViewModel != null)
+                        getMainActivity().mViewModel.allowGetYuePic.setValue(true);
+                }, 3000);
 
                 // save file
                 CustomThreadPool.post(() -> YuePicUtil.saveYuePicFile(getMainActivity(), data));

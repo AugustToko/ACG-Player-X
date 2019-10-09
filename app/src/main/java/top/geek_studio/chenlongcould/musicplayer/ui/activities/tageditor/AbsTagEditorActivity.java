@@ -161,7 +161,7 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
 
     private void startImagePicker() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
+        intent.setType("useless/image/*");
         startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_from_local_storage)), REQUEST_CODE_SELECT_IMAGE);
     }
 

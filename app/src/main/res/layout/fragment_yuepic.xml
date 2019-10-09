@@ -61,7 +61,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_margin="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_shuffle_black_24dp" />
+        app:srcCompat="@drawable/ic_shuffle_black_24dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:rippleColor="#79FFFFFF"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

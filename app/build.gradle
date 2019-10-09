@@ -5,7 +5,7 @@ apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
-apply plugin: 'McImage'
+//apply plugin: 'McImage'
 
 def lifecycle_version = "2.0.0"
 
@@ -46,13 +46,11 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 29
-
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
-
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 167
-        versionName '1.4.9.1'
+        versionCode 168
+        versionName '1.4.9.2'
         applicationIdSuffix = 'Common'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
@@ -167,7 +165,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // RX
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.9'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.13'
     // Okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     // firebase
@@ -180,7 +178,7 @@ dependencies {
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
     implementation 'com.google.firebase:firebase-messaging:20.0.0'
     implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.1'
-    implementation 'org.jsoup:jsoup:1.11.3'
+    implementation 'org.jsoup:jsoup:1.12.1'
 }
 repositories {
     mavenCentral()

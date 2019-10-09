@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Location">
+    <item android:title="@string/location">
         <menu>
             <group
                 android:id="@+id/navigation_drawer_menu_category_sections"
@@ -22,6 +22,19 @@
                     android:id="@+id/nav_yuepic"
                     android:icon="@drawable/ic_photo_white_24dp"
                     android:title="@string/yuepic" />
+            </group>
+        </menu>
+    </item>
+
+    <!-- TODO: 网络位置 (开源歌曲) -->
+    <item android:title="Net Location"
+        android:visible="false">
+        <menu>
+            <group android:id="@+id/navigation_drawer_menu_category_net_location">
+                <item android:title="- Net Home -" />
+                <item android:title="jamendo.com" />
+                <item android:title="soundcloud.com" />
+                <item android:title="ccmixter.org" />
             </group>
         </menu>
     </item>

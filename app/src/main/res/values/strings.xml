@@ -324,4 +324,5 @@
     <string name="yuepic">YuePic</string>
     <string name="netsearch">NetSearch</string>
     <string name="data_overview">Data overview</string>
+    <string name="location">Location</string>
 </resources>

@@ -40,6 +40,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(@NonNull String s) {
+        Log.d(TAG, "onNewToken: " + s);
         super.onNewToken(s);
     }
 }

@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -71,9 +72,9 @@ public class GenreDetailActivity extends AbsSlidingMusicPanelActivity implements
 
         setUpRecyclerView();
 
-        setUpToolBar();
+        setUpToolBar(genre);
 
-        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -97,11 +98,13 @@ public class GenreDetailActivity extends AbsSlidingMusicPanelActivity implements
         });
     }
 
-    private void setUpToolBar() {
+    private void setUpToolBar(@Nullable Genre genre) {
         toolbar.setBackgroundColor(ThemeStore.primaryColor(this));
         setSupportActionBar(toolbar);
+        if (genre != null)
+            //noinspection ConstantConditions
+            getSupportActionBar().setTitle(genre.name);
         //noinspection ConstantConditions
-        getSupportActionBar().setTitle(genre.name);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 

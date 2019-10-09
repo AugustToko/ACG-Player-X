@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -83,9 +84,9 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
 
         setUpRecyclerView();
 
-        setUpToolbar();
+        setUpToolbar(playlist);
 
-        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -126,12 +127,12 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
         });
     }
 
-    private void setUpToolbar() {
+    private void setUpToolbar(@Nullable Playlist playlist) {
         toolbar.setBackgroundColor(ThemeStore.primaryColor(this));
         setSupportActionBar(toolbar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setToolbarTitle(playlist.name);
+        if (playlist != null) setToolbarTitle(playlist.name);
     }
 
     private void setToolbarTitle(String title) {

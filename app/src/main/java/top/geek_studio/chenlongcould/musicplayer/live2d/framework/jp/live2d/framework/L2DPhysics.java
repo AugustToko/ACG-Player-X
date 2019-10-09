@@ -83,7 +83,7 @@ public class L2DPhysics {
 				} else if (typeStr.equals("angle")) {
 					type = PhysicsHair.Src.SRC_TO_G_ANGLE;
 				} else {
-					UtDebug.error("live2d", "Invalid parameter:PhysicsHair.Src");
+					UtDebug.error("useless/live2d", "Invalid parameter:PhysicsHair.Src");
 				}
 
 				float scale = src.get("scale").toFloat();
@@ -104,7 +104,7 @@ public class L2DPhysics {
 				} else if (typeStr.equals("angle_v")) {
 					type = PhysicsHair.Target.TARGET_FROM_ANGLE_V;
 				} else {
-					UtDebug.error("live2d", "Invalid parameter:PhysicsHair.Target");
+					UtDebug.error("useless/live2d", "Invalid parameter:PhysicsHair.Target");
 				}
 
 				float scale = target.get("scale").toFloat();

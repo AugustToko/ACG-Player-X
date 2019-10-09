@@ -24,13 +24,13 @@ public class LAppDefine {
 	public static final float VIEW_LOGICAL_MAX_BOTTOM = -2;
 	public static final float VIEW_LOGICAL_MAX_TOP = 2;
 
-	public static final String BACK_IMAGE_NAME = "image/back_class_normal.png";
+	public static final String BACK_IMAGE_NAME = "useless/image/back_class_normal.png";
 
-	public static final String MODEL_HARU = "live2d/haru/haru.model.json";
-	public static final String MODEL_HARU_A = "live2d/haru/haru_01.model.json";
-	public static final String MODEL_HARU_B = "live2d/haru/haru_02.model.json";
-	public static final String MODEL_SHIZUKU = "live2d/shizuku/shizuku.model.json";
-	public static final String MODEL_WANKO = "live2d/wanko/wanko.model.json";
+	public static final String MODEL_HARU = "useless/live2d/haru/haru.model.json";
+	public static final String MODEL_HARU_A = "useless/live2d/haru/haru_01.model.json";
+	public static final String MODEL_HARU_B = "useless/live2d/haru/haru_02.model.json";
+	public static final String MODEL_SHIZUKU = "useless/live2d/shizuku/shizuku.model.json";
+	public static final String MODEL_WANKO = "useless/live2d/wanko/wanko.model.json";
 
 	static final String MOTION_GROUP_IDLE = "idle";
 	static final String MOTION_GROUP_TAP_BODY = "tap_body";

@@ -66,7 +66,6 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
     protected boolean showSectionName = true;
 
-
     public NetSearchSongAdapter(AppCompatActivity activity, NetSearchFragment netSearchFragment, List<SongsBean> dataSet, @LayoutRes int itemLayoutRes, boolean usePalette, @Nullable CabHolder cabHolder) {
         this(activity, netSearchFragment, dataSet, itemLayoutRes, usePalette, cabHolder, true);
     }
