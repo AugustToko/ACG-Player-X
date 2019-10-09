@@ -2,6 +2,9 @@
 
 ## 酷安: https://www.coolapk.com/apk/209705
 ## MIUI http://app.mi.com/details?id=top.geek_studio.chenlongcould.musicplayer.Common
+## uptodown.com: 
+## PlayStore:
+## catappult.io:
 
 ## ℃_C
 ## chenlongcould
