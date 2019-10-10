@@ -49,8 +49,8 @@ android {
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 169
-        versionName '1.4.9.3'
+        versionCode 170
+        versionName '1.4.9.4'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
         applicationIdSuffix = 'Common'

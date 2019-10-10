@@ -18,12 +18,12 @@
                     android:id="@+id/nav_net_search"
                     android:icon="@drawable/ic_search_white_24dp"
                     android:title="@string/netsearch"
-                    android:visible="true" />
+                    android:visible="false" />
                 <item
                     android:id="@+id/nav_yuepic"
                     android:icon="@drawable/ic_photo_white_24dp"
                     android:title="@string/yuepic"
-                    android:visible="true" />
+                    android:visible="false" />
             </group>
         </menu>
     </item>

@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 
@@ -37,6 +38,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.NetSearchSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.NetSearchSong;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
@@ -77,6 +79,8 @@ public class NetSearchFragment extends AbsMainActivityFragment {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+
+    private DataViewModel dataViewModel;
 
     public static NetSearchFragment newInstance() {
         return new NetSearchFragment();
@@ -120,6 +124,12 @@ public class NetSearchFragment extends AbsMainActivityFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         // ...
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        dataViewModel = ViewModelProviders.of(getMainActivity()).get(DataViewModel.class);
     }
 
     private synchronized void initPlayer() {
