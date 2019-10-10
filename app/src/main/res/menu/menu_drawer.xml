@@ -23,7 +23,7 @@
                     android:id="@+id/nav_yuepic"
                     android:icon="@drawable/ic_photo_white_24dp"
                     android:title="@string/yuepic"
-                    android:visible="false" />
+                    android:visible="true" />
             </group>
         </menu>
     </item>

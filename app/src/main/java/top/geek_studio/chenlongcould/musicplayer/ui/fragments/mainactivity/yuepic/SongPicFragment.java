@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -24,6 +25,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
+import top.geek_studio.chenlongcould.musicplayer.model.DataViewModel;
 import top.geek_studio.chenlongcould.musicplayer.model.yuepic.YuePic;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
@@ -53,6 +55,8 @@ public class SongPicFragment extends AbsMainActivityFragment {
     @BindView(R.id.changeImage)
     FloatingActionButton changeImageButton;
 
+    private DataViewModel dataViewModel;
+
     public static SongPicFragment newInstance() {
         return new SongPicFragment();
     }
@@ -61,9 +65,16 @@ public class SongPicFragment extends AbsMainActivityFragment {
     protected ViewGroup createRootView(@NotNull @NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_yuepic, container, false);
         unbinder = ButterKnife.bind(this, view);
+        return (ViewGroup) view;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        dataViewModel = ViewModelProviders.of(getMainActivity()).get(DataViewModel.class);
 
         changeImageButton.setOnClickListener(v -> {
-            final Boolean allow = getMainActivity().mViewModel.allowGetYuePic.getValue();
+            final Boolean allow = dataViewModel.allowGetYuePic.getValue();
 
             if (allow == null || allow) {
                 loadYuePicFromNet();
@@ -73,17 +84,11 @@ public class SongPicFragment extends AbsMainActivityFragment {
 
         });
 
-        return (ViewGroup) view;
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
         setUpYuePic();
     }
 
     private void setUpYuePic() {
-        final YuePic y = getMainActivity().mViewModel.yuePicData.getValue();
+        final YuePic y = dataViewModel.yuePicData.getValue();
         if (y != null) {
             putIntoView(y);
             return;
@@ -95,7 +100,7 @@ public class SongPicFragment extends AbsMainActivityFragment {
                 Log.d(TAG, "setUpYuePic: load from file");
                 getMainActivity().runOnUiThread(() -> {
                     putIntoView(yuePic);
-                    getMainActivity().mViewModel.yuePicData.postValue(yuePic);
+                    dataViewModel.yuePicData.postValue(yuePic);
                 });
             } else {
                 Log.d(TAG, "setUpYuePic: load from net");
@@ -111,20 +116,16 @@ public class SongPicFragment extends AbsMainActivityFragment {
                 // TODO: Check date
                 putIntoView(data);
 
-
-
-                getMainActivity().mViewModel.yuePicData.setValue(data);
+                dataViewModel.yuePicData.setValue(data);
                 // 每隔 3s 允许获取一次
-                getMainActivity().mViewModel.allowGetYuePic.setValue(false);
-                getMainActivity().handler.postDelayed(() -> {
-                    if (getMainActivity().mViewModel != null)
-                        getMainActivity().mViewModel.allowGetYuePic.setValue(true);
-                }, 3000);
+                dataViewModel.allowGetYuePic.setValue(false);
+                getMainActivity().handler.postDelayed(() -> dataViewModel.allowGetYuePic.setValue(true), 3000);
 
                 // save file
                 CustomThreadPool.post(() -> YuePicUtil.saveYuePicFile(getMainActivity(), data));
 
             }
+
 
             @Override
             public void onError() {
