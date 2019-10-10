@@ -5,6 +5,8 @@
 ## uptodown.com: 
 ## PlayStore:
 ## catappult.io:
+## getjar.mobi:
+## f-droid.org:
 
 ## ℃_C
 ## chenlongcould

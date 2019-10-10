@@ -200,7 +200,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
 
-        CSutil.checkUpdate(this);
+//        CSutil.checkUpdate(this);
 
         handler = new Handler();
 
@@ -775,9 +775,9 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                         .setAvailableProviders(providers)
                         .setLogo(R.mipmap.ic_launcher_round)      // Set logo drawable
                         .setTheme(PreferenceUtil.getInstance(getApplicationContext()).getGeneralTheme())
-                        .setTosAndPrivacyPolicyUrls(
-                                "https://www.crypto-studio.com/acg-player/privacy-policy.html",
-                                "https://www.crypto-studio.com/acg-player/privacy-policy.html")
+//                        .setTosAndPrivacyPolicyUrls(
+//                                "https://www.crypto-studio.com/acg-player/privacy-policy.html",
+//                                "https://www.crypto-studio.com/acg-player/privacy-policy.html")
                         .build(),
                 MainActivity.RC_SIGN_IN);
     }

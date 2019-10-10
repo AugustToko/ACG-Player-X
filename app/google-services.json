@@ -79,6 +79,12 @@
           "package_name": "top.geek_studio.chenlongcould.musicplayer.Common.debug"
         }
       },
+      "client_info": {
+        "mobilesdk_app_id": "1:1001792791911:android:ec4a59ea5fc227a865bbc2",
+        "android_client_info": {
+          "package_name": "top.geek_studio.chenlongcould.musicplayer.Common.ps"
+        }
+      },
       "oauth_client": [
         {
           "client_id": "1001792791911-8p0t2o6ba577og9j70ghgqvj8kg8m641.apps.googleusercontent.com",

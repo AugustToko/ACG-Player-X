@@ -51,9 +51,9 @@ android {
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
         versionCode 169
         versionName '1.4.9.3'
-        applicationIdSuffix = 'Common'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
+        applicationIdSuffix = 'Common'
     }
     signingConfigs {
         release {
@@ -78,7 +78,6 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
-
 //            resValue('string', 'app_name', "ACG Player X")
         }
         debug {
@@ -86,6 +85,14 @@ android {
             versionNameSuffix ' DEBUG (' + gitBranch() + ')'
 
 //            resValue('string', 'app_name', "Debug ACG Player X")
+        }
+        playstore {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release4GooglePlay
+            applicationIdSuffix = '.ps'
+//            resValue('string', 'app_name', "Unit Player X")
         }
     }
     packagingOptions {
@@ -109,7 +116,8 @@ android {
         javaMaxHeapSize "4g"
         preDexLibraries = false
         additionalParameters += '--multi-dex'
-        additionalParameters += '--set-max-idx-number=50000'//每个包内方法数上限（根据实际项目配置这个数，来适配4.0-4.4一些低端机型，因为拆分的dex太大，这些低端机型加载不了dex）
+        additionalParameters += '--set-max-idx-number=50000'
+        //每个包内方法数上限（根据实际项目配置这个数，来适配4.0-4.4一些低端机型，因为拆分的dex太大，这些低端机型加载不了dex）
         additionalParameters += '--main-dex-list=' + '/multidex-config.txt'
         additionalParameters += '--minimal-main-dex'
     }

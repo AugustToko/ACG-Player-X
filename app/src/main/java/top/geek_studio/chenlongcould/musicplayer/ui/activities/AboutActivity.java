@@ -208,7 +208,7 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:827266641qq@gmail.com"));
             intent.putExtra(Intent.EXTRA_EMAIL, "827266641qq@gmail.com");
-            intent.putExtra(Intent.EXTRA_SUBJECT, "ACG Player X");
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
             startActivity(Intent.createChooser(intent, "E-Mail"));
         } else if (v == translate) {
 //            openUrl(TRANSLATE);
