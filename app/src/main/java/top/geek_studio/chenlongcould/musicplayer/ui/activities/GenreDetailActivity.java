@@ -152,7 +152,7 @@ public class GenreDetailActivity extends AbsSlidingMusicPanelActivity implements
     @Override
     public void onMediaStoreChanged() {
         super.onMediaStoreChanged();
-        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     private void checkIsEmpty() {
@@ -205,6 +205,7 @@ public class GenreDetailActivity extends AbsSlidingMusicPanelActivity implements
 
         @Override
         public List<Song> loadInBackground() {
+            if (genre == null) return new ArrayList<>();
             return GenreLoader.getSongs(getContext(), genre.id);
         }
     }

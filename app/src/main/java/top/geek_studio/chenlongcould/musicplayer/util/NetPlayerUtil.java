@@ -1,12 +1,15 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.google.gson.Gson;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -14,13 +17,12 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import top.geek_studio.chenlongcould.musicplayer.adapter.song.NetSearchSongAdapter;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
 import top.geek_studio.chenlongcould.musicplayer.model.NetMusicComment;
 import top.geek_studio.chenlongcould.musicplayer.model.NetSearchSong;
 import top.geek_studio.chenlongcould.musicplayer.model.NetSong;
+import top.geek_studio.chenlongcould.musicplayer.model.nmlrc.NmLrc2;
 import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 
 /**
  * @author : chenlongcould
@@ -39,15 +41,14 @@ public class NetPlayerUtil {
 
         CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(BASE_URL + "/song/detail?ids=" + musicId, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 e.printStackTrace();
                 transDataCallback.onError();
-                activity.runOnUiThread(() -> Toast.makeText(activity, "Get Song Detail -> Error!", Toast.LENGTH_SHORT).show());
                 call.cancel();
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final ResponseBody responseBody = response.body();
                 if (responseBody == null) return;
 
@@ -136,14 +137,14 @@ public class NetPlayerUtil {
     public static void getSongComment(@NonNull Activity activity, long netSongId, TransDataCallback<NetMusicComment> transDataCallback) {
         CustomThreadPool.post(() -> OkHttpUtils.getInstance().get("https://api.a632079.me/nm/comment/music/" + netSongId + "?offset=0&limit=100", new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 e.printStackTrace();
                 activity.runOnUiThread(() -> Toast.makeText(activity, "Get Song Comment -> Error!", Toast.LENGTH_SHORT).show());
                 call.cancel();
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final ResponseBody responseBody = response.body();
                 if (responseBody == null) return;
 
@@ -161,25 +162,78 @@ public class NetPlayerUtil {
         getSongUrlTask = null;
     }
 
-    public static void search(Activity activity, String key, TransDataCallback<NetSearchSong> transDataCallback) {
-        CustomThreadPool.post(() -> OkHttpUtils.getInstance().get("https://api.crypto-studio.com/search?keywords=" + key, new Callback() {
+    @WorkerThread
+    public static void search(Activity activity, @NonNull final String key, TransDataCallback<NetSearchSong> transDataCallback) {
+        final String kw = "https://api.crypto-studio.com/search?keywords=" + key;
+        Log.d(TAG, "search: " + kw);
+        CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(kw, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 e.printStackTrace();
                 transDataCallback.onError();
+                call.cancel();
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final ResponseBody responseBody = response.body();
-
                 if (responseBody == null) return;
-
                 final Gson gson = new Gson();
-                final NetSearchSong netSearchSong = gson.fromJson(responseBody.string(), NetSearchSong.class);
+
+                final String content = responseBody.string();
+
+                final NetSearchSong netSearchSong = gson.fromJson(content, NetSearchSong.class);
 
                 transDataCallback.onTrans(netSearchSong);
+                call.cancel();
             }
         }));
+    }
+
+    /**
+     * 根据网易云音乐歌曲 ID 获取歌词
+     *
+     * @param activity          activity
+     * @param nmSongId          歌曲 id
+     * @param transDataCallback callback
+     */
+    @WorkerThread
+    public static void getLrc(final Activity activity, int nmSongId, TransDataCallback<NmLrc2> transDataCallback) {
+
+        final String url = BASE_URL + "/lyric?id=" + nmSongId;
+        Log.d(TAG, "getLrc: url : " + url);
+
+        OkHttpUtils.getInstance().get(url, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                if (activity != null) activity.runOnUiThread(transDataCallback::onError);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final ResponseBody responseBody = response.body();
+                if (responseBody == null) {
+                    transDataCallback.onError();
+                    return;
+                }
+                String content = responseBody.string();
+//                Log.d(TAG, "onResponse: " + content);
+                final Gson gson = new Gson();
+                NmLrc2 lrc = gson.fromJson(content, NmLrc2.class);
+                transDataCallback.onTrans(lrc);
+            }
+        });
+    }
+
+    /**
+     * 根据网易云音乐歌曲 关键词 获取歌词
+     *
+     * @param activity          activity
+     * @param songName          歌曲 id
+     * @param transDataCallback callback
+     */
+    @WorkerThread
+    public static void getLrc(Activity activity, String songName, TransDataCallback<NmLrc2> transDataCallback) {
+        Log.d(TAG, "getLrc: get Lrc");
     }
 }

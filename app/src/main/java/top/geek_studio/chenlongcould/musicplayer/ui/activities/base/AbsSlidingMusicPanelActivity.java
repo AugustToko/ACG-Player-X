@@ -225,12 +225,13 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      */
     private void initBlur() {
         realtimeBlurView = mRootView.findViewById(R.id.real_blur);
-        realtimeBlurView.setVisibility(View.GONE);
-
+        realtimeBlurView.setVisibility(View.INVISIBLE);
         if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur()) {
             // set realtimeBlur
             realtimeBlurView.setBlurRadius(150);
             realtimeBlurView.setDownsampleFactor(0.1f);
+        } else {
+            realtimeBlurView.setVisibility(View.GONE);
         }
     }
 
@@ -242,10 +243,12 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      */
     protected void setBlur(float slideOffset, boolean transition) {
         if (!PreferenceUtil.getInstance(getApplicationContext()).isUseBlur()) return;
+        realtimeBlurView.setVisibility(View.VISIBLE);
 
-        if (slideOffset > 0) realtimeBlurView.setVisibility(View.VISIBLE);
-        if (slideOffset == 0) realtimeBlurView.setVisibility(View.GONE);
+//        if (slideOffset > 0) realtimeBlurView.setVisibility(View.VISIBLE);
+//        if (slideOffset == 0) realtimeBlurView.setVisibility(View.GONE);
 
+        realtimeBlurView.invalidate();
         if (transition) realtimeBlurView.setTranslationY(0 - slideOffset * 120);
         realtimeBlurView.setAlpha((float) (slideOffset * 1.5));
 //        realtimeBlurView.setBlurRadius(slideOffset * 50);
@@ -275,21 +278,19 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
         switch (newState) {
             case COLLAPSED:
-//                Log.d(TAG, "onPanelStateChanged: COLLAPSED");
                 onPanelCollapsed(panel);
 
-                // 检测模糊
-                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
-                    realtimeBlurView.setVisibility(View.GONE);
+//                // 检测模糊
+//                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
+//                    realtimeBlurView.setVisibility(View.GONE);
                 break;
             case EXPANDED:
-//                Log.d(TAG, "onPanelStateChanged: EXPANDED");
                 onPanelExpanded(panel);
 
-                // 检测模糊
-                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
-                    realtimeBlurView.setVisibility(View.VISIBLE);
-                break;
+//                // 检测模糊
+//                if (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur())
+//                    realtimeBlurView.setVisibility(View.VISIBLE);
+//                break;
             case ANCHORED:
                 collapsePanel(); // this fixes a bug where the panel would get4LastFM stuck for some reason
                 break;

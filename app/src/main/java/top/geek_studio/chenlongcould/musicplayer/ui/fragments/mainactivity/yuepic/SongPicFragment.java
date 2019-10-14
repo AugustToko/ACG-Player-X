@@ -1,5 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
@@ -55,6 +57,9 @@ public class SongPicFragment extends AbsMainActivityFragment {
     @BindView(R.id.changeImage)
     FloatingActionButton changeImageButton;
 
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
     private DataViewModel dataViewModel;
 
     public static SongPicFragment newInstance() {
@@ -65,12 +70,17 @@ public class SongPicFragment extends AbsMainActivityFragment {
     protected ViewGroup createRootView(@NotNull @NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_yuepic, container, false);
         unbinder = ButterKnife.bind(this, view);
+        getMainActivity().setSupportActionBar(toolbar);
+        getMainActivity().getSupportActionBar().setElevation(0f);
+        final View statusBar = getMainActivity().getWindow().getDecorView().getRootView().findViewById(R.id.status_bar);
+        statusBar.setVisibility(View.GONE);
         return (ViewGroup) view;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
         dataViewModel = ViewModelProviders.of(getMainActivity()).get(DataViewModel.class);
 
         changeImageButton.setOnClickListener(v -> {
@@ -113,24 +123,26 @@ public class SongPicFragment extends AbsMainActivityFragment {
         YuePicUtil.getRandomYuePic(getMainActivity(), new TransDataCallback<YuePic>() {
             @Override
             public void onTrans(@NonNull YuePic data) {
-                // TODO: Check date
-                putIntoView(data);
+                getMainActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        putIntoView(data);
 
-                dataViewModel.yuePicData.setValue(data);
-                // 每隔 3s 允许获取一次
-                dataViewModel.allowGetYuePic.setValue(false);
-                getMainActivity().handler.postDelayed(() -> dataViewModel.allowGetYuePic.setValue(true), 3000);
+                        dataViewModel.yuePicData.setValue(data);
+                        // 每隔 3s 允许获取一次
+                        dataViewModel.allowGetYuePic.setValue(false);
+                    }
+                });
 
+                imageView.postDelayed(() -> dataViewModel.allowGetYuePic.setValue(true), 3000);
                 // save file
                 CustomThreadPool.post(() -> YuePicUtil.saveYuePicFile(getMainActivity(), data));
-
             }
-
 
             @Override
             public void onError() {
                 // ...
-                getMainActivity().runOnUiThread(() -> Toast.makeText(getMainActivity(), "Get YuePic -> Error!", Toast.LENGTH_SHORT).show());
+                Toast.makeText(getMainActivity(), "Get YuePic -> Error!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -138,11 +150,11 @@ public class SongPicFragment extends AbsMainActivityFragment {
     @UiThread
     private void putIntoView(@NonNull YuePic data) {
         if (!isAdded()) return;
-
         Glide.with(getMainActivity()).load(data.getUrls().getRegular()).into(imageView);
         yuePicAuthorName.setText(data.getUser().getName());
         yuePicUrl.setText(data.getLinks().getHtml());
     }
+
     //    @Nullable
 //    public static String stringMD5(String input) {
 //
@@ -214,6 +226,8 @@ public class SongPicFragment extends AbsMainActivityFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+        final View statusBar = getMainActivity().getWindow().getDecorView().getRootView().findViewById(R.id.status_bar);
+        statusBar.setVisibility(View.VISIBLE);
     }
 
     @Override

@@ -23,8 +23,7 @@
             android:id="@+id/real_blur"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            sothree:realtimeOverlayColor="#00FFFFFF"
-            android:visibility="gone">
+            sothree:realtimeOverlayColor="#00FFFFFF">
 
         </com.github.mmin18.widget.RealtimeBlurView>
 

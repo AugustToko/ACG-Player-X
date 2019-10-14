@@ -1,9 +1,10 @@
 # ACG Player X
 
 ## 酷安: https://www.coolapk.com/apk/209705
+## 手机乐园: https://soft.shouji.com.cn/down/1565093.html
 ## MIUI http://app.mi.com/details?id=top.geek_studio.chenlongcould.musicplayer.Common
 ## uptodown.com: 
-## PlayStore:
+## PlayStore: https://play.google.com/store/apps/details?id=top.geek_studio.chenlongcould.musicplayer.Common.ps
 ## catappult.io:
 ## getjar.mobi:
 ## f-droid.org:

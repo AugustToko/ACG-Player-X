@@ -174,7 +174,10 @@ public class NetSearchSongAdapter extends AbsMultiSelectAdapter<NetSearchSongAda
 
             @Override
             public void onError() {
-                activity.runOnUiThread(() -> holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art)));
+                activity.runOnUiThread(() -> {
+                    Toast.makeText(activity, "Get Song Detail -> Error!", Toast.LENGTH_SHORT).show();
+                    holder.image.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.default_album_art));
+                });
             }
         });
     }

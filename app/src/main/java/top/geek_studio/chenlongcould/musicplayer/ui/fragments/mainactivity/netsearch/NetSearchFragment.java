@@ -225,7 +225,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
     private void search(@Nullable final String key) {
         progressBar.animate().alpha(100).setDuration(1000).start();
 
-        NetPlayerUtil.search(getActivity(), key, new TransDataCallback<NetSearchSong>() {
+        CustomThreadPool.post(() -> NetPlayerUtil.search(getActivity(), key, new TransDataCallback<NetSearchSong>() {
             @Override
             public void onTrans(@NotNull NetSearchSong data) {
                 adapter = new NetSearchSongAdapter(getMainActivity(), NetSearchFragment.this, data.getResult().getSongs(), R.layout.item_list, false, null);
@@ -240,8 +240,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
             public void onError() {
                 getMainActivity().runOnUiThread(() -> progressBar.animate().alpha(0).setDuration(1000).start());
             }
-        });
-
+        }));
     }
 
     @Override

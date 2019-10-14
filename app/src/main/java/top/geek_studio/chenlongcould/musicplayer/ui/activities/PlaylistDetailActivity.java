@@ -41,6 +41,7 @@ import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistSongLoader;
 import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.AbsCustomPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
+import top.geek_studio.chenlongcould.musicplayer.model.PlaylistSong;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
@@ -247,8 +248,7 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
 
     @Override
     public void onLoadFinished(@NonNull Loader<List<Song>> loader, List<Song> data) {
-        if (adapter != null)
-            adapter.swapDataSet(data);
+        if (adapter != null) adapter.swapDataSet(data);
     }
 
     @Override
@@ -267,11 +267,12 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
 
         @Override
         public List<Song> loadInBackground() {
+            if (playlist == null) return new ArrayList<>();
+
             if (playlist instanceof AbsCustomPlaylist) {
                 return ((AbsCustomPlaylist) playlist).getSongs(getContext());
             } else {
-                //noinspection unchecked
-                return (List) PlaylistSongLoader.getPlaylistSongList(getContext(), playlist.id);
+                return new ArrayList<>(PlaylistSongLoader.getPlaylistSongList(getContext(), playlist.id));
             }
         }
     }

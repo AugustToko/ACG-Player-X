@@ -1,11 +1,14 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 
 public class OkHttpUtils {
     private static OkHttpUtils okHttpUtil;
@@ -31,7 +34,7 @@ public class OkHttpUtils {
 
     /**
      * 单例
-     * */
+     */
     public static OkHttpUtils getInstance() {
         if (null == okHttpUtil) {
             synchronized (OkHttpUtils.class) {
@@ -67,16 +70,16 @@ public class OkHttpUtils {
 //        okHttpClient4LastFM.newCall(request).enqueue(callback);
 //    }
 
-//    //添加拦截器
-//    class LoggingInterceptor implements Interceptor {
-//        @Override
-//        public Response intercept(Chain chain) throws IOException {
-//            Request request = chain.request();
-//            String method = request.method();
-//            Response proceed = chain.proceed(request);
-//            return proceed;
-//        }
-//    }
+    //添加拦截器
+    class LoggingInterceptor implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            String method = request.method();
+            Response proceed = chain.proceed(request);
+            return proceed;
+        }
+    }
 
 //    private SSLSocketFactory getSSLSocketFactory(Context ctx) throws NoSuchAlgorithmException, KeyManagementException {
 //        final SSLContext context = SSLContext.getInstance("TLS");

@@ -49,8 +49,8 @@ android {
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 170
-        versionName '1.4.9.4'
+        versionCode 171
+        versionName '1.4.9.5'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
         applicationIdSuffix = 'Common'
@@ -187,6 +187,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:20.0.0'
     implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.1'
     implementation 'org.jsoup:jsoup:1.12.1'
+    implementation 'com.github.Lauzy:LyricView:1.0.4'
 }
 repositories {
     mavenCentral()

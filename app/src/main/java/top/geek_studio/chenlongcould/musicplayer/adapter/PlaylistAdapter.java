@@ -14,6 +14,7 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.chenlongcould.musicplayer.R;
@@ -241,7 +242,9 @@ public class PlaylistAdapter extends AbsMultiSelectAdapter<PlaylistAdapter.ViewH
 
             if (menu != null) {
                 menu.setOnClickListener(view -> {
-                    final Playlist playlist = dataSet.get(getAdapterPosition());
+                    final int index = getAdapterPosition();
+                    if (index == RecyclerView.NO_POSITION) return;
+                    final Playlist playlist = dataSet.get(index);
                     final PopupMenu popupMenu = new PopupMenu(activity, view);
                     popupMenu.inflate(getItemViewType() == SMART_PLAYLIST ? R.menu.menu_item_smart_playlist : R.menu.menu_item_playlist);
                     if (playlist instanceof LastAddedPlaylist) {
@@ -254,8 +257,10 @@ public class PlaylistAdapter extends AbsMultiSelectAdapter<PlaylistAdapter.ViewH
                                 return true;
                             }
                         }
-                        return PlaylistMenuHelper.handleMenuClick(
-                                activity, dataSet.get(getAdapterPosition()), item);
+
+                        final int i = getAdapterPosition();
+                        if (i == RecyclerView.NO_POSITION) return false;
+                        return PlaylistMenuHelper.handleMenuClick(activity, dataSet.get(i), item);
                     });
                     popupMenu.show();
                 });

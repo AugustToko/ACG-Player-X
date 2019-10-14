@@ -71,6 +71,7 @@ import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.debug.DebugFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
@@ -116,6 +117,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     private static final int NET_SEARCH = 2;
 
     private static final int YUEPIC = 4;
+
+    private static final int LRC_MODE = 5;
+
+    private static final int DEBUG = 6;
 
     /**
      * Drawer 菜单点击延迟, 用于点击item, 等待 Drawer 收起, 再进行操作
@@ -328,6 +333,11 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 targetFrag = SongPicFragment.newInstance();
 
                 break;
+            case LRC_MODE:
+                navigationView.setCheckedItem(R.id.nav_lrc_mode);
+                targetFrag = new DebugFragment();
+
+                break;
         }
 
         if (targetFrag != null) {
@@ -462,19 +472,22 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             drawerLayout.closeDrawers();
             switch (menuItem.getItemId()) {
                 case R.id.nav_library:
-                    new Handler().postDelayed(() -> setMusicChooser(LIBRARY), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> setMusicChooser(LIBRARY), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_folders:
-                    new Handler().postDelayed(() -> setMusicChooser(FOLDERS), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> setMusicChooser(FOLDERS), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_net_search:
-                    new Handler().postDelayed(() -> setMusicChooser(NET_SEARCH), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> setMusicChooser(NET_SEARCH), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_yuepic:
-                    new Handler().postDelayed(() -> setMusicChooser(YUEPIC), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> setMusicChooser(YUEPIC), DRAWER_WAIT_TIME);
+                    break;
+                case R.id.nav_lrc_mode:
+                    handler.postDelayed(() -> setMusicChooser(LRC_MODE), DRAWER_WAIT_TIME);
                     break;
                 case R.id.buy_pro:
-                    new Handler().postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);
                     break;
                 case R.id.action_scan:
                     new Handler().postDelayed(() -> {
@@ -483,10 +496,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     }, DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_settings:
-                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, SettingsActivity.class)), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> startActivity(new Intent(MainActivity.this, SettingsActivity.class)), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_about:
-                    new Handler().postDelayed(() -> startActivity(new Intent(MainActivity.this, AboutActivity.class)), DRAWER_WAIT_TIME);
+                    handler.postDelayed(() -> startActivity(new Intent(MainActivity.this, AboutActivity.class)), DRAWER_WAIT_TIME);
                     break;
                 case R.id.nav_data_overview:
                     // TODO: DATA OVERVIEW
@@ -637,7 +650,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         final Bundle ext = intent.getExtras();
         if (ext == null) {
-            Toast.makeText(this, "handlePlaybackIntent: Ext is null", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "handlePlaybackIntent: Ext is null", Toast.LENGTH_SHORT).show();
             return;
         }
 

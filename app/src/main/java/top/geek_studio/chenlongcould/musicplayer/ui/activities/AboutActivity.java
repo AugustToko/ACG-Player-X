@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.afollestad.materialdialogs.internal.ThemeSingleton;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ChangelogDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.DonationsDialog;
+import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsBaseActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.bugreport.BugReportActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
@@ -36,6 +37,7 @@ import de.psdev.licensesdialog.LicensesDialog;
 @SuppressWarnings("FieldCanBeLocal")
 public class AboutActivity extends AbsBaseActivity implements View.OnClickListener {
 
+    private static final String RATE_ON_GOOGLE_PLAY = "https://play.google.com/store/apps/details?id=top.geek_studio.chenlongcould.musicplayer.Common.ps";
     private static String GITHUB = "https://github.com/Crypto-Android-Apps/ACG-Player-X";
 
     private static String TWITTER = "https://twitter.com/chenlongcould";
@@ -213,7 +215,7 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
         } else if (v == translate) {
 //            openUrl(TRANSLATE);
         } else if (v == rateOnGooglePlay) {
-//            openUrl(RATE_ON_GOOGLE_PLAY);
+            openUrl(RATE_ON_GOOGLE_PLAY);
         } else if (v == donate) {
             if (App.Companion.isProVersion()) {
                 DonationsDialog.create().show(getSupportFragmentManager(), "DONATION_DIALOG");
