@@ -8,7 +8,7 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.util.ArrayList;
 import java.util.List;

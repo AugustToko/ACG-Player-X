@@ -6,7 +6,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 import android.util.AttributeSet;
 
 import com.kabouzeid.appthemehelper.util.ATHUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * @author Karim Abou Zeid (kabouzeid)

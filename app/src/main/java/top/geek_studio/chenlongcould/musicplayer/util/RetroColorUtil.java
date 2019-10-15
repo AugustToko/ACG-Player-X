@@ -26,7 +26,7 @@ import androidx.palette.graphics.Palette;
 
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.util.ArrayList;
 import java.util.Collections;

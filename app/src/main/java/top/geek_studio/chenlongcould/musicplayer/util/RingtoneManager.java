@@ -15,7 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * 铃声管理

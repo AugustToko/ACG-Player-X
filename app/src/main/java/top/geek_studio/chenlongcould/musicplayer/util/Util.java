@@ -19,7 +19,7 @@ import androidx.annotation.AttrRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * 工具类

@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.util.Pair;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.model.Genre;

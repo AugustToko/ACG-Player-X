@@ -18,7 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.player.NowPlayingScreen;
 

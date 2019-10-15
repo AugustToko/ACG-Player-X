@@ -24,7 +24,7 @@ import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.PlayPauseDrawable;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 
 import java.util.Collection;

@@ -19,7 +19,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import org.jetbrains.annotations.NotNull;
 
