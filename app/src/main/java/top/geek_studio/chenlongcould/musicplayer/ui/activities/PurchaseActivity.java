@@ -16,7 +16,7 @@ import com.anjlab.android.iab.v3.TransactionDetails;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsBaseActivity;
 import com.kabouzeid.appthemehelper.color.MaterialColor;
 import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.lang.ref.WeakReference;
 

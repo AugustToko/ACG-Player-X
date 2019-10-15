@@ -18,7 +18,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.io.File;
 import java.util.ArrayList;

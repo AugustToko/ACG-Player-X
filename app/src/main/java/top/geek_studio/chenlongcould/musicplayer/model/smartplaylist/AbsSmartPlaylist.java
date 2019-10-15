@@ -5,7 +5,7 @@ import android.os.Parcel;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.model.AbsCustomPlaylist;
 
 /**

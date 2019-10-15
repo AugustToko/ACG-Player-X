@@ -3,7 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * 分类信息

@@ -18,7 +18,7 @@ import androidx.annotation.LayoutRes;
 import androidx.fragment.app.Fragment;
 
 import com.github.mmin18.widget.RealtimeBlurView;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import butterknife.BindView;

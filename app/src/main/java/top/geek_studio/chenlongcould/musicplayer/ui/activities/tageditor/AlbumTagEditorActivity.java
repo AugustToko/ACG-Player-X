@@ -28,7 +28,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.LastFMUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import org.jaudiotagger.tag.FieldKey;
 

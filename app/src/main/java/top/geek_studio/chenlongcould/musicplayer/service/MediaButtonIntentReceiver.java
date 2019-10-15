@@ -26,7 +26,7 @@ import android.view.KeyEvent;
 
 import androidx.core.content.ContextCompat;
 
-import com.kabouzeid.chenlongcould.musicplayer.BuildConfig;
+import top.geek_studio.chenlongcould.musicplayer.Common.BuildConfig;
 
 /**
  * 媒体按钮监听

@@ -3,7 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.helper;
 import android.content.Context;
 import android.view.ViewGroup;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * 水平适配器帮助类

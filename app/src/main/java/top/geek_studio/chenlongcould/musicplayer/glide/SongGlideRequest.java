@@ -16,7 +16,7 @@ import top.geek_studio.chenlongcould.musicplayer.glide.audiocover.AudioFileCover
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteTranscoder;
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteWrapper;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 

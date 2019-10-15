@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.graphics.drawable.IconCompat;
 
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;

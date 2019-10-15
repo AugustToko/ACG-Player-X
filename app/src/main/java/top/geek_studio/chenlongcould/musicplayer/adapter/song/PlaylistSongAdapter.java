@@ -10,7 +10,7 @@ import android.view.View;
 
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;

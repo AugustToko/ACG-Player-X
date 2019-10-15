@@ -12,7 +12,7 @@ import top.geek_studio.chenlongcould.musicplayer.dialogs.DeletePlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.RenamePlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.loader.PlaylistSongLoader;
 import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.misc.WeakContextAsyncTask;
 import top.geek_studio.chenlongcould.musicplayer.model.AbsCustomPlaylist;

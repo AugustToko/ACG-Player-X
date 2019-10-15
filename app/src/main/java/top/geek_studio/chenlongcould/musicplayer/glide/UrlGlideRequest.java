@@ -15,7 +15,7 @@ import com.bumptech.glide.load.Key;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteTranscoder;
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteWrapper;

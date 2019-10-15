@@ -17,7 +17,7 @@ import android.view.KeyEvent;
 import android.view.View;
 
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * AbsBaseActivity

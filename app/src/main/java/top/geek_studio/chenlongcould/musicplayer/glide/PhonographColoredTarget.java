@@ -7,7 +7,7 @@ import com.bumptech.glide.request.animation.GlideAnimation;
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteTarget;
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteWrapper;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.util.PhonographColorUtil;
 
 public abstract class PhonographColoredTarget extends BitmapPaletteTarget {

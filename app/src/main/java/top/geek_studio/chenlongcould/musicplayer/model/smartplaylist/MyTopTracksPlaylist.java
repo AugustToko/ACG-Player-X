@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 
 import top.geek_studio.chenlongcould.musicplayer.loader.TopAndRecentlyPlayedTracksLoader;
 import top.geek_studio.chenlongcould.musicplayer.provider.SongPlayCountStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 
 import java.util.List;

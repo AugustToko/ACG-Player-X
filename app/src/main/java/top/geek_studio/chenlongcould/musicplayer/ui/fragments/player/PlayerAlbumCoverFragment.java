@@ -23,7 +23,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.lyrics.AbsSynchronizedLyr
 import top.geek_studio.chenlongcould.musicplayer.model.lyrics.Lyrics;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.ViewUtil;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.AbsMusicServiceFragment;
 
 import butterknife.BindView;

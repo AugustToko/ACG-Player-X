@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.service.playback.Playback;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 

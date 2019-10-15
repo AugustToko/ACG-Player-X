@@ -24,7 +24,7 @@ import top.geek_studio.chenlongcould.musicplayer.misc.WrappedAsyncTaskLoader;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsMusicServiceActivity;
 import top.geek_studio.chenlongcould.musicplayer.util.Util;
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.util.ArrayList;
 import java.util.Collections;

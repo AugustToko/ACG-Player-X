@@ -24,7 +24,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.Album;
 import top.geek_studio.chenlongcould.musicplayer.model.Artist;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.util.ArtistSignatureUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.CustomArtistImageUtil;
 

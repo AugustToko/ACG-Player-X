@@ -15,7 +15,7 @@ import com.bumptech.glide.Glide;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.AbsMultiSelectAdapter;
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder;
 import top.geek_studio.chenlongcould.musicplayer.glide.ArtistGlideRequest;

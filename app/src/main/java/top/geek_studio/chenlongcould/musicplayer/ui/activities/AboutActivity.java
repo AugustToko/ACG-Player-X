@@ -22,7 +22,7 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.bugreport.BugRepo
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import top.geek_studio.chenlongcould.musicplayer.App;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

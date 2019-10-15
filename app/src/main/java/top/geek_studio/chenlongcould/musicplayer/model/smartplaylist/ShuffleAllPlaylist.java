@@ -5,7 +5,7 @@ import android.os.Parcel;
 import androidx.annotation.NonNull;
 
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 
 import java.util.List;

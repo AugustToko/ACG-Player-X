@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.dialogs.AddToPlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.DeleteSongsDialog;

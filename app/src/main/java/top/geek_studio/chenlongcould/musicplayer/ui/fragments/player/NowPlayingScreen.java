@@ -3,7 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.player;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 /**
  * 目前正在播放的页面

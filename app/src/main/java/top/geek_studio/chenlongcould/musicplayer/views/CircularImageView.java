@@ -30,7 +30,7 @@ import android.util.Log;
 
 import androidx.appcompat.widget.AppCompatImageView;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 public class CircularImageView extends AppCompatImageView {
 

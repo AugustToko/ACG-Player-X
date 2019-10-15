@@ -5,7 +5,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import top.geek_studio.chenlongcould.musicplayer.dialogs.AddToPlaylistDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.DeleteSongsDialog;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 

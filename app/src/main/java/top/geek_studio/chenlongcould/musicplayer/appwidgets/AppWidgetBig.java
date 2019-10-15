@@ -18,7 +18,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import top.geek_studio.chenlongcould.musicplayer.appwidgets.base.BaseAppWidget;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.model.Song;
 import top.geek_studio.chenlongcould.musicplayer.service.MusicService;

@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
-import com.kabouzeid.chenlongcould.musicplayer.BuildConfig;
+import top.geek_studio.chenlongcould.musicplayer.Common.BuildConfig;
 
 import top.geek_studio.chenlongcould.musicplayer.helper.StackBlur;
 import top.geek_studio.chenlongcould.musicplayer.util.ImageUtil;

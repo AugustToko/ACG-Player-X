@@ -9,7 +9,7 @@ import android.widget.EditText;
 
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import org.jaudiotagger.tag.FieldKey;
 

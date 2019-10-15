@@ -51,7 +51,7 @@ import top.geek_studio.chenlongcould.musicplayer.service.notification.PlayingNot
 import top.geek_studio.chenlongcould.musicplayer.service.notification.PlayingNotificationImpl;
 import top.geek_studio.chenlongcould.musicplayer.service.notification.PlayingNotificationImpl24;
 import top.geek_studio.chenlongcould.musicplayer.service.playback.Playback;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.glide.BlurTransformation;
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
 import top.geek_studio.chenlongcould.musicplayer.helper.ShuffleHelper;

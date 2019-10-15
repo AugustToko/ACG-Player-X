@@ -32,7 +32,7 @@ import com.github.ksoichiro.android.observablescrollview.ObservableScrollView;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.TintHelper;
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsBaseActivity;
 
 import org.jaudiotagger.audio.AudioFile;

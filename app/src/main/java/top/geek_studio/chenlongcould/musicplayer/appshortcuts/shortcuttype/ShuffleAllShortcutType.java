@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.pm.ShortcutInfo;
 import android.os.Build;
 
-import com.kabouzeid.chenlongcould.musicplayer.R;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.appshortcuts.AppShortcutIconGenerator;
 import top.geek_studio.chenlongcould.musicplayer.appshortcuts.AppShortcutLauncherActivity;
 
