@@ -9,12 +9,12 @@ import android.util.Log
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.afollestad.materialdialogs.MaterialDialog
-import com.kabouzeid.chenlongcould.musicplayer.R
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.audio.exceptions.CannotReadException
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException
 import org.jaudiotagger.tag.TagException
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil
 import java.io.File

@@ -49,8 +49,8 @@ android {
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 171
-        versionName '1.4.9.5'
+        versionCode 173
+        versionName '1.5.0.1'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
         applicationIdSuffix = 'Common'
@@ -81,7 +81,7 @@ android {
 //            resValue('string', 'app_name', "ACG Player X")
         }
         debug {
-            applicationIdSuffix '.debug'
+//            applicationIdSuffix '.debug'
             versionNameSuffix ' DEBUG (' + gitBranch() + ')'
 
 //            resValue('string', 'app_name', "Debug ACG Player X")
@@ -187,6 +187,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:20.0.0'
     implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.1'
     implementation 'org.jsoup:jsoup:1.12.1'
+    // 歌词
     implementation 'com.github.Lauzy:LyricView:1.0.4'
 }
 repositories {

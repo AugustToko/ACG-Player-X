@@ -18,7 +18,7 @@ import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import com.bumptech.glide.request.animation.GlideAnimation
 import com.kabouzeid.appthemehelper.util.ATHUtil
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteTarget
 import top.geek_studio.chenlongcould.musicplayer.glide.palette.BitmapPaletteWrapper
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil

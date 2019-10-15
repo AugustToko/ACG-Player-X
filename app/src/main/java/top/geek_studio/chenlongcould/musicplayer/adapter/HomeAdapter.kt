@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import com.kabouzeid.appthemehelper.ThemeStore
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.adapter.album.AlbumFullWidthAdapter
 import top.geek_studio.chenlongcould.musicplayer.adapter.artist.ArtistAdapter
 import top.geek_studio.chenlongcould.musicplayer.adapter.song.SongAdapter

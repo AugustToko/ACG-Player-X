@@ -23,7 +23,7 @@ import androidx.annotation.NonNull
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.adapter.base.MediaEntryViewHolder
 import top.geek_studio.chenlongcould.musicplayer.util.RetroUtil
 

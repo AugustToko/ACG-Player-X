@@ -22,7 +22,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.Pair
 import com.bumptech.glide.Glide
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.glide.RetroMusicColoredTarget
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote

@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 
 import com.afollestad.materialdialogs.MaterialDialog
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil

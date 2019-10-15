@@ -22,7 +22,7 @@ import android.util.AttributeSet
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatImageView
 import com.kabouzeid.appthemehelper.util.ColorUtil
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ColorIconsImageView : AppCompatImageView {

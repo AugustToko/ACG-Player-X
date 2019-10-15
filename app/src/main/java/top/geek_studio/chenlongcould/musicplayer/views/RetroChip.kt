@@ -22,7 +22,7 @@ import androidx.annotation.RequiresApi
 import com.google.android.material.chip.Chip
 import com.kabouzeid.appthemehelper.ThemeStore
 import com.kabouzeid.appthemehelper.util.ATHUtil
-import com.kabouzeid.chenlongcould.musicplayer.R
+import top.geek_studio.chenlongcould.musicplayer.Common.R
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RetroChip @JvmOverloads constructor(
