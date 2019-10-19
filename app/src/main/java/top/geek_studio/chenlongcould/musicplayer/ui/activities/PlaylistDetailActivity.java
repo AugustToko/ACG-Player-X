@@ -185,6 +185,7 @@ public class PlaylistDetailActivity extends AbsSlidingMusicPanelActivity
     @Override
     public void onMediaStoreChanged() {
         super.onMediaStoreChanged();
+        if (playlist == null) return;
 
         if (!(playlist instanceof AbsCustomPlaylist)) {
             // Playlist deleted
