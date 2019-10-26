@@ -41,7 +41,6 @@ public class YuePicUtil {
         CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(BASE_URL + "/photos/random" + PARAM_CLIENT_ID + CLIENT_ID, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                activity.runOnUiThread(callback::onError);
                 e.printStackTrace();
                 call.cancel();
             }

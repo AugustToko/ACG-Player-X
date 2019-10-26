@@ -14,12 +14,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.util.Pair;
+import androidx.core.widget.ContentLoadingProgressBar;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
-import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import com.lauzy.freedom.library.LrcView;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +35,7 @@ import java.util.TimerTask;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.MusicServiceEventListener;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
@@ -44,6 +46,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.nmlrc.NmLrc2;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NetPlayerUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.lrc.CustomLrcHelper;
 
@@ -110,6 +113,12 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 //            builder.show();
 //            return false;
 //        });
+
+        albumImage.setOnClickListener(v ->
+                NavigationUtil.goToAlbum(getMainActivity()
+                        , MusicPlayerRemote.getCurrentSong().albumId
+                        , Pair.create(albumImage, getResources().getString(R.string.transition_album_art)))
+        );
 
         title.setTextColor(Color.BLACK);
         albumTitle.setTextColor(Color.BLACK);

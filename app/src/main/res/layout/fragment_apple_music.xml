@@ -32,6 +32,7 @@
             android:id="@+id/albumImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:transitionName="@string/transition_album_art"
             app:srcCompat="@drawable/default_album_art" />
 
     </com.google.android.material.card.MaterialCardView>
@@ -40,11 +41,11 @@
         android:id="@+id/albumTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:textIsSelectable="true"
-        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="@+id/title"
         app:layout_constraintStart_toStartOf="@+id/title"
         app:layout_constraintTop_toBottomOf="@+id/title"

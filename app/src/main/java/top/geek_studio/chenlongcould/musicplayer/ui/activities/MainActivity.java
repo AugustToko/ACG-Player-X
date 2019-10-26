@@ -298,21 +298,21 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         switch (key) {
             case LIBRARY:
-//                if (currentFragment instanceof LibraryFragment) return;
+                if (currentFragment instanceof LibraryFragment) return;
 
                 navigationView.setCheckedItem(R.id.nav_library);
 
                 targetFrag = LibraryFragment.newInstance();
                 break;
             case FOLDERS:
-//                if (currentFragment instanceof FoldersFragment) return;
+                if (currentFragment instanceof FoldersFragment) return;
 
                 navigationView.setCheckedItem(R.id.nav_folders);
 
                 targetFrag = FoldersFragment.newInstance(this);
                 break;
             case NET_SEARCH:
-//                if (currentFragment instanceof NetSearchFragment) return;
+                if (currentFragment instanceof NetSearchFragment) return;
 
                 // 检测服务是否可以访问
                 if (mViewModel != null && mViewModel.allowUseNetPlayer.getValue() != null
@@ -326,12 +326,16 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 targetFrag = NetSearchFragment.newInstance();
                 break;
             case YUEPIC:
+                if (currentFragment instanceof SongPicFragment) return;
+
                 navigationView.setCheckedItem(R.id.nav_yuepic);
 
                 targetFrag = SongPicFragment.newInstance();
 
                 break;
             case LRC_MODE:
+                if (currentFragment instanceof LrcFragment) return;
+
                 navigationView.setCheckedItem(R.id.nav_lrc_mode);
                 targetFrag = new LrcFragment();
 

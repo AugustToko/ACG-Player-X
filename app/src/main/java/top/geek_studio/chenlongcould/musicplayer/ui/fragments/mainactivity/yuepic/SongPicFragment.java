@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.ContentLoadingProgressBar;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
@@ -34,8 +36,6 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMa
 import top.geek_studio.chenlongcould.musicplayer.util.openimage.YuePicUtil;
 
 /**
- * HomePage
- *
  * @author : chenlongcould
  * @date : 2019/10/03/10
  */
@@ -60,6 +60,9 @@ public class SongPicFragment extends AbsMainActivityFragment {
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
+
     private DataViewModel dataViewModel;
 
     public static SongPicFragment newInstance() {
@@ -74,6 +77,7 @@ public class SongPicFragment extends AbsMainActivityFragment {
         getMainActivity().getSupportActionBar().setElevation(0f);
         final View statusBar = getMainActivity().getWindow().getDecorView().getRootView().findViewById(R.id.status_bar);
         statusBar.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
         return (ViewGroup) view;
     }
 
@@ -120,18 +124,17 @@ public class SongPicFragment extends AbsMainActivityFragment {
     }
 
     private void loadYuePicFromNet() {
+        progressBar.setVisibility(View.VISIBLE);
+
         YuePicUtil.getRandomYuePic(getMainActivity(), new TransDataCallback<YuePic>() {
             @Override
             public void onTrans(@NonNull YuePic data) {
-                getMainActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        putIntoView(data);
+                getMainActivity().runOnUiThread(() -> {
+                    putIntoView(data);
 
-                        dataViewModel.yuePicData.setValue(data);
-                        // 每隔 3s 允许获取一次
-                        dataViewModel.allowGetYuePic.setValue(false);
-                    }
+                    dataViewModel.yuePicData.setValue(data);
+                    // 每隔 3s 允许获取一次
+                    dataViewModel.allowGetYuePic.setValue(false);
                 });
 
                 imageView.postDelayed(() -> dataViewModel.allowGetYuePic.setValue(true), 3000);
@@ -142,7 +145,10 @@ public class SongPicFragment extends AbsMainActivityFragment {
             @Override
             public void onError() {
                 // ...
-                Toast.makeText(getMainActivity(), "Get YuePic -> Error!", Toast.LENGTH_SHORT).show();
+                getMainActivity().runOnUiThread(() -> {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(getMainActivity(), "Get YuePic -> Error!", Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
@@ -153,6 +159,7 @@ public class SongPicFragment extends AbsMainActivityFragment {
         Glide.with(getMainActivity()).load(data.getUrls().getRegular()).into(imageView);
         yuePicAuthorName.setText(data.getUser().getName());
         yuePicUrl.setText(data.getLinks().getHtml());
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
     //    @Nullable

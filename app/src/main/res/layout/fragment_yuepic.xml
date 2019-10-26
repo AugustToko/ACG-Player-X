@@ -79,6 +79,11 @@
         app:rippleColor="#79FFFFFF"
         app:srcCompat="@drawable/ic_shuffle_black_24dp" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 
