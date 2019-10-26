@@ -162,8 +162,7 @@ public class NetPlayerUtil {
         getSongUrlTask = null;
     }
 
-    @WorkerThread
-    public static void search(Activity activity, @NonNull final String key, TransDataCallback<NetSearchSong> transDataCallback) {
+    public static void search(@NonNull final String key, TransDataCallback<NetSearchSong> transDataCallback) {
         final String kw = "https://api.crypto-studio.com/search?keywords=" + key;
         Log.d(TAG, "search: " + kw);
         CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(kw, new Callback() {

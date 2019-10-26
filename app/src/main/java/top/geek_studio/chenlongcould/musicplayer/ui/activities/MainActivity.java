@@ -36,7 +36,6 @@ import com.firebase.ui.auth.FirebaseUiException;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -71,13 +70,12 @@ import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.debug.DebugFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.debug.LrcFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic.SongPicFragment;
-import top.geek_studio.chenlongcould.musicplayer.util.CSutil;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.RemoteConfigUtil;
@@ -335,7 +333,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 break;
             case LRC_MODE:
                 navigationView.setCheckedItem(R.id.nav_lrc_mode);
-                targetFrag = new DebugFragment();
+                targetFrag = new LrcFragment();
 
                 break;
         }

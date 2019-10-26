@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch;
 
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -105,6 +104,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
         fastScrollRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         getMainActivity().setSupportActionBar(toolbar);
+        getMainActivity().setLightStatusbar(true);
 
         button.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(editText.getText())) {
@@ -225,7 +225,7 @@ public class NetSearchFragment extends AbsMainActivityFragment {
     private void search(@Nullable final String key) {
         progressBar.animate().alpha(100).setDuration(1000).start();
 
-        CustomThreadPool.post(() -> NetPlayerUtil.search(getActivity(), key, new TransDataCallback<NetSearchSong>() {
+        CustomThreadPool.post(() -> NetPlayerUtil.search(key, new TransDataCallback<NetSearchSong>() {
             @Override
             public void onTrans(@NotNull NetSearchSong data) {
                 adapter = new NetSearchSongAdapter(getMainActivity(), NetSearchFragment.this, data.getResult().getSongs(), R.layout.item_list, false, null);

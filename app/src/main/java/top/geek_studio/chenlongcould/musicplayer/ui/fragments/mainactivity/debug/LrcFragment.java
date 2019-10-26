@@ -1,9 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.debug;
 
 import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -18,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.lifecycle.ViewModelProviders;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
@@ -56,9 +53,9 @@ import top.geek_studio.chenlongcould.musicplayer.util.lrc.CustomLrcHelper;
  * @author : chenlongcould
  * @date : 2019/10/03/10
  */
-public class DebugFragment extends AbsMainActivityFragment implements MusicServiceEventListener {
+public class LrcFragment extends AbsMainActivityFragment implements MusicServiceEventListener {
 
-    private static final String TAG = DebugFragment.class.getSimpleName();
+    private static final String TAG = LrcFragment.class.getSimpleName();
 
     private Unbinder unbinder;
 
@@ -86,8 +83,8 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
 
     private Timer mTimer;
 
-    public static DebugFragment newInstance() {
-        return new DebugFragment();
+    public static LrcFragment newInstance() {
+        return new LrcFragment();
     }
 
     private Handler handler = new Handler();
@@ -100,27 +97,27 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
         statusBar = getMainActivity().getWindow().getDecorView().getRootView().findViewById(R.id.status_bar);
         statusBar.setVisibility(View.GONE);
 
-        mLrcView.setOnLongClickListener(v -> {
-            MaterialDialog.Builder builder = new MaterialDialog.Builder(getMainActivity());
-            builder.title("LrcView")
-                    .content("Power by https://i.a632079.me.")
-////                    .negativeText("Hide LRC")
-////                    .onNegative((dialog, which) -> mLrcView.setVisibility(View.INVISIBLE))
-////                    .positiveText("Show LRC")
-////                    .onPositive((dialog, which) -> mLrcView.setVisibility(View.VISIBLE))
-                    .showListener(dialog -> dataViewModel.dialogs.add(dialog))
-                    .build();
-            builder.show();
-            return false;
-        });
+//        mLrcView.setOnLongClickListener(v -> {
+//            MaterialDialog.Builder builder = new MaterialDialog.Builder(getMainActivity());
+//            builder.title("LrcView")
+//                    .content("Power by https://i.a632079.me.")
+//////                    .negativeText("Hide LRC")
+//////                    .onNegative((dialog, which) -> mLrcView.setVisibility(View.INVISIBLE))
+//////                    .positiveText("Show LRC")
+//////                    .onPositive((dialog, which) -> mLrcView.setVisibility(View.VISIBLE))
+//                    .showListener(dialog -> dataViewModel.dialogs.add(dialog))
+//                    .build();
+//            builder.show();
+//            return false;
+//        });
 
         title.setTextColor(Color.BLACK);
         albumTitle.setTextColor(Color.BLACK);
 
-        getMainActivity().setLightStatusbar(false);
+        getMainActivity().setLightStatusbar(true);
 
         // init blur
-        realtimeBlurView.setBlurRadius(300);
+        realtimeBlurView.setBlurRadius(280);
         realtimeBlurView.setDownsampleFactor(0.1f);
 
         imageView.setScaleX(2);
@@ -146,13 +143,11 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
         }, 0, 100);
 
         mLrcView.setOnPlayIndicatorLineListener((time, content) -> {
-//                Log.d(TAG, "onPlay: time: " + time + "   getTime: " + MusicPlayerRemote.getPosition() + "   content: " + content);
             if (!MusicPlayerRemote.isPlaying()) MusicPlayerRemote.resumePlaying();
             MusicPlayerRemote.seekTo((int) time);
         });
 
         updateImage();
-        updateLrc();
 
         return (ViewGroup) view;
     }
@@ -162,16 +157,17 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
         super.onActivityCreated(savedInstanceState);
         dataViewModel = ViewModelProviders.of(getMainActivity()).get(DataViewModel.class);
         getMainActivity().addMusicServiceEventListener(this);
+        updateLrc();
     }
 
     /**
      * 更新背景
      */
     private void updateImage() {
-        MainActivity activity = getMainActivity();
+        final MainActivity activity = getMainActivity();
         if (activity == null) return;
 
-        Song song = MusicPlayerRemote.getCurrentSong();
+        final Song song = MusicPlayerRemote.getCurrentSong();
         if (song.id < 0 || song.albumId < 0) return;
 
         imageView.setImageURI(MusicUtil.getMediaStoreAlbumCoverUri(song.albumId));
@@ -191,9 +187,9 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
 
     private void updateLrc() {
         final Song song = MusicPlayerRemote.getCurrentSong();
-        if (song == null || song.id < 0) return;
+        if (song == null || song.id < 0 || song.title == null || mLrcView == null) return;
 
-        NetPlayerUtil.search(getMainActivity(), song.title, new TransDataCallback<NetSearchSong>() {
+        NetPlayerUtil.search(song.title, new TransDataCallback<NetSearchSong>() {
             @Override
             public void onTrans(@NonNull NetSearchSong data) {
                 if (data.getResult() == null || data.getResult().getSongCount() == 0) {
@@ -227,11 +223,11 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
                             return;
                         }
 
-//                        final String finalTarget = target;
                         if (!isAdded()) return;
                         getMainActivity().runOnUiThread(() -> {
                             try {
-                                mLrcView.setLrcData(CustomLrcHelper.getLrc(lrcs.get(0)));
+                                dataViewModel.lrcData.postValue(CustomLrcHelper.getLrc(lrcs.get(0)));
+                                mLrcView.setLrcData(dataViewModel.lrcData.getValue());
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 onError();
@@ -264,6 +260,17 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
         });
     }
 
+    private void clearLrcData() {
+        if (dataViewModel != null) {
+            dataViewModel.lrcData.postValue(null);
+        }
+
+        if (mLrcView != null) {
+            mLrcView.setLrcData(new ArrayList<>());
+            mLrcView.setEmptyContent("Loading...");
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -280,10 +287,8 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
 
     @Override
     public void onServiceConnected() {
-        if (mLrcView != null) {
-            mLrcView.setLrcData(new ArrayList<>());
-            mLrcView.setEmptyContent("Loading...");
-        }
+        clearLrcData();
+
         updateImage();
         updateLrc();
     }
@@ -300,10 +305,8 @@ public class DebugFragment extends AbsMainActivityFragment implements MusicServi
 
     @Override
     public void onPlayingMetaChanged() {
-        if (mLrcView != null) {
-            mLrcView.setLrcData(new ArrayList<>());
-            mLrcView.setEmptyContent("Loading...");
-        }
+        clearLrcData();
+
         updateImage();
         updateLrc();
     }

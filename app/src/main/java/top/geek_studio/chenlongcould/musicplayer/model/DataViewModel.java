@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.lauzy.freedom.library.Lrc;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +52,8 @@ public class DataViewModel extends ViewModel {
     public MutableLiveData<Boolean> allowUseNetPlayer = new MutableLiveData<>();
 
     public MutableLiveData<Boolean> allowGetYuePic = new MutableLiveData<>();
+
+    public MutableLiveData<List<Lrc>> lrcData = new MutableLiveData<>();
 
     //////////////////////// songs /////////////////////////
 
