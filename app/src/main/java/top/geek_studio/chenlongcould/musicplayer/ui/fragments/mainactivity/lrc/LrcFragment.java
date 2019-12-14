@@ -1,4 +1,4 @@
-package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.debug;
+package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.lrc;
 
 import android.animation.ObjectAnimator;
 import android.graphics.Color;
@@ -15,12 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.util.Pair;
-import androidx.core.widget.ContentLoadingProgressBar;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.github.mmin18.widget.RealtimeBlurView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
+import com.lauzy.freedom.library.Lrc;
 import com.lauzy.freedom.library.LrcView;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +36,7 @@ import java.util.TimerTask;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.MusicServiceEventListener;
@@ -79,6 +81,11 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 
     @BindView(R.id.albumImage)
     AppCompatImageView albumImage;
+
+    @BindView(R.id.changeLrc)
+    FloatingActionButton changeLrc;
+
+    private List<Lrc> emptyList = new ArrayList<>();
 
     private DataViewModel dataViewModel;
 
@@ -157,6 +164,7 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
         });
 
         updateImage();
+        clearLrcData();
 
         return (ViewGroup) view;
     }
@@ -165,8 +173,25 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         dataViewModel = ViewModelProviders.of(getMainActivity()).get(DataViewModel.class);
+
+        initFab();
+
         getMainActivity().addMusicServiceEventListener(this);
         updateLrc();
+    }
+
+    private void initFab() {
+        changeLrc.hide();
+
+        changeLrc.setOnClickListener(v -> {
+            Toast.makeText(App.Companion.getInstance(), "Changing Lrc...", Toast.LENGTH_SHORT).show();
+
+            final List<String> data = dataViewModel.lrcData.getValue();
+            if (data == null) return;
+
+            // TODO :
+
+        });
     }
 
     /**
@@ -194,7 +219,7 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 //                .into(imageView);
     }
 
-    private void updateLrc() {
+    private synchronized void updateLrc() {
         final Song song = MusicPlayerRemote.getCurrentSong();
         if (song == null || song.id < 0 || song.title == null || mLrcView == null) return;
 
@@ -216,11 +241,13 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
                             lrcs.add(l1);
                             Log.d(TAG, "onTrans: LRC: " + l1);
                         }
+
                         if (data.getTlyric() != null) {
                             final String l2 = data.getTlyric().getLyric();
                             lrcs.add(l2);
                             Log.d(TAG, "onTrans: TLRC: " + l2);
                         }
+
                         if (data.getKlyric() != null) {
                             final String l3 = data.getKlyric().getLyric();
                             lrcs.add(l3);
@@ -232,11 +259,10 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
                             return;
                         }
 
-                        if (!isAdded()) return;
                         getMainActivity().runOnUiThread(() -> {
                             try {
-                                dataViewModel.lrcData.postValue(CustomLrcHelper.getLrc(lrcs.get(0)));
-                                mLrcView.setLrcData(dataViewModel.lrcData.getValue());
+                                dataViewModel.lrcData.postValue(lrcs);
+                                mLrcView.setLrcData(CustomLrcHelper.getLrc(data.getLrc().getLyric()));
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 onError();
@@ -246,13 +272,8 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 
                     @Override
                     public void onError() {
-                        if (isAdded()) {
-                            getMainActivity().runOnUiThread(() -> {
-                                Toast.makeText(getMainActivity(), "Get Lrc (Lrc Error) -> Error", Toast.LENGTH_SHORT).show();
-                                mLrcView.setLrcData(new ArrayList<>());
-                                mLrcView.setEmptyContent("None");
-                            });
-                        }
+                        if (!isAdded()) return;
+                        clearLrcData();
                     }
                 });
             }
@@ -260,24 +281,24 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
             @Override
             public void onError() {
                 if (!isAdded()) return;
-                getMainActivity().runOnUiThread(() -> {
-                    Toast.makeText(getMainActivity(), "Get Lrc (NetSearch) -> Error", Toast.LENGTH_SHORT).show();
-                    mLrcView.setLrcData(new ArrayList<>());
-                    mLrcView.setEmptyContent("None");
-                });
+                clearLrcData();
             }
         });
     }
 
     private void clearLrcData() {
-        if (dataViewModel != null) {
-            dataViewModel.lrcData.postValue(null);
-        }
+        getMainActivity().runOnUiThread(() -> {
+            changeLrc.hide();
 
-        if (mLrcView != null) {
-            mLrcView.setLrcData(new ArrayList<>());
-            mLrcView.setEmptyContent("Loading...");
-        }
+            if (dataViewModel != null) {
+                dataViewModel.lrcData.postValue(null);
+            }
+
+            if (mLrcView != null) {
+                mLrcView.setLrcData(emptyList);
+                mLrcView.setEmptyContent("Loading...");
+            }
+        });
     }
 
     @Override
@@ -304,7 +325,7 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 
     @Override
     public void onServiceDisconnected() {
-
+        clearLrcData();
     }
 
     @Override
@@ -337,6 +358,6 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
 
     @Override
     public void onMediaStoreChanged() {
-
+        clearLrcData();
     }
 }

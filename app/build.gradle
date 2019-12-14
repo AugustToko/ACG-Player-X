@@ -5,9 +5,6 @@ apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
-//apply plugin: 'McImage'
-
-def lifecycle_version = "2.0.0"
 
 static def gitBranch() {
     def branch = 'GitHub'
@@ -49,8 +46,8 @@ android {
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 173
-        versionName '1.5.0.1'
+        versionCode 175
+        versionName '1.5.0.2.1'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
         applicationIdSuffix = 'Common'
@@ -132,7 +129,7 @@ dependencies {
     implementation 'androidx.fragment:fragment:1.1.0'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.gridlayout:gridlayout:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.palette:palette:1.0.0'
@@ -146,7 +143,7 @@ dependencies {
     implementation 'com.github.kabouzeid:RecyclerView-FastScroll:1.0.16-kmod'
 //    implementation 'com.github.kabouzeid:SeekArc:1.1'
     implementation 'com.github.mmin18:realtimeblurview:1.2.1'
-    implementation 'com.github.kabouzeid:AndroidSlidingUpPanel:3.3.3-kmod'
+    implementation 'com.github.kabouzeid:AndroidSlidingUpPanel:6'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
     implementation 'com.afollestad:material-cab:0.1.12'
@@ -167,7 +164,7 @@ dependencies {
     implementation 'com.github.bumptech.glide:okhttp3-integration:1.5.0'
     implementation 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
     implementation 'com.github.AdrienPoupa:jaudiotagger:2.2.3'
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.1.0"
     implementation "androidx.core:core-ktx:1.1.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -177,15 +174,15 @@ dependencies {
     // Okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     // firebase
-    implementation 'com.google.firebase:firebase-core:17.2.0'
-    implementation 'com.google.firebase:firebase-analytics:17.2.0'
+    implementation 'com.google.firebase:firebase-core:17.2.1'
+    implementation 'com.google.firebase:firebase-analytics:17.2.1'
     implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
-    implementation 'com.google.firebase:firebase-auth:19.1.0'
-    implementation 'com.google.firebase:firebase-database:19.1.0'
-    implementation 'com.google.firebase:firebase-perf:19.0.0'
+    implementation 'com.google.firebase:firebase-auth:19.2.0'
+    implementation 'com.google.firebase:firebase-database:19.2.0'
+    implementation 'com.google.firebase:firebase-perf:19.0.3'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
-    implementation 'com.google.firebase:firebase-messaging:20.0.0'
-    implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.1'
+    implementation 'com.google.firebase:firebase-messaging:20.1.0'
+    implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.2'
     implementation 'org.jsoup:jsoup:1.12.1'
     // 歌词
     implementation 'com.github.Lauzy:LyricView:1.0.4'

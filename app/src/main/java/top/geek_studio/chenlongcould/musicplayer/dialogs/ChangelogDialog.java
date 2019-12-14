@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.internal.ThemeSingleton;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import java.io.BufferedReader;
@@ -43,7 +45,6 @@ public class ChangelogDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
         final View customView;
         try {
             customView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_web_view, null);
@@ -55,7 +56,7 @@ public class ChangelogDialog extends DialogFragment {
                     .positiveText(android.R.string.ok)
                     .build();
         }
-        final MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
+        MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
                 .title(R.string.changelog)
                 .customView(customView, false)
                 .positiveText(android.R.string.ok)
@@ -67,10 +68,10 @@ public class ChangelogDialog extends DialogFragment {
 
         final WebView webView = customView.findViewById(R.id.web_view);
         try {
-            // Load from acgplayer-changelog.html in the assets folder
+            // Load from phonograph-changelog.html in the assets folder
             StringBuilder buf = new StringBuilder();
-            InputStream json = getActivity().getAssets().open("acgplayer-changelog.html");
-            final BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
+            InputStream json = getActivity().getAssets().open("phonograph-changelog.html");
+            BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
             String str;
             while ((str = in.readLine()) != null)
                 buf.append(str);
@@ -84,6 +85,7 @@ public class ChangelogDialog extends DialogFragment {
                             String.format("body { background-color: %s; color: %s; }", backgroundColor, contentColor))
                     .replace("{link-color}", colorToCSS(ThemeSingleton.get().positiveColor.getDefaultColor()))
                     .replace("{link-color-active}", colorToCSS(ColorUtil.lightenColor(ThemeSingleton.get().positiveColor.getDefaultColor())));
+            Log.d("CHANGELOG", changeLog);
             webView.loadData(changeLog, "text/html", "UTF-8");
         } catch (Throwable e) {
             webView.loadData("<h1>Unable to load</h1><p>" + e.getLocalizedMessage() + "</p>", "text/html", "UTF-8");

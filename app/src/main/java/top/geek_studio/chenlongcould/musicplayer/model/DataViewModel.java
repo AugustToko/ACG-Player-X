@@ -53,7 +53,7 @@ public class DataViewModel extends ViewModel {
 
     public MutableLiveData<Boolean> allowGetYuePic = new MutableLiveData<>();
 
-    public MutableLiveData<List<Lrc>> lrcData = new MutableLiveData<>();
+    public MutableLiveData<List<String>> lrcData = new MutableLiveData<>();
 
     //////////////////////// songs /////////////////////////
 

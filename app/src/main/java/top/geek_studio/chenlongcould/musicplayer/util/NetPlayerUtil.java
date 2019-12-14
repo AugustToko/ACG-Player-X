@@ -35,7 +35,10 @@ public class NetPlayerUtil {
 
     private static final String BASE_URL = "https://api.crypto-studio.com";
 
-    private static Runnable getSongUrlTask = null;
+    private static volatile Runnable getSongUrlTask = null;
+
+    private static volatile Runnable searchTask = null;
+    private static volatile Runnable lrcTask = null;
 
     public static void getNetSongDetail(@NonNull Activity activity, long musicId, TransDataCallback<NetSong> transDataCallback) {
 
@@ -157,15 +160,14 @@ public class NetPlayerUtil {
         }));
     }
 
-    public static void cancelGetSongUrl() {
-        if (getSongUrlTask != null) CustomThreadPool.removeTask(getSongUrlTask);
-        getSongUrlTask = null;
-    }
-
     public static void search(@NonNull final String key, TransDataCallback<NetSearchSong> transDataCallback) {
         final String kw = "https://api.crypto-studio.com/search?keywords=" + key;
         Log.d(TAG, "search: " + kw);
-        CustomThreadPool.post(() -> OkHttpUtils.getInstance().get(kw, new Callback() {
+        if (searchTask != null) {
+            CustomThreadPool.removeTask(searchTask);
+            searchTask = null;
+        }
+        searchTask = () -> OkHttpUtils.getInstance().get(kw, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 e.printStackTrace();
@@ -186,7 +188,8 @@ public class NetPlayerUtil {
                 transDataCallback.onTrans(netSearchSong);
                 call.cancel();
             }
-        }));
+        });
+        CustomThreadPool.post(searchTask);
     }
 
     /**
@@ -198,11 +201,14 @@ public class NetPlayerUtil {
      */
     @WorkerThread
     public static void getLrc(final Activity activity, int nmSongId, TransDataCallback<NmLrc2> transDataCallback) {
-
         final String url = BASE_URL + "/lyric?id=" + nmSongId;
         Log.d(TAG, "getLrc: url : " + url);
+        if (lrcTask != null) {
+            CustomThreadPool.removeTask(lrcTask);
+            lrcTask = null;
+        }
 
-        OkHttpUtils.getInstance().get(url, new Callback() {
+        lrcTask = () -> OkHttpUtils.getInstance().get(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 if (activity != null) activity.runOnUiThread(transDataCallback::onError);
@@ -216,23 +222,24 @@ public class NetPlayerUtil {
                     return;
                 }
                 String content = responseBody.string();
-//                Log.d(TAG, "onResponse: " + content);
                 final Gson gson = new Gson();
                 NmLrc2 lrc = gson.fromJson(content, NmLrc2.class);
                 transDataCallback.onTrans(lrc);
             }
         });
+
+        CustomThreadPool.post(lrcTask);
     }
 
-    /**
-     * 根据网易云音乐歌曲 关键词 获取歌词
-     *
-     * @param activity          activity
-     * @param songName          歌曲 id
-     * @param transDataCallback callback
-     */
-    @WorkerThread
-    public static void getLrc(Activity activity, String songName, TransDataCallback<NmLrc2> transDataCallback) {
-        Log.d(TAG, "getLrc: get Lrc");
-    }
+//    /**
+//     * 根据网易云音乐歌曲 关键词 获取歌词
+//     *
+//     * @param activity          activity
+//     * @param songName          歌曲 id
+//     * @param transDataCallback callback
+//     */
+//    @WorkerThread
+//    public static void getLrc(Activity activity, String songName, TransDataCallback<NmLrc2> transDataCallback) {
+//        Log.d(TAG, "getLrc: get Lrc");
+//    }
 }
