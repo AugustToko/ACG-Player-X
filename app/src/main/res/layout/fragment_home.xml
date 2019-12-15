@@ -7,7 +7,6 @@
     app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
     <LinearLayout
-
         android:id="@+id/contentContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -23,7 +22,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false" />
-
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>

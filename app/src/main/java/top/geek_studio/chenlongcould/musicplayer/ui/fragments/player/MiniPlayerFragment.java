@@ -3,25 +3,21 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.player;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.GravityCompat;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import butterknife.BindView;
@@ -83,7 +79,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
         view.setOnTouchListener(new FlingPlayBackController(getActivity()));
 
         // 设置迷你播放器
-        setUpMiniPlayer(view);
+        setUpMiniPlayer();
     }
 
     @Override
@@ -95,25 +91,25 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
     /**
      * Setup miniPlayer
      */
-    private void setUpMiniPlayer(View root) {
+    private void setUpMiniPlayer() {
         setUpPlayPauseButton();
         // 设置进度条着色列表
-        progressBar.setSupportProgressTintList(ColorStateList.valueOf(ThemeStore.accentColor(getActivity())));
+        progressBar.setSupportProgressTintList(ColorStateList.valueOf(ThemeStore.accentColor(requireContext())));
     }
 
     /**
      * 设置播放暂停按钮
-     * */
+     */
     private void setUpPlayPauseButton() {
-        miniPlayerPlayPauseDrawable = new PlayPauseDrawable(getActivity());
+        miniPlayerPlayPauseDrawable = new PlayPauseDrawable(requireContext());
         miniPlayerPlayPauseButton.setImageDrawable(miniPlayerPlayPauseDrawable);
-        miniPlayerPlayPauseButton.setColorFilter(ATHUtil.resolveColor(getActivity(), R.attr.iconColor, ThemeStore.textColorSecondary(getActivity())), PorterDuff.Mode.SRC_IN);
+        miniPlayerPlayPauseButton.setColorFilter(ATHUtil.resolveColor(requireContext(), R.attr.iconColor, ThemeStore.textColorSecondary(requireContext())), PorterDuff.Mode.SRC_IN);
         miniPlayerPlayPauseButton.setOnClickListener(new PlayPauseButtonOnClickHandler());
     }
 
     /**
      * 设置 title
-     * */
+     */
     private void updateSongTitle() {
         miniPlayerTitle.setText(MusicPlayerRemote.getCurrentSong().title);
     }
@@ -154,7 +150,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
 
     /**
      * 触摸回调
-     * */
+     */
     private static class FlingPlayBackController implements View.OnTouchListener {
 
         /**
@@ -189,7 +185,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
 
     /**
      * 更新播放暂停按钮
-     * */
+     */
     protected void updatePlayPauseDrawableState(boolean animate) {
         if (MusicPlayerRemote.isPlaying()) {
             miniPlayerPlayPauseDrawable.setPause(animate);

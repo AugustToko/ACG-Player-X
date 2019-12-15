@@ -42,7 +42,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
-import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
@@ -51,7 +50,9 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.flutter.embedding.android.FlutterActivity;
 import top.geek_studio.chenlongcould.musicplayer.App;
+import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ChangelogDialog;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ScanMediaFolderChooserDialog;
 import top.geek_studio.chenlongcould.musicplayer.glide.SongGlideRequest;
@@ -70,10 +71,10 @@ import top.geek_studio.chenlongcould.musicplayer.service.MusicService;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.base.AbsSlidingMusicPanelActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.activities.intro.AppIntroActivity;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.AbsMainActivityFragment;
-import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.lrc.LrcFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.folders.FoldersFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.LibraryFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library.pager.HomeFragment;
+import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.lrc.LrcFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.netsearch.NetSearchFragment;
 import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.yuepic.SongPicFragment;
 import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
@@ -184,7 +185,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         ButterKnife.bind(this);
 
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
-            navigationView.setFitsSystemWindows(false); // for header to go below statusbar
+            // for header to go below statusBar
+            navigationView.setFitsSystemWindows(false);
         }
 
         setUpDrawerLayout();
@@ -203,14 +205,14 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
 
-//        CSutil.checkUpdate(this);
-
         handler = new Handler();
 
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this);
             Toast.makeText(this, "Google Play Services is not available!", Toast.LENGTH_SHORT).show();
         }
+
+        setUpLive2D();
     }
 
     /**
@@ -224,51 +226,78 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         mlAppView = live2DMgr.createView(this, true);
         mlAppView.setBackground(null);
-
-        mLive2DContent = new FrameLayout(this);
-        mLive2DContent.addView(mlAppView);
-
-        navigationView.addView(mLive2DContent);
-
-        final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mlAppView.getLayoutParams();
-        lp.gravity = Gravity.BOTTOM | Gravity.END;
-        lp.width = 400;
-        lp.height = 800;
-
         mlAppView.setLongClickable(true);
         mlAppView.setOnLongClickListener(view -> {
-            new MaterialDialog.Builder(MainActivity.this).title("Hi")
+            new MaterialDialog.Builder(MainActivity.this)
+                    .title("Hi")
                     .content("这里是 ACG Player 助手酱 ~")
                     .showListener(dialogInterface -> mViewModel.dialogs.add(dialogInterface))
                     .dismissListener(dialogInterface -> mViewModel.dialogs.remove(dialogInterface))
                     .negativeText("Change Me!")
                     .onNegative((dialog, which) -> live2DMgr.changeModel())
+                    .positiveText("Reload")
+                    .onPositive((dialog, which) -> {
+                        releaseLive2d();
+                        setUpLive2D();
+                    })
                     .show();
             return false;
         });
+
+        mLive2DContent = new FrameLayout(this);
+        mLive2DContent.addView(mlAppView);
+        mLive2DContent.setBackground(null);
+
+        final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mlAppView.getLayoutParams();
+        lp.gravity = Gravity.BOTTOM | Gravity.END;
+        lp.width = 350;
+        lp.height = 700;
+        mlAppView.setLayoutParams(lp);
+
+        navigationView.addView(mLive2DContent);
+    }
+
+    private void releaseLive2d() {
+        if (mlAppView != null) {
+            mlAppView.onPause();
+            mlAppView.setOnClickListener(null);
+            mlAppView = null;
+        }
+
+        FileManager.clear();
+        SoundManager.release();
+        mLive2DContent.removeAllViews();
+        mLive2DContent = null;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        mlAppView.onPause();
+        if (mlAppView != null) mlAppView.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-//        setUpLive2D();
-        if (mlAppView != null) mlAppView.onResume();
+        // 判断是否开启 live2d
+        if (PreferenceUtil.getInstance(getApplicationContext()).isShowLive2D()) {
+            if (mlAppView != null) {
+                mlAppView.onResume();
+            } else {
+                setUpLive2D();
+            }
+        } else {
+            if (mlAppView != null) releaseLive2d();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        FileManager.clear();
-//        SoundManager.release();
-//        mLive2DContent.removeAllViews();
-//        mlAppView = null;
-//        mLive2DContent = null;
+
+        if (PreferenceUtil.getInstance(getApplicationContext()).isShowLive2D()) {
+            releaseLive2d();
+        }
 
         for (final DialogInterface d : mViewModel.dialogs) {
             if (d != null) d.dismiss();
@@ -511,6 +540,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     stopService(new Intent(MainActivity.this, MusicService.class));
                     finish();
                     break;
+                case R.id.nav_debug: {
+                    startActivity(FlutterActivity.withCachedEngine("my_engine_id")
+                            .build(this));
+                }
             }
             return true;
         });
@@ -708,7 +741,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
      * @param intent    intent
      * @param longKey   k1
      * @param stringKey k2
-     *
      * @return ID
      */
     private long parseIdFromIntent(@NonNull Intent intent, String longKey,

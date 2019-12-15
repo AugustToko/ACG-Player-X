@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -287,7 +288,9 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
     }
 
     private void clearLrcData() {
-        getMainActivity().runOnUiThread(() -> {
+        if (isDetached() || !isAdded() || isHidden() || isRemoving() || !isVisible()) return;
+
+        new Handler(Looper.getMainLooper()).post(() -> {
             changeLrc.hide();
 
             if (dataViewModel != null) {

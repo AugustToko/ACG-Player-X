@@ -49,6 +49,13 @@
             android:summary="Blur scene when sliding."
             android:title="Use overlay blur" />
 
+        <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="show_live2d"
+            android:summary="Show Live2D character."
+            android:title="Show Live2D" />
+
     </com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

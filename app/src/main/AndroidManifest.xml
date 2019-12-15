@@ -25,6 +25,13 @@
         android:theme="@style/Theme.Phonograph"
         android:requestLegacyExternalStorage="true"
         tools:ignore="UnusedAttribute">
+        <!--flutter activity-->
+        <activity
+            android:name="io.flutter.embedding.android.FlutterActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize"
+            />
         <activity android:name="top.geek_studio.chenlongcould.musicplayer.ui.activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -27,16 +27,16 @@ public class FileManager {
 		context = new WeakReference<>(c);
 	}
 
-	public static boolean exists_resource(String path) {
-		if (context == null) return false;
-		try {
-			InputStream afd = context.get().getAssets().open(path);
-			afd.close();
-			return true;
-		} catch (IOException e) {
-			return false;
-		}
-	}
+//	public static boolean exists_resource(String path) {
+//		if (context == null) return false;
+//		try {
+//			InputStream afd = context.get().getAssets().open(path);
+//			afd.close();
+//			return true;
+//		} catch (IOException e) {
+//			return false;
+//		}
+//	}
 
 	@Nullable
 	private static InputStream open_resource(String path) throws IOException {
@@ -44,11 +44,11 @@ public class FileManager {
 		return context.get().getAssets().open(path);
 	}
 
-	private static boolean exists_cache(String path) {
-		if (context == null) return false;
-		File f = new File(context.get().getCacheDir(), path);
-		return f.exists();
-	}
+//	private static boolean exists_cache(String path) {
+//		if (context == null) return false;
+//		File f = new File(context.get().getCacheDir(), path);
+//		return f.exists();
+//	}
 
 	@Nullable
 	private static InputStream open_cache(String path) throws FileNotFoundException {
@@ -57,6 +57,7 @@ public class FileManager {
 		return new FileInputStream(f);
 	}
 
+	@SuppressWarnings("SameParameterValue")
 	@Nullable
 	private static InputStream open(String path, boolean isCache) throws IOException {
 		if (isCache) {

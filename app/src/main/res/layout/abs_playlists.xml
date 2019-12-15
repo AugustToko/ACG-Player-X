@@ -19,13 +19,13 @@
         android:paddingTop="24dp"
         android:paddingEnd="24dp"
         android:paddingBottom="10dp"
-        tools:background="#C7C0C0"
         android:background="?selectableItemBackground">
 
         <top.geek_studio.chenlongcould.musicplayer.views.CircularImageView
             android:id="@+id/userImage"
             android:layout_width="42dp"
             android:layout_height="42dp"
+            tools:src="@tools:sample/avatars"
             app:civ_border="false" />
 
         <LinearLayout

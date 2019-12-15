@@ -1,4 +1,4 @@
-/**
+/*
  * You can modify and use this source freely
  * only for the development of application related Live2D.
  * <p>
@@ -30,16 +30,14 @@ public class LAppLive2DManager {
 
 	private ArrayList<LAppModel> models;
 
-
 	private int modelCount = -1;
 	private boolean reloadFlg;
-
 
 	public LAppLive2DManager() {
 		Live2D.init();
 		Live2DFramework.setPlatformManager(new PlatformManager());
 
-		models = new ArrayList<LAppModel>();
+		models = new ArrayList<>();
 	}
 
 

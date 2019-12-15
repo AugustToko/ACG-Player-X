@@ -182,13 +182,13 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             super.onViewCreated(view, savedInstanceState);
             getListView().setPadding(0, 0, 0, 0);
             invalidateSettings();
-            PreferenceUtil.getInstance(getActivity()).registerOnSharedPreferenceChangedListener(this);
+            PreferenceUtil.getInstance(requireContext()).registerOnSharedPreferenceChangedListener(this);
         }
 
         @Override
         public void onDestroyView() {
             super.onDestroyView();
-            PreferenceUtil.getInstance(getActivity()).unregisterOnSharedPreferenceChangedListener(this);
+            PreferenceUtil.getInstance(requireContext()).unregisterOnSharedPreferenceChangedListener(this);
         }
 
         private void invalidateSettings() {
@@ -204,7 +204,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
 
                 setSummary(generalTheme, o);
 
-                ThemeStore.markChanged(getActivity());
+                ThemeStore.markChanged(requireContext());
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
                     // Set the new theme so that updateAppShortcuts can pull it
@@ -223,37 +223,37 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                 return true;
             });
 
-            final ATEColorPreference primaryColorPref = (ATEColorPreference) findPreference("primary_color");
-            final int primaryColor = ThemeStore.primaryColor(getActivity());
+            final ATEColorPreference primaryColorPref = findPreference("primary_color");
+            final int primaryColor = ThemeStore.primaryColor(requireContext());
             primaryColorPref.setColor(primaryColor, ColorUtil.darkenColor(primaryColor));
             primaryColorPref.setOnPreferenceClickListener(preference -> {
-                new ColorChooserDialog.Builder(getActivity(), R.string.primary_color)
+                new ColorChooserDialog.Builder(requireContext(), R.string.primary_color)
                         .accentMode(false)
                         .allowUserColorInput(true)
                         .allowUserColorInputAlpha(false)
                         .preselect(primaryColor)
-                        .show(getActivity());
+                        .show(requireActivity());
                 return true;
             });
 
-            final ATEColorPreference accentColorPref = (ATEColorPreference) findPreference("accent_color");
-            final int accentColor = ThemeStore.accentColor(getActivity());
+            final ATEColorPreference accentColorPref = findPreference("accent_color");
+            final int accentColor = ThemeStore.accentColor(requireContext());
             accentColorPref.setColor(accentColor, ColorUtil.darkenColor(accentColor));
             accentColorPref.setOnPreferenceClickListener(preference -> {
-                new ColorChooserDialog.Builder(getActivity(), R.string.accent_color)
+                new ColorChooserDialog.Builder(requireContext(), R.string.accent_color)
                         .accentMode(true)
                         .allowUserColorInput(true)
                         .allowUserColorInputAlpha(false)
                         .preselect(accentColor)
-                        .show(getActivity());
+                        .show(requireActivity());
                 return true;
             });
 
-            TwoStatePreference colorNavBar = (TwoStatePreference) findPreference("should_color_navigation_bar");
+            TwoStatePreference colorNavBar = findPreference("should_color_navigation_bar");
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 colorNavBar.setVisible(false);
             } else {
-                colorNavBar.setChecked(ThemeStore.coloredNavigationBar(getActivity()));
+                colorNavBar.setChecked(ThemeStore.coloredNavigationBar(requireContext()));
                 colorNavBar.setOnPreferenceChangeListener((preference, newValue) -> {
                     ThemeStore.editTheme(getActivity())
                             .coloredNavigationBar((Boolean) newValue)
@@ -263,7 +263,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                 });
             }
 
-            final TwoStatePreference classicNotification = (TwoStatePreference) findPreference("classic_notification");
+            final TwoStatePreference classicNotification = findPreference("classic_notification");
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 classicNotification.setVisible(false);
             } else {
@@ -275,7 +275,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                 });
             }
 
-            final TwoStatePreference coloredNotification = (TwoStatePreference) findPreference("colored_notification");
+            final TwoStatePreference coloredNotification = findPreference("colored_notification");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 coloredNotification.setEnabled(PreferenceUtil.getInstance(getActivity()).classicNotification());
             } else {

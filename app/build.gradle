@@ -5,6 +5,8 @@ apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
+//apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.gms.google-services'
 
 static def gitBranch() {
     def branch = 'GitHub'
@@ -46,8 +48,8 @@ android {
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
         applicationId 'top.geek_studio.chenlongcould.musicplayer'
-        versionCode 175
-        versionName '1.5.0.2.1'
+        versionCode 176
+        versionName '1.5.0.3'
         multiDexEnabled = true
         multiDexKeepFile file('multidex-config.txt')
         applicationIdSuffix = 'Common'
@@ -75,22 +77,17 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
-//            resValue('string', 'app_name', "ACG Player X")
         }
         debug {
-//            applicationIdSuffix '.debug'
             versionNameSuffix ' DEBUG (' + gitBranch() + ')'
-
-//            resValue('string', 'app_name', "Debug ACG Player X")
         }
-        playstore {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release4GooglePlay
-            applicationIdSuffix = '.ps'
-//            resValue('string', 'app_name', "Unit Player X")
-        }
+//        release4playstore {
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            signingConfig signingConfigs.release4GooglePlay
+//            applicationIdSuffix = '.ps'
+//        }
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
@@ -105,10 +102,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    // Required for IntroActivity
-    dataBinding {
-        enabled = true
-    }
+//    // Required for IntroActivity
+//    dataBinding {
+//        enabled = true
+//    }
     dexOptions {
         javaMaxHeapSize "4g"
         preDexLibraries = false
@@ -148,7 +145,8 @@ dependencies {
     implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
     implementation 'com.afollestad:material-cab:0.1.12'
     implementation 'com.github.ksoichiro:android-observablescrollview:1.6.0'
-    implementation 'com.heinrichreimersoftware:material-intro:1.6'
+//    implementation 'com.heinrichreimersoftware:material-intro:1.6'
+    implementation 'com.heinrichreimersoftware:material-intro:2.0.0'
     implementation 'me.zhanghai.android.materialprogressbar:library:1.6.1'
     implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar') {
         transitive = true
@@ -186,9 +184,9 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.12.1'
     // 歌词
     implementation 'com.github.Lauzy:LyricView:1.0.4'
+    implementation project(path: ':flutter')
 }
+
 repositories {
     mavenCentral()
 }
-
-apply plugin: 'com.google.gms.google-services'

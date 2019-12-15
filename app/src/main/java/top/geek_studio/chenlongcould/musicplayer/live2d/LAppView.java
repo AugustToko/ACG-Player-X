@@ -1,7 +1,7 @@
-/**
+/*
  * You can modify and use this source freely
  * only for the development of application related Live2D.
- * <p>
+ *
  * (c) Live2D Inc. All rights reserved.
  */
 package top.geek_studio.chenlongcould.musicplayer.live2d;
@@ -22,319 +22,318 @@ import top.geek_studio.chenlongcould.musicplayer.live2d.framework.jp.live2d.fram
 
 public class LAppView extends GLSurfaceView {
 
-	static public final String TAG = "LAppView";
+    static public final String TAG = "LAppView";
 
-	private LAppRenderer renderer;
+    private LAppRenderer renderer;
 
-	private LAppLive2DManager delegate;
-	private L2DMatrix44 deviceToScreen;
-	private L2DViewMatrix viewMatrix;
-	private AccelHelper accelHelper;
-	private TouchManager touchMgr;
-	private L2DTargetPoint dragMgr;
+    private LAppLive2DManager delegate;
+    private L2DMatrix44 deviceToScreen;
+    private L2DViewMatrix viewMatrix;
+    private AccelHelper accelHelper;
+    private TouchManager touchMgr;
+    private L2DTargetPoint dragMgr;
 
-	GestureDetector gestureDetector;
+    GestureDetector gestureDetector;
 
-	public LAppView(Context context) {
-		super(context);
-		setFocusable(true);
-	}
+    public LAppView(Context context) {
+        super(context);
+        setFocusable(true);
+    }
 
-	public void setLive2DManager(LAppLive2DManager live2DMgr) {
-		this.delegate = live2DMgr;
-		this.renderer = new LAppRenderer(live2DMgr, false);
+    public void setLive2DManager(LAppLive2DManager live2DMgr) {
+        this.delegate = live2DMgr;
+        this.renderer = new LAppRenderer(live2DMgr, false);
 
-		setRenderer(renderer);
+        setRenderer(renderer);
 
-		gestureDetector = new GestureDetector(this.getContext(), simpleOnGestureListener);
-		deviceToScreen = new L2DMatrix44();
-		viewMatrix = new L2DViewMatrix();
+        gestureDetector = new GestureDetector(this.getContext(), simpleOnGestureListener);
+        deviceToScreen = new L2DMatrix44();
+        viewMatrix = new L2DViewMatrix();
 
-		viewMatrix.setMaxScale(LAppDefine.VIEW_MAX_SCALE);
-		viewMatrix.setMinScale(LAppDefine.VIEW_MIN_SCALE);
+        viewMatrix.setMaxScale(LAppDefine.VIEW_MAX_SCALE);
+        viewMatrix.setMinScale(LAppDefine.VIEW_MIN_SCALE);
 
-		viewMatrix.setMaxScreenRect(
-				LAppDefine.VIEW_LOGICAL_MAX_LEFT,
-				LAppDefine.VIEW_LOGICAL_MAX_RIGHT,
-				LAppDefine.VIEW_LOGICAL_MAX_BOTTOM,
-				LAppDefine.VIEW_LOGICAL_MAX_TOP
-		);
+        viewMatrix.setMaxScreenRect(
+                LAppDefine.VIEW_LOGICAL_MAX_LEFT,
+                LAppDefine.VIEW_LOGICAL_MAX_RIGHT,
+                LAppDefine.VIEW_LOGICAL_MAX_BOTTOM,
+                LAppDefine.VIEW_LOGICAL_MAX_TOP
+        );
+
 
+        touchMgr = new TouchManager();
+        dragMgr = new L2DTargetPoint();
+    }
 
-		touchMgr = new TouchManager();
-		dragMgr = new L2DTargetPoint();
-	}
+    public void startAccel(Activity activity) {
+        accelHelper = new AccelHelper(activity);
+    }
 
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
 
-	public void startAccel(Activity activity) {
-		accelHelper = new AccelHelper(activity);
-	}
+    @Override
+    public boolean performLongClick() {
+        return super.performLongClick();
+    }
 
-	@Override
-	public boolean performClick() {
-		return super.performClick();
-	}
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        boolean ret = false;
+        int touchNum;
 
-	@Override
-	public boolean performLongClick() {
-		return super.performLongClick();
-	}
+        long timeDown = 0;
+        long timeUp = 0;
 
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		boolean ret = false;
-		int touchNum;
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
 
-		long timeDown = 0;
-		long timeUp = 0;
+                ret = true;
 
-		switch (event.getAction()) {
-			case MotionEvent.ACTION_DOWN:
+                touchNum = event.getPointerCount();
 
-				ret = true;
+                if (touchNum == 1) {
+                    touchesBegan(event.getX(), event.getY());
+                } else if (touchNum == 2) {
+                    touchesBegan(event.getX(0), event.getY(0), event.getX(1), event.getY(1));
+                } else {
 
-				touchNum = event.getPointerCount();
+                }
 
-				if (touchNum == 1) {
-					touchesBegan(event.getX(), event.getY());
-				} else if (touchNum == 2) {
-					touchesBegan(event.getX(0), event.getY(0), event.getX(1), event.getY(1));
-				} else {
+                super.onTouchEvent(event);
+                break;
 
-				}
+            case MotionEvent.ACTION_UP:
+                touchesEnded();
+                performClick();
+                super.onTouchEvent(event);
+                break;
+            case MotionEvent.ACTION_MOVE:
 
-				super.onTouchEvent(event);
-				break;
+                touchNum = event.getPointerCount();
 
-			case MotionEvent.ACTION_UP:
-				touchesEnded();
-				performClick();
-				super.onTouchEvent(event);
-				break;
-			case MotionEvent.ACTION_MOVE:
+                if (touchNum == 1) {
+                    touchesMoved(event.getX(), event.getY());
+                } else if (touchNum == 2) {
+                    touchesMoved(event.getX(0), event.getY(0), event.getX(1), event.getY(1));
+                } else {
 
-				touchNum = event.getPointerCount();
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                break;
+            default:
+                break;
+        }
 
-				if (touchNum == 1) {
-					touchesMoved(event.getX(), event.getY());
-				} else if (touchNum == 2) {
-					touchesMoved(event.getX(0), event.getY(0), event.getX(1), event.getY(1));
-				} else {
+        ret |= gestureDetector.onTouchEvent(event);
 
-				}
-				break;
-			case MotionEvent.ACTION_CANCEL:
-				break;
-			default:
-				break;
-		}
+        return ret;
+    }
 
-		ret |= gestureDetector.onTouchEvent(event);
 
-		return ret;
-	}
+    public void onResume() {
+        if (accelHelper != null) {
+            if (LAppDefine.DEBUG_LOG) Log.d(TAG, "start accelHelper");
+            accelHelper.start();
+        }
+    }
 
 
-	public void onResume() {
-		if (accelHelper != null) {
-			if (LAppDefine.DEBUG_LOG) Log.d(TAG, "start accelHelper");
-			accelHelper.start();
-		}
-	}
+    public void onPause() {
+        if (accelHelper != null) {
+            if (LAppDefine.DEBUG_LOG) Log.d(TAG, "stop accelHelper");
+            accelHelper.stop();
+        }
 
+        if (renderer != null) {
+            renderer.pause();
+        }
+    }
 
-	public void onPause() {
-		if (accelHelper != null) {
-			if (LAppDefine.DEBUG_LOG) Log.d(TAG, "stop accelHelper");
-			accelHelper.stop();
-		}
+    public void setupView(int width, int height) {
+        float ratio = (float) height / width;
+        float left = LAppDefine.VIEW_LOGICAL_LEFT;
+        float right = LAppDefine.VIEW_LOGICAL_RIGHT;
+        float bottom = -ratio;
+        float top = ratio;
 
-		if (renderer != null) {
-			renderer.pause();
-		}
-	}
+        viewMatrix.setScreenRect(left, right, bottom, top);
 
-	public void setupView(int width, int height) {
-		float ratio = (float) height / width;
-		float left = LAppDefine.VIEW_LOGICAL_LEFT;
-		float right = LAppDefine.VIEW_LOGICAL_RIGHT;
-		float bottom = -ratio;
-		float top = ratio;
+        float screenW = Math.abs(left - right);
+        deviceToScreen.identity();
+        deviceToScreen.multTranslate(-width / 2.0f, height / 2.0f);
+        deviceToScreen.multScale(screenW / width, screenW / width);
+    }
 
-		viewMatrix.setScreenRect(left, right, bottom, top);
 
-		float screenW = Math.abs(left - right);
-		deviceToScreen.identity();
-		deviceToScreen.multTranslate(-width / 2.0f, height / 2.0f);
-		deviceToScreen.multScale(screenW / width, screenW / width);
-	}
+    public void update() {
+        dragMgr.update();
+        delegate.setDrag(dragMgr.getX(), dragMgr.getY());
 
+        accelHelper.update();
 
-	public void update() {
-		dragMgr.update();
-		delegate.setDrag(dragMgr.getX(), dragMgr.getY());
+        if (accelHelper.getShake() > 1.5f) {
+            if (LAppDefine.DEBUG_LOG) Log.d(TAG, "shake event");
 
-		accelHelper.update();
+            delegate.shakeEvent();
+            accelHelper.resetShake();
+        }
 
-		if (accelHelper.getShake() > 1.5f) {
-			if (LAppDefine.DEBUG_LOG) Log.d(TAG, "shake event");
+        delegate.setAccel(accelHelper.getAccelX(), accelHelper.getAccelY(), accelHelper.getAccelZ());
+        renderer.setAccel(accelHelper.getAccelX(), accelHelper.getAccelY(), accelHelper.getAccelZ());
+    }
 
-			delegate.shakeEvent();
-			accelHelper.resetShake();
-		}
 
-		delegate.setAccel(accelHelper.getAccelX(), accelHelper.getAccelY(), accelHelper.getAccelZ());
-		renderer.setAccel(accelHelper.getAccelX(), accelHelper.getAccelY(), accelHelper.getAccelZ());
-	}
+    public void updateViewMatrix(float dx, float dy, float cx, float cy, float scale, boolean enableEvent) {
+        boolean isMaxScale = viewMatrix.isMaxScale();
+        boolean isMinScale = viewMatrix.isMinScale();
 
 
-	public void updateViewMatrix(float dx, float dy, float cx, float cy, float scale, boolean enableEvent) {
-		boolean isMaxScale = viewMatrix.isMaxScale();
-		boolean isMinScale = viewMatrix.isMinScale();
+        viewMatrix.adjustScale(cx, cy, scale);
 
 
-		viewMatrix.adjustScale(cx, cy, scale);
+        viewMatrix.adjustTranslate(dx, dy);
 
+        if (enableEvent) {
 
-		viewMatrix.adjustTranslate(dx, dy);
+            if (!isMaxScale) {
+                if (viewMatrix.isMaxScale()) {
+                    delegate.maxScaleEvent();
+                }
+            }
 
-		if (enableEvent) {
+            if (!isMinScale) {
+                if (viewMatrix.isMinScale()) {
+                    delegate.minScaleEvent();
+                }
+            }
+        }
+    }
 
-			if (!isMaxScale) {
-				if (viewMatrix.isMaxScale()) {
-					delegate.maxScaleEvent();
-				}
-			}
 
-			if (!isMinScale) {
-				if (viewMatrix.isMinScale()) {
-					delegate.minScaleEvent();
-				}
-			}
-		}
-	}
+    private float transformDeviceToViewX(float deviceX) {
+        float screenX = deviceToScreen.transformX(deviceX);
+        return viewMatrix.invertTransformX(screenX);
+    }
 
 
-	private float transformDeviceToViewX(float deviceX) {
-		float screenX = deviceToScreen.transformX(deviceX);
-		return viewMatrix.invertTransformX(screenX);
-	}
+    private float transformDeviceToViewY(float deviceY) {
+        float screenY = deviceToScreen.transformY(deviceY);
+        return viewMatrix.invertTransformY(screenY);
+    }
 
 
-	private float transformDeviceToViewY(float deviceY) {
-		float screenY = deviceToScreen.transformY(deviceY);
-		return viewMatrix.invertTransformY(screenY);
-	}
+    public void touchesBegan(float p1x, float p1y) {
+        if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesBegan" + " x:" + p1x + " y:" + p1y);
+        touchMgr.touchBegan(p1x, p1y);
 
+        float x = transformDeviceToViewX(touchMgr.getX());
+        float y = transformDeviceToViewY(touchMgr.getY());
 
-	public void touchesBegan(float p1x, float p1y) {
-		if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesBegan" + " x:" + p1x + " y:" + p1y);
-		touchMgr.touchBegan(p1x, p1y);
+        dragMgr.set(x, y);
+    }
 
-		float x = transformDeviceToViewX(touchMgr.getX());
-		float y = transformDeviceToViewY(touchMgr.getY());
 
-		dragMgr.set(x, y);
-	}
+    public void touchesBegan(float p1x, float p1y, float p2x, float p2y) {
+        if (LAppDefine.DEBUG_TOUCH_LOG)
+            Log.v(TAG, "touchesBegan" + " x1:" + p1x + " y1:" + p1y + " x2:" + p2x + " y2:" + p2y);
+        touchMgr.touchBegan(p1x, p1y, p2x, p2y);
 
+        float x = transformDeviceToViewX(touchMgr.getX());
+        float y = transformDeviceToViewY(touchMgr.getY());
 
-	public void touchesBegan(float p1x, float p1y, float p2x, float p2y) {
-		if (LAppDefine.DEBUG_TOUCH_LOG)
-			Log.v(TAG, "touchesBegan" + " x1:" + p1x + " y1:" + p1y + " x2:" + p2x + " y2:" + p2y);
-		touchMgr.touchBegan(p1x, p1y, p2x, p2y);
+        dragMgr.set(x, y);
+    }
 
-		float x = transformDeviceToViewX(touchMgr.getX());
-		float y = transformDeviceToViewY(touchMgr.getY());
 
-		dragMgr.set(x, y);
-	}
+    public void touchesMoved(float p1x, float p1y) {
+        if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesMoved" + "x:" + p1x + " y:" + p1y);
+        touchMgr.touchesMoved(p1x, p1y);
+        float x = transformDeviceToViewX(touchMgr.getX());
+        float y = transformDeviceToViewY(touchMgr.getY());
 
+        dragMgr.set(x, y);
 
-	public void touchesMoved(float p1x, float p1y) {
-		if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesMoved" + "x:" + p1x + " y:" + p1y);
-		touchMgr.touchesMoved(p1x, p1y);
-		float x = transformDeviceToViewX(touchMgr.getX());
-		float y = transformDeviceToViewY(touchMgr.getY());
+        final int FLICK_DISTANCE = 100;
 
-		dragMgr.set(x, y);
 
-		final int FLICK_DISTANCE = 100;
+        if (touchMgr.isSingleTouch() && touchMgr.isFlickAvailable()) {
+            float flickDist = touchMgr.getFlickDistance();
+            if (flickDist > FLICK_DISTANCE) {
 
+                float startX = transformDeviceToViewX(touchMgr.getStartX());
+                float startY = transformDeviceToViewY(touchMgr.getStartY());
+                delegate.flickEvent(startX, startY);
+                touchMgr.disableFlick();
+            }
+        }
+    }
 
-		if (touchMgr.isSingleTouch() && touchMgr.isFlickAvailable()) {
-			float flickDist = touchMgr.getFlickDistance();
-			if (flickDist > FLICK_DISTANCE) {
 
-				float startX = transformDeviceToViewX(touchMgr.getStartX());
-				float startY = transformDeviceToViewY(touchMgr.getStartY());
-				delegate.flickEvent(startX, startY);
-				touchMgr.disableFlick();
-			}
-		}
-	}
+    public void touchesMoved(float p1x, float p1y, float p2x, float p2y) {
+        if (LAppDefine.DEBUG_TOUCH_LOG)
+            Log.v(TAG, "touchesMoved" + " x1:" + p1x + " y1:" + p1y + " x2:" + p2x + " y2:" + p2y);
+        touchMgr.touchesMoved(p1x, p1y, p2x, p2y);
 
 
-	public void touchesMoved(float p1x, float p1y, float p2x, float p2y) {
-		if (LAppDefine.DEBUG_TOUCH_LOG)
-			Log.v(TAG, "touchesMoved" + " x1:" + p1x + " y1:" + p1y + " x2:" + p2x + " y2:" + p2y);
-		touchMgr.touchesMoved(p1x, p1y, p2x, p2y);
+        float dx = touchMgr.getDeltaX() * deviceToScreen.getScaleX();
+        float dy = touchMgr.getDeltaY() * deviceToScreen.getScaleY();
+        float cx = deviceToScreen.transformX(touchMgr.getCenterX()) * touchMgr.getScale();
+        float cy = deviceToScreen.transformY(touchMgr.getCenterY()) * touchMgr.getScale();
+        float scale = touchMgr.getScale();
 
+        if (LAppDefine.DEBUG_TOUCH_LOG)
+            Log.v(TAG, "view  dx:" + dx + " dy:" + dy + " cx:" + cx + " cy:" + cy + " scale:" + scale);
 
-		float dx = touchMgr.getDeltaX() * deviceToScreen.getScaleX();
-		float dy = touchMgr.getDeltaY() * deviceToScreen.getScaleY();
-		float cx = deviceToScreen.transformX(touchMgr.getCenterX()) * touchMgr.getScale();
-		float cy = deviceToScreen.transformY(touchMgr.getCenterY()) * touchMgr.getScale();
-		float scale = touchMgr.getScale();
+        updateViewMatrix(dx, dy, cx, cy, scale, true);
 
-		if (LAppDefine.DEBUG_TOUCH_LOG)
-			Log.v(TAG, "view  dx:" + dx + " dy:" + dy + " cx:" + cx + " cy:" + cy + " scale:" + scale);
+        float x = transformDeviceToViewX(touchMgr.getX());
+        float y = transformDeviceToViewY(touchMgr.getY());
 
-		updateViewMatrix(dx, dy, cx, cy, scale, true);
+        dragMgr.set(x, y);
+    }
 
-		float x = transformDeviceToViewX(touchMgr.getX());
-		float y = transformDeviceToViewY(touchMgr.getY());
 
-		dragMgr.set(x, y);
-	}
+    public void touchesEnded() {
+        if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesEnded");
+        dragMgr.set(0, 0);
+    }
 
 
-	public void touchesEnded() {
-		if (LAppDefine.DEBUG_TOUCH_LOG) Log.v(TAG, "touchesEnded");
-		dragMgr.set(0, 0);
-	}
+    public L2DViewMatrix getViewMatrix() {
+        return viewMatrix;
+    }
 
 
-	public L2DViewMatrix getViewMatrix() {
-		return viewMatrix;
-	}
+    private final SimpleOnGestureListener simpleOnGestureListener = new SimpleOnGestureListener() {
+        @Override
+        public boolean onDoubleTap(MotionEvent event) {
+            return super.onDoubleTap(event);
+        }
 
+        @Override
+        public boolean onDown(MotionEvent event) {
+            super.onDown(event);
+            return true;
+        }
 
-	private final SimpleOnGestureListener simpleOnGestureListener = new SimpleOnGestureListener() {
-		@Override
-		public boolean onDoubleTap(MotionEvent event) {
-			return super.onDoubleTap(event);
-		}
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent event) {
+            float x = transformDeviceToViewX(touchMgr.getX());
+            float y = transformDeviceToViewY(touchMgr.getY());
+            boolean ret = delegate.tapEvent(x, y);//Live2D Event
+            ret |= super.onSingleTapUp(event);
+            return ret;
+        }
 
-		@Override
-		public boolean onDown(MotionEvent event) {
-			super.onDown(event);
-			return true;
-		}
-
-		@Override
-		public boolean onSingleTapConfirmed(MotionEvent event) {
-			float x = transformDeviceToViewX(touchMgr.getX());
-			float y = transformDeviceToViewY(touchMgr.getY());
-			boolean ret = delegate.tapEvent(x, y);//Live2D Event
-			ret |= super.onSingleTapUp(event);
-			return ret;
-		}
-
-		@Override
-		public boolean onSingleTapUp(MotionEvent event) {
-			return super.onSingleTapUp(event);
-		}
-	};
+        @Override
+        public boolean onSingleTapUp(MotionEvent event) {
+            return super.onSingleTapUp(event);
+        }
+    };
 
 }
 

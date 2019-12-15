@@ -4,11 +4,15 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -26,6 +30,7 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +50,10 @@ import top.geek_studio.chenlongcould.musicplayer.Constants;
 import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
+import top.geek_studio.chenlongcould.musicplayer.live2d.LAppLive2DManager;
+import top.geek_studio.chenlongcould.musicplayer.live2d.LAppView;
+import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.FileManager;
+import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.SoundManager;
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Hitokoto;
 import top.geek_studio.chenlongcould.musicplayer.model.Home;
@@ -217,7 +226,6 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         recyclerView.setAdapter(homeAdapter);
 
         setUpHomeData(appCompatActivity);
-
     }
 
     /**
@@ -258,8 +266,10 @@ public class HomeFragment extends AbsLibraryPagerFragment {
         HitokotoUtil.getHitokoto(activity, new TransDataCallback<Hitokoto>() {
             @Override
             public void onTrans(@NotNull Hitokoto data) {
-                putIntoHitokotoView(data);
-                getLibraryFragment().getMainActivity().mViewModel.HitokotoData.setValue(data);
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    putIntoHitokotoView(data);
+                    getLibraryFragment().getMainActivity().mViewModel.HitokotoData.setValue(data);
+                });
 
                 CustomThreadPool.post(() -> HitokotoUtil.saveHitokoFile(activity, data));
             }

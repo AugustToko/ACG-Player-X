@@ -42,6 +42,9 @@
                     android:id="@+id/nav_debug"
                     android:icon="@drawable/ic_bug_report_white_24dp"
                     android:title="Debug" />
+<!--                <item android:id="@+id/flutter_debug"-->
+<!--                    android:icon="@drawable/ic_bug_report_white_24dp"-->
+<!--                    android:title="Flutter Activity"/>-->
             </group>
         </menu>
     </item>
