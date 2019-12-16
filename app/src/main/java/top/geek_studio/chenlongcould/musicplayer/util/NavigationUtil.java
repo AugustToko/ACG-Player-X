@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.util.Pair;
 
+import io.flutter.embedding.android.FlutterActivity;
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
@@ -29,6 +30,8 @@ import top.geek_studio.chenlongcould.musicplayer.ui.activities.PlaylistDetailAct
  * @author Karim Abou Zeid (kabouzeid)
  */
 public class NavigationUtil {
+
+    private static final String TAG = "NavigationUtil";
 
     /**
      * 显示艺术家详情页面
@@ -104,5 +107,10 @@ public class NavigationUtil {
                 Toast.makeText(activity, activity.getResources().getString(R.string.no_equalizer), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public static void openLive2dPage(@NonNull final Activity activity) {
+        final Intent intent = FlutterActivity.withNewEngine().initialRoute("/live2d_settings").build(activity);
+        activity.startActivity(intent);
     }
 }

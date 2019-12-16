@@ -1,7 +1,8 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory android:title="@string/pref_header_colors">
+    <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:title="@string/pref_header_theme">
 
         <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEListPreference
             app:iconSpaceReserved="false"
@@ -55,6 +56,13 @@
             android:key="show_live2d"
             android:summary="Show Live2D character."
             android:title="Show Live2D" />
+
+        <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="live2d_settings"
+            android:summary="Live2D option settings."
+            android:title="Live2D settings" />
 
     </com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
 

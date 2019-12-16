@@ -192,7 +192,6 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 //                    return;
 //                }
 
-
                 final MainActivity mainActivity = getLibraryFragment().getMainActivity();
                 FirebaseUser user = mainActivity.mViewModel.userData.getValue();
                 if (user != null && user.getDisplayName() != null) {

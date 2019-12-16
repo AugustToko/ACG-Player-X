@@ -1,7 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.lrc;
 
 import android.animation.ObjectAnimator;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,8 +20,6 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
-import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 import com.lauzy.freedom.library.Lrc;
 import com.lauzy.freedom.library.LrcView;
 
@@ -75,10 +73,10 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
     LrcView mLrcView;
 
     @BindView(R.id.title)
-    ATEPrimaryTextView title;
+    TextView title;
 
     @BindView(R.id.albumTitle)
-    ATESecondaryTextView albumTitle;
+    TextView albumTitle;
 
     @BindView(R.id.albumImage)
     AppCompatImageView albumImage;
@@ -128,10 +126,7 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
                         , Pair.create(albumImage, getResources().getString(R.string.transition_album_art)))
         );
 
-        title.setTextColor(Color.BLACK);
-        albumTitle.setTextColor(Color.BLACK);
-
-        getMainActivity().setLightStatusbar(true);
+        getMainActivity().setLightStatusbar(false);
 
         // init blur
         realtimeBlurView.setBlurRadius(280);

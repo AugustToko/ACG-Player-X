@@ -51,6 +51,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.engine.FlutterEngineCache;
 import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ChangelogDialog;
@@ -135,8 +136,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     MainActivityFragmentCallbacks currentFragment;
 
     ////////////////// LIVE 2D ////////////////////
-    private LAppLive2DManager live2DMgr;
-    private LAppView mlAppView;
+    public LAppLive2DManager live2DMgr;
     private FrameLayout mLive2DContent;
     ////////////////// LIVE 2D ////////////////////
 
@@ -224,10 +224,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
 
         live2DMgr = new LAppLive2DManager();
 
-        mlAppView = live2DMgr.createView(this, true);
-        mlAppView.setBackground(null);
-        mlAppView.setLongClickable(true);
-        mlAppView.setOnLongClickListener(view -> {
+        LAppView lAppView = live2DMgr.createView(this, true);
+        lAppView.setBackground(null);
+        lAppView.setLongClickable(true);
+        lAppView.setOnLongClickListener(view -> {
             new MaterialDialog.Builder(MainActivity.this)
                     .title("Hi")
                     .content("这里是 ACG Player 助手酱 ~")
@@ -245,27 +245,21 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         });
 
         mLive2DContent = new FrameLayout(this);
-        mLive2DContent.addView(mlAppView);
+        mLive2DContent.addView(lAppView);
         mLive2DContent.setBackground(null);
 
-        final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mlAppView.getLayoutParams();
+        final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) lAppView.getLayoutParams();
         lp.gravity = Gravity.BOTTOM | Gravity.END;
         lp.width = 350;
         lp.height = 700;
-        mlAppView.setLayoutParams(lp);
+        lAppView.setLayoutParams(lp);
 
         navigationView.addView(mLive2DContent);
     }
 
     private void releaseLive2d() {
-        if (mlAppView != null) {
-            mlAppView.onPause();
-            mlAppView.setOnClickListener(null);
-            mlAppView = null;
-        }
-
-        FileManager.clear();
-        SoundManager.release();
+        live2DMgr.release();
+        live2DMgr = null;
         mLive2DContent.removeAllViews();
         mLive2DContent = null;
     }
@@ -273,7 +267,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (mlAppView != null) mlAppView.onPause();
+        if (live2DMgr != null) live2DMgr.onPause();
     }
 
     @Override
@@ -281,13 +275,13 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         super.onResume();
         // 判断是否开启 live2d
         if (PreferenceUtil.getInstance(getApplicationContext()).isShowLive2D()) {
-            if (mlAppView != null) {
-                mlAppView.onResume();
+            if (live2DMgr != null) {
+                live2DMgr.onResume();
             } else {
                 setUpLive2D();
             }
         } else {
-            if (mlAppView != null) releaseLive2d();
+            if (live2DMgr != null) releaseLive2d();
         }
     }
 
@@ -304,6 +298,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
 
         mViewModel.dialogs.clear();
+//        App.flutterEngine.destroy();
     }
 
     /**

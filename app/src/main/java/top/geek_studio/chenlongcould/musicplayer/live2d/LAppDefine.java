@@ -9,28 +9,31 @@ package top.geek_studio.chenlongcould.musicplayer.live2d;
 
 public class LAppDefine {
 
-	public static boolean DEBUG_LOG = true;
-	public static boolean DEBUG_TOUCH_LOG = false;
-	public static boolean DEBUG_DRAW_HIT_AREA = false;
+	/**
+	 * Log
+	 * */
+	public static boolean DEBUG_LOG = false;
+	static boolean DEBUG_TOUCH_LOG = false;
+	static boolean DEBUG_DRAW_HIT_AREA = false;
 
-	public static final float VIEW_MAX_SCALE = 2f;
-	public static final float VIEW_MIN_SCALE = 0.8f;
+	static final float VIEW_MAX_SCALE = 2f;
+	static final float VIEW_MIN_SCALE = 0.8f;
 
-	public static final float VIEW_LOGICAL_LEFT = -1;
-	public static final float VIEW_LOGICAL_RIGHT = 1;
+	static final float VIEW_LOGICAL_LEFT = -1;
+	static final float VIEW_LOGICAL_RIGHT = 1;
 
-	public static final float VIEW_LOGICAL_MAX_LEFT = -2;
-	public static final float VIEW_LOGICAL_MAX_RIGHT = 2;
-	public static final float VIEW_LOGICAL_MAX_BOTTOM = -2;
-	public static final float VIEW_LOGICAL_MAX_TOP = 2;
+	static final float VIEW_LOGICAL_MAX_LEFT = -2;
+	static final float VIEW_LOGICAL_MAX_RIGHT = 2;
+	static final float VIEW_LOGICAL_MAX_BOTTOM = -2;
+	static final float VIEW_LOGICAL_MAX_TOP = 2;
 
-	public static final String BACK_IMAGE_NAME = "image/back_class_normal.png";
+	static final String BACK_IMAGE_NAME = "image/back_class_normal.png";
 
-	public static final String MODEL_HARU = "live2d/haru/haru.model.json";
-	public static final String MODEL_HARU_A = "live2d/haru/haru_01.model.json";
-	public static final String MODEL_HARU_B = "live2d/haru/haru_02.model.json";
-	public static final String MODEL_SHIZUKU = "live2d/shizuku/shizuku.model.json";
-	public static final String MODEL_WANKO = "live2d/wanko/wanko.model.json";
+	static final String MODEL_HARU = "live2d/haru/haru.model.json";
+	static final String MODEL_HARU_A = "live2d/haru/haru_01.model.json";
+	static final String MODEL_HARU_B = "live2d/haru/haru_02.model.json";
+	static final String MODEL_SHIZUKU = "live2d/shizuku/shizuku.model.json";
+//	public static final String MODEL_WANKO = "live2d/wanko/wanko.model.json";
 
 	static final String MOTION_GROUP_IDLE = "idle";
 	static final String MOTION_GROUP_TAP_BODY = "tap_body";

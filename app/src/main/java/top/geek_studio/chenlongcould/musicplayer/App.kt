@@ -64,6 +64,8 @@ class App : MultiDexApplication() {
         val isProVersion: Boolean
             get() = true
 
+//        val flutterEngineId = "my_engine_id"
+
 //        lateinit var flutterEngine: FlutterEngine
     }
 

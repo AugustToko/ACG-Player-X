@@ -15,7 +15,8 @@
     <com.github.mmin18.widget.RealtimeBlurView
         android:id="@+id/real_blur"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:realtimeOverlayColor="#4D000000" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card"
@@ -32,12 +33,13 @@
             android:id="@+id/albumImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:scaleType="centerCrop"
             android:transitionName="@string/transition_album_art"
             app:srcCompat="@drawable/default_album_art" />
 
     </com.google.android.material.card.MaterialCardView>
 
-    <com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/albumTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -51,22 +53,35 @@
         app:layout_constraintTop_toBottomOf="@+id/title"
         tools:text="@string/app_name" />
 
-    <com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginLeft="20dp"
         android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:textAppearance="@style/TextViewHeadline5"
         android:textIsSelectable="true"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/moreButton"
         app:layout_constraintStart_toEndOf="@+id/card"
         app:layout_constraintTop_toTopOf="@+id/card"
         tools:text="@string/app_name" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/moreButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/white_circle"
+        app:layout_constraintBottom_toBottomOf="@+id/card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/card"
+        app:srcCompat="@drawable/ic_more_vert_white_24dp" />
 
     <com.lauzy.freedom.library.LrcView
         android:id="@+id/lrcView"
@@ -75,11 +90,15 @@
         android:layout_margin="20dp"
         android:ellipsize="end"
         app:currentIndicateLrcColor="@color/colorAccent"
-        app:indicatorTextColor="@android:color/black"
+        app:indicatorTextColor="@color/lrc_text_color"
+        app:isLrcCurrentTextBold="true"
+        app:indicatorLineColor="@color/lrc_text_color"
+        app:noLrcTextColor="@color/lrc_text_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/card"
-        app:lrcNormalTextColor="#000"
-        app:lrcTextSize="18sp" />
+        app:lrcCurrentTextColor="@color/lrc_text_color"
+        app:lrcNormalTextColor="@color/lrc_text_color"
+        app:lrcTextSize="20sp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/changeLrc"
@@ -88,10 +107,10 @@
         android:layout_marginEnd="15dp"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="15dp"
-        app:srcCompat="@drawable/ic_comment_text_outline_white_24dp"
         android:tint="#000"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_comment_text_outline_white_24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

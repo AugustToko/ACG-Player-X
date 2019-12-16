@@ -42,8 +42,7 @@ public class CustomLrcHelper {
         while ((line = br.readLine()) != null) {
             // 检测第十个字符是否为 ]
             // 应对 [03:56.000]hhhhh 这种类型的时间
-
-            if (line.length() < 9) break;
+            if (TextUtils.isEmpty(line) || line.trim().length() < 8) break;
 
             if (line.charAt(9) != ']') {
                 final StringBuilder builder = new StringBuilder(line);

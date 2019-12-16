@@ -40,8 +40,12 @@ public class LAppRenderer implements GLSurfaceView.Renderer {
 		if (setUpBackgroundImage.length > 0) setBg = setUpBackgroundImage[0];
 	}
 
-	public void pause() {
+	void pause() {
 		pause = true;
+	}
+
+	void resume() {
+		pause = false;
 	}
 
 	@Override

@@ -154,7 +154,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
         @Override
         public void onCreatePreferences(Bundle bundle, String s) {
             addPreferencesFromResource(R.xml.pref_library);
-            addPreferencesFromResource(R.xml.pref_colors);
+            addPreferencesFromResource(R.xml.pref_theme);
             addPreferencesFromResource(R.xml.pref_notification);
             addPreferencesFromResource(R.xml.pref_now_playing_screen);
             addPreferencesFromResource(R.xml.pref_images);
@@ -255,7 +255,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             } else {
                 colorNavBar.setChecked(ThemeStore.coloredNavigationBar(requireContext()));
                 colorNavBar.setOnPreferenceChangeListener((preference, newValue) -> {
-                    ThemeStore.editTheme(getActivity())
+                    ThemeStore.editTheme(requireContext())
                             .coloredNavigationBar((Boolean) newValue)
                             .commit();
                     getActivity().recreate();
@@ -267,7 +267,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 classicNotification.setVisible(false);
             } else {
-                classicNotification.setChecked(PreferenceUtil.getInstance(getActivity()).classicNotification());
+                classicNotification.setChecked(PreferenceUtil.getInstance(requireContext()).classicNotification());
                 classicNotification.setOnPreferenceChangeListener((preference, newValue) -> {
                     // Save preference
                     PreferenceUtil.getInstance(getActivity()).setClassicNotification((Boolean) newValue);
@@ -277,24 +277,24 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
 
             final TwoStatePreference coloredNotification = findPreference("colored_notification");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                coloredNotification.setEnabled(PreferenceUtil.getInstance(getActivity()).classicNotification());
+                coloredNotification.setEnabled(PreferenceUtil.getInstance(requireContext()).classicNotification());
             } else {
-                coloredNotification.setChecked(PreferenceUtil.getInstance(getActivity()).coloredNotification());
+                coloredNotification.setChecked(PreferenceUtil.getInstance(requireContext()).coloredNotification());
                 coloredNotification.setOnPreferenceChangeListener((preference, newValue) -> {
                     // Save preference
-                    PreferenceUtil.getInstance(getActivity()).setColoredNotification((Boolean) newValue);
+                    PreferenceUtil.getInstance(requireContext()).setColoredNotification((Boolean) newValue);
                     return true;
                 });
             }
 
-            final TwoStatePreference colorAppShortcuts = (TwoStatePreference) findPreference("should_color_app_shortcuts");
+            final TwoStatePreference colorAppShortcuts = findPreference("should_color_app_shortcuts");
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
                 colorAppShortcuts.setVisible(false);
             } else {
-                colorAppShortcuts.setChecked(PreferenceUtil.getInstance(getActivity()).coloredAppShortcuts());
+                colorAppShortcuts.setChecked(PreferenceUtil.getInstance(requireContext()).coloredAppShortcuts());
                 colorAppShortcuts.setOnPreferenceChangeListener((preference, newValue) -> {
                     // Save preference
-                    PreferenceUtil.getInstance(getActivity()).setColoredAppShortcuts((Boolean) newValue);
+                    PreferenceUtil.getInstance(requireContext()).setColoredAppShortcuts((Boolean) newValue);
 
                     // Update app shortcuts
                     new DynamicShortcutManager(getActivity()).updateDynamicShortcuts();
@@ -303,15 +303,26 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                 });
             }
 
+            // equalizer
             final Preference equalizer = findPreference("equalizer");
-            if (!hasEqualizer()) {
-                equalizer.setEnabled(false);
-                equalizer.setSummary(getResources().getString(R.string.no_equalizer));
+            if (equalizer != null) {
+                if (!hasEqualizer()) {
+                    equalizer.setEnabled(false);
+                    equalizer.setSummary(getResources().getString(R.string.no_equalizer));
+                }
+                equalizer.setOnPreferenceClickListener(preference -> {
+                    NavigationUtil.openEqualizer(requireActivity());
+                    return true;
+                });
             }
-            equalizer.setOnPreferenceClickListener(preference -> {
-                NavigationUtil.openEqualizer(getActivity());
-                return true;
-            });
+
+            final Preference live2dOption = findPreference("live2d_settings");
+            if (live2dOption != null) {
+                live2dOption.setOnPreferenceClickListener(preference -> {
+                    NavigationUtil.openLive2dPage(requireActivity());
+                    return true;
+                });
+            }
 
             updateNowPlayingScreenSummary();
         }

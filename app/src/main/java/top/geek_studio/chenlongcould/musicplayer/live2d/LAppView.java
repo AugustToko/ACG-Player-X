@@ -139,6 +139,10 @@ public class LAppView extends GLSurfaceView {
             if (LAppDefine.DEBUG_LOG) Log.d(TAG, "start accelHelper");
             accelHelper.start();
         }
+
+        if (renderer != null) {
+            renderer.resume();
+        }
     }
 
 
