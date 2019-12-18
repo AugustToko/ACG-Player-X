@@ -24,7 +24,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import jp.live2d.Live2D;
 
-
 public class LAppLive2DManager {
 
     private static final String TAG = "SampleLive2DManager";
@@ -91,7 +90,7 @@ public class LAppLive2DManager {
                         releaseModel();
 
                         models.add(new LAppModel());
-                        models.get(0).load(gl, LAppDefine.MODEL_SHIZUKU);
+                        models.get(0).load(gl, LAppDefine.MODEL_TERISA);
                         models.get(0).feedIn();
                         break;
 //					case 2:
@@ -101,17 +100,17 @@ public class LAppLive2DManager {
 //						models.get(0).load(gl, LAppDefine.MODEL_WANKO);
 //						models.get(0).feedIn();
 //						break;
-                    case 2:
-                        releaseModel();
-
-                        models.add(new LAppModel());
-                        models.get(0).load(gl, LAppDefine.MODEL_HARU_A);
-                        models.get(0).feedIn();
-
-                        models.add(new LAppModel());
-                        models.get(1).load(gl, LAppDefine.MODEL_HARU_B);
-                        models.get(1).feedIn();
-                        break;
+//                    case 2:
+//                        releaseModel();
+//
+//                        models.add(new LAppModel());
+//                        models.get(0).load(gl, LAppDefine.MODEL_HARU_A);
+//                        models.get(0).feedIn();
+//
+//                        models.add(new LAppModel());
+//                        models.get(1).load(gl, LAppDefine.MODEL_HARU_B);
+//                        models.get(1).feedIn();
+//                        break;
                     default:
                         break;
                 }
@@ -152,19 +151,16 @@ public class LAppLive2DManager {
         view.onResume();
     }
 
-
     public void onPause() {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "onPause");
         view.onPause();
     }
-
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "onSurfaceChanged " + width + " " + height);
         view.setupView(width, height);
 
         if (getModelNum() == 0) {
-
             changeModel();
         }
     }

@@ -62,7 +62,8 @@
             android:defaultValue="true"
             android:key="live2d_settings"
             android:summary="Live2D option settings."
-            android:title="Live2D settings" />
+            android:title="Live2D settings"
+            app:isPreferenceVisible="false"/>
 
     </com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
 

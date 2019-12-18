@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.util.Pair;
 
-import io.flutter.embedding.android.FlutterActivity;
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
@@ -110,7 +109,7 @@ public class NavigationUtil {
     }
 
     public static void openLive2dPage(@NonNull final Activity activity) {
-        final Intent intent = FlutterActivity.withNewEngine().initialRoute("/live2d_settings").build(activity);
-        activity.startActivity(intent);
+//        final Intent intent = FlutterActivity.withNewEngine().initialRoute("/live2d_settings").build(activity);
+//        activity.startActivity(intent);
     }
 }

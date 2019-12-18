@@ -44,7 +44,6 @@ public class LAppModel extends L2DBaseModel {
 
 	public LAppModel() {
 		super();
-
 		if (LAppDefine.DEBUG_LOG) {
 			debugMode = true;
 //			mainMotionManager.setMotionDebugMode(true);

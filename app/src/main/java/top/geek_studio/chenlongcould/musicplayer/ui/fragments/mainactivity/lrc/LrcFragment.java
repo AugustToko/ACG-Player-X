@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -84,6 +85,9 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
     @BindView(R.id.changeLrc)
     FloatingActionButton changeLrc;
 
+    @BindView(R.id.moreButton)
+    ImageButton moreButton;
+
     private List<Lrc> emptyList = new ArrayList<>();
 
     private DataViewModel dataViewModel;
@@ -125,6 +129,13 @@ public class LrcFragment extends AbsMainActivityFragment implements MusicService
                         , MusicPlayerRemote.getCurrentSong().albumId
                         , Pair.create(albumImage, getResources().getString(R.string.transition_album_art)))
         );
+
+        moreButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         getMainActivity().setLightStatusbar(false);
 

@@ -3,6 +3,11 @@
 *.apk
 *.ap_
 
+# custom files
+useless/
+music-sample/
+doc/
+
 # Files for the ART/Dalvik VM
 *.dex
 

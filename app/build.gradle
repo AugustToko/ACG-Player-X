@@ -184,7 +184,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.12.1'
     // 歌词
     implementation 'com.github.Lauzy:LyricView:1.0.4'
-    implementation project(path: ':flutter')
+//    implementation project(path: ':flutter')
 }
 
 repositories {

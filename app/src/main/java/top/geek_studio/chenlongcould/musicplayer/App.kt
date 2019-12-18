@@ -3,9 +3,6 @@ package top.geek_studio.chenlongcould.musicplayer
 import android.os.Build
 import androidx.multidex.MultiDexApplication
 import com.kabouzeid.appthemehelper.ThemeStore
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.FlutterEngineCache
-import io.flutter.embedding.engine.dart.DartExecutor
 import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.appshortcuts.DynamicShortcutManager
 

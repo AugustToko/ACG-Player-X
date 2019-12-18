@@ -11,40 +11,41 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SoundManager {
-	static private SoundPool soundPool;
-	static private WeakReference<Context> context;
-	static private Map<String, Integer> soundList;
+    static private SoundPool soundPool;
+    static private WeakReference<Context> context;
+    static private Map<String, Integer> soundList;
 
-	static public void init(Context c) {
+    static public void init(Context c) {
+        context = new WeakReference<>(c);
+        soundPool = new SoundPool(50, AudioManager.STREAM_MUSIC, 0);
+        soundList = new HashMap<>();
+    }
 
-		context = new WeakReference<>(c);
-		soundPool = new SoundPool(50, AudioManager.STREAM_MUSIC, 0);
-		soundList = new HashMap<>();
-	}
 
+    static public void load(String path) {
+        if (soundList.containsKey(path)) return;
 
-	static public void load(String path) {
-		if (soundList.containsKey(path)) return;
+        try {
+            final AssetFileDescriptor assetFileDescritorArticle = context.get().getAssets().openFd(path);
+            int soundID = soundPool.load(assetFileDescritorArticle, 0);
+            soundList.put(path, soundID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-		try {
-			AssetFileDescriptor assetFileDescritorArticle = context.get().getAssets().openFd(path);
-			int soundID = soundPool.load(assetFileDescritorArticle, 0);
-			soundList.put(path, soundID);
-		} catch (IOException e) {
+    static public void play(String name) {
+        if (!soundList.containsKey(name)) return;
 
-			e.printStackTrace();
-		}
-	}
-
-	static public void play(String name) {
-		if (!soundList.containsKey(name)) return;
+        final Integer i = soundList.get(name);
+        if (i == null) return;
 
 //		soundPool.play(soundID, leftVolume, rightVolume, priority, loop, rate);
-		soundPool.play(soundList.get(name), 1f, 1f, 1, 0, 1);
-	}
+        soundPool.play(i, 1f, 1f, 1, 0, 1);
+    }
 
-	static public void release() {
-		soundList.clear();
-		soundPool.release();
-	}
+    static public void release() {
+        soundList.clear();
+        soundPool.release();
+    }
 }

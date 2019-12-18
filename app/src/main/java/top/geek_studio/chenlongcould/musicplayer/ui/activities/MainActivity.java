@@ -50,8 +50,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.flutter.embedding.android.FlutterActivity;
-import io.flutter.embedding.engine.FlutterEngineCache;
 import top.geek_studio.chenlongcould.musicplayer.App;
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 import top.geek_studio.chenlongcould.musicplayer.dialogs.ChangelogDialog;
@@ -536,8 +534,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     finish();
                     break;
                 case R.id.nav_debug: {
-                    startActivity(FlutterActivity.withCachedEngine("my_engine_id")
-                            .build(this));
+                    break;
                 }
             }
             return true;
