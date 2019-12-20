@@ -49,5 +49,4 @@ public class LAppDefine {
 	public static final int PRIORITY_IDLE = 1;
 	public static final int PRIORITY_NORMAL = 2;
 	public static final int PRIORITY_FORCE = 3;
-
 }

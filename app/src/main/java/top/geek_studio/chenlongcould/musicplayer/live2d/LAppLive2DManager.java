@@ -9,6 +9,7 @@ package top.geek_studio.chenlongcould.musicplayer.live2d;
 import android.app.Activity;
 import android.graphics.PixelFormat;
 import android.util.Log;
+import android.view.View;
 
 import top.geek_studio.chenlongcould.musicplayer.live2d.framework.jp.live2d.framework.L2DViewMatrix;
 import top.geek_studio.chenlongcould.musicplayer.live2d.framework.jp.live2d.framework.Live2DFramework;
@@ -76,22 +77,23 @@ public class LAppLive2DManager {
 
             reloadFlg = false;
 
-            int no = modelCount % 3;
+            int no = modelCount % 2;
 
             try {
                 switch (no) {
                     case 0:
                         releaseModel();
-                        models.add(new LAppModel());
-                        models.get(0).load(gl, LAppDefine.MODEL_HARU);
-                        models.get(0).feedIn();
+                        final LAppModel model = new LAppModel();
+                        model.load(gl, LAppDefine.MODEL_HARU);
+                        model.feedIn();
+                        models.add(model);
                         break;
                     case 1:
                         releaseModel();
-
-                        models.add(new LAppModel());
-                        models.get(0).load(gl, LAppDefine.MODEL_TERISA);
-                        models.get(0).feedIn();
+                        final LAppModel m2 = new LAppModel();
+                        m2.load(gl, LAppDefine.MODEL_TERISA);
+                        m2.feedIn();
+                        models.add(m2);
                         break;
 //					case 2:
 //						releaseModel();
@@ -189,7 +191,6 @@ public class LAppLive2DManager {
         return true;
     }
 
-
     public void flickEvent(float x, float y) {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "flick x:" + x + " y:" + y);
 
@@ -201,7 +202,6 @@ public class LAppLive2DManager {
         }
     }
 
-
     public void maxScaleEvent() {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "Max scale event.");
 
@@ -209,7 +209,6 @@ public class LAppLive2DManager {
             models.get(i).startRandomMotion(LAppDefine.MOTION_GROUP_PINCH_IN, LAppDefine.PRIORITY_NORMAL);
         }
     }
-
 
     public void minScaleEvent() {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "Min scale event.");
@@ -219,7 +218,6 @@ public class LAppLive2DManager {
         }
     }
 
-
     public void shakeEvent() {
         if (LAppDefine.DEBUG_LOG) Log.d(TAG, "Shake event.");
 
@@ -228,20 +226,17 @@ public class LAppLive2DManager {
         }
     }
 
-
     public void setAccel(float x, float y, float z) {
         for (int i = 0; i < models.size(); i++) {
             models.get(i).setAccel(x, y, z);
         }
     }
 
-
     public void setDrag(float x, float y) {
         for (int i = 0; i < models.size(); i++) {
             models.get(i).setDrag(x, y);
         }
     }
-
 
     public L2DViewMatrix getViewMatrix() {
         return view.getViewMatrix();
