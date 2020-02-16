@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/app/other_files/screen_shots/Promotional%20picture/Promotional%20picture_00036.png" hspace="10">
+
 # ACG Player X
 
 ## 酷安: https://www.coolapk.com/apk/209705
@@ -20,8 +22,6 @@
 ## Old Version: https://github.com/AugustToko/ACG-Player
 
 **A material designed local music player for Android.**
-
-<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/app/other_files/screen_shots/Promotional%20picture/Promotional%20picture_00036.png" hspace="10">
 
 ![Screenshots](./art/art.jpg?raw=true)
 
