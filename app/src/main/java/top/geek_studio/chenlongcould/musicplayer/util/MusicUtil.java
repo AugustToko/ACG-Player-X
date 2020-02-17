@@ -43,7 +43,7 @@ import top.geek_studio.chenlongcould.musicplayer.model.lyrics.AbsSynchronizedLyr
 
 /**
  * Music Util
- *
+ * <p>
  * 音乐工具合集
  *
  * @author chenlongcould (Modify)
@@ -98,7 +98,6 @@ public class MusicUtil {
      *
      * @param context ctx
      * @param artist  artist
-     *
      * @return info (string type)
      */
     @NonNull
@@ -117,7 +116,6 @@ public class MusicUtil {
      *
      * @param context ctx
      * @param album   album
-     *
      * @return info
      */
     @NonNull
@@ -134,7 +132,6 @@ public class MusicUtil {
      * 获取歌曲信息
      *
      * @param song song
-     *
      * @return info
      */
     @NonNull
@@ -149,7 +146,6 @@ public class MusicUtil {
      * 获取歌曲信息
      *
      * @param song song
-     *
      * @return info
      */
     @NonNull
@@ -171,7 +167,6 @@ public class MusicUtil {
      *
      * @param context ctx
      * @param songs   songs
-     *
      * @return playlist info
      */
     @NonNull
@@ -191,7 +186,6 @@ public class MusicUtil {
      *
      * @param context   ctx
      * @param songCount 歌曲数量
-     *
      * @return string
      */
     @NonNull
@@ -236,7 +230,6 @@ public class MusicUtil {
      * 获取可读的音乐时长
      *
      * @param songDurationMillis 音乐长度
-     *
      * @return 长度 (string)
      */
     public static String getReadableDurationString(long songDurationMillis) {
@@ -299,6 +292,7 @@ public class MusicUtil {
         values.put("_data", path);
 
         contentResolver.insert(artworkUri, values);
+        contentResolver.notifyChange(artworkUri, null);
     }
 
     /**
@@ -311,6 +305,7 @@ public class MusicUtil {
         final ContentResolver contentResolver = context.getContentResolver();
         final Uri localUri = Uri.parse("content://media/external/audio/albumart");
         contentResolver.delete(ContentUris.withAppendedId(localUri, albumId), null, null);
+        contentResolver.notifyChange(localUri, null);
     }
 
     /**
@@ -363,6 +358,8 @@ public class MusicUtil {
         }
         selection.append(")");
 
+        int deletedCount = 0;
+
         try {
             final Cursor cursor = context.getContentResolver().query(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection.toString(),
@@ -381,18 +378,18 @@ public class MusicUtil {
                     cursor.moveToNext();
                 }
 
-                // Step ic_launcher: Remove selected tracks from the database
-                // 从数据库中删除选定的曲目
-                context.getContentResolver().delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        selection.toString(), null);
-
-                // Step 3: Remove files from sdcard
+                // Step 2: Remove files from sdcard
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {
+                    final int id = cursor.getInt(0);
                     final String name = cursor.getString(1);
                     try { // File.delete can throw a security exception
                         final File f = new File(name);
-                        if (!f.delete()) {
+                        if (f.delete()) {
+                            // Step 3: Remove selected track from the database
+                            context.getContentResolver().delete(ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id), null, null);
+                            deletedCount++;
+                        } else {
                             // I'm not sure if we'd ever get4LastFM here (deletion would
                             // have to fail, but no exception thrown)
                             Log.e("MusicUtils", "Failed to delete file " + name);
@@ -406,8 +403,7 @@ public class MusicUtil {
                 }
                 cursor.close();
             }
-            context.getContentResolver().notifyChange(Uri.parse("content://media"), null);
-            Toast.makeText(context, context.getString(R.string.deleted_x_songs, songs.size()), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, context.getString(R.string.deleted_x_songs, deletedCount), Toast.LENGTH_SHORT).show();
         } catch (SecurityException ignored) {
             // ...
         }
@@ -427,7 +423,6 @@ public class MusicUtil {
      * 获取喜爱列表
      *
      * @param context ctx
-     *
      * @return playlist
      */
     private static Playlist getFavoritesPlaylist(@NonNull final Context context) {
@@ -448,7 +443,6 @@ public class MusicUtil {
      *
      * @param context ctx
      * @param song    song
-     *
      * @return bool
      */
     public static boolean isFavorite(@NonNull final Context context, @NonNull final Song song) {
@@ -475,7 +469,6 @@ public class MusicUtil {
      * 用于检测元数据不完整歌曲, 或某些看似是歌曲的 mp3 文件
      *
      * @param artistName artist
-     *
      * @return bool
      */
     public static boolean isArtistNameUnknown(@Nullable String artistName) {
@@ -502,7 +495,6 @@ public class MusicUtil {
      * 获取歌词
      *
      * @param song song
-     *
      * @return 歌词
      */
     @Nullable

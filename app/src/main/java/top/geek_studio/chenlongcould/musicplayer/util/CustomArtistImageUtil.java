@@ -1,10 +1,13 @@
 package top.geek_studio.chenlongcould.musicplayer.util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -65,102 +68,45 @@ public class CustomArtistImageUtil {
 
                     @Override
                     public void onResourceReady(final Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                        CustomThreadPool.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                File dir = new File(App.Companion.getInstance().getFilesDir(), FOLDER_NAME);
-                                if (!dir.exists()) {
-                                    if (!dir.mkdirs()) { // create the folder
-                                        return;
-                                    }
-                                }
-                                File file = new File(dir, getFileName(artist));
-
-                                boolean succesful = false;
-                                try {
-                                    OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-                                    succesful = ImageUtil.resizeBitmap(resource, 2048).compress(Bitmap.CompressFormat.JPEG, 100, os);
-                                    os.close();
-                                } catch (IOException e) {
-                                    Toast.makeText(App.Companion.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
-                                }
-
-                                if (succesful) {
-                                    mPreferences.edit().putBoolean(getFileName(artist), true).commit();
-                                    ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
-                                    App.Companion.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+                        CustomThreadPool.post(() -> {
+                            File dir = new File(App.Companion.getInstance().getFilesDir(), FOLDER_NAME);
+                            if (!dir.exists()) {
+                                if (!dir.mkdirs()) { // create the folder
+                                    return;
                                 }
                             }
-                        });
+                            File file = new File(dir, getFileName(artist));
 
-//                        new AsyncTask<Void, Void, Void>() {
-//                            @SuppressLint("ApplySharedPref")
-//                            @Override
-//                            protected Void doInBackground(Void... params) {
-//                                File dir = new File(App.getInstance().getFilesDir(), FOLDER_NAME);
-//                                if (!dir.exists()) {
-//                                    if (!dir.mkdirs()) { // create the folder
-//                                        return null;
-//                                    }
-//                                }
-//                                File file = new File(dir, getFileName(artist));
-//
-//                                boolean succesful = false;
-//                                try {
-//                                    OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-//                                    succesful = ImageUtil.resizeBitmap(resource, 2048).compress(Bitmap.CompressFormat.JPEG, 100, os);
-//                                    os.close();
-//                                } catch (IOException e) {
-//                                    Toast.makeText(App.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
-//                                }
-//
-//                                if (succesful) {
-//                                    mPreferences.edit().putBoolean(getFileName(artist), true).commit();
-//                                    ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
-//                                    App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
-//                                }
-//                                return null;
-//                            }
-//                        }.execute();
+                            boolean succesful = false;
+                            try {
+                                OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+                                succesful = ImageUtil.resizeBitmap(resource, 2048).compress(Bitmap.CompressFormat.JPEG, 100, os);
+                                os.close();
+                            } catch (IOException e) {
+                                Toast.makeText(App.Companion.getInstance(), e.toString(), Toast.LENGTH_LONG).show();
+                            }
+
+                            if (succesful) {
+                                mPreferences.edit().putBoolean(getFileName(artist), true).commit();
+                                ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
+                                App.Companion.getInstance().getContentResolver().notifyChange(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, null); // trigger media store changed to force artist image reload
+                            }
+                        });
                     }
                 });
     }
 
     public void resetCustomArtistImage(final Artist artist) {
-        CustomThreadPool.post(new Runnable() {
-            @Override
-            public void run() {
-                mPreferences.edit().putBoolean(getFileName(artist), false).commit();
-                ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
-                App.Companion.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
+        CustomThreadPool.post(() -> {
+            mPreferences.edit().putBoolean(getFileName(artist), false).commit();
+            ArtistSignatureUtil.getInstance(App.Companion.getInstance()).updateArtistSignature(artist.getName());
+            App.Companion.getInstance().getContentResolver().notifyChange(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, null); // trigger media store changed to force artist image reload
 
-                final File file = getFile(artist);
-                if (!file.exists()) {
-                    return;
-                } else {
-                    file.delete();
-                }
-                return;
+            final File file = getFile(artist);
+            if (file.exists()) {
+                file.delete();
             }
         });
-
-//        new AsyncTask<Void, Void, Void>() {
-//            @SuppressLint("ApplySharedPref")
-//            @Override
-//            protected Void doInBackground(Void... params) {
-//                mPreferences.edit().putBoolean(getFileName(artist), false).commit();
-//                ArtistSignatureUtil.getInstance(App.getInstance()).updateArtistSignature(artist.getName());
-//                App.getInstance().getContentResolver().notifyChange(Uri.parse("content://media"), null); // trigger media store changed to force artist image reload
-//
-//                final File file = getFile(artist);
-//                if (!file.exists()) {
-//                    return null;
-//                } else {
-//                    file.delete();
-//                }
-//                return null;
-//            }
-//        }.execute();
     }
 
     // shared prefs saves us many IO operations
