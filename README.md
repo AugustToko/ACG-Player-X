@@ -1,4 +1,9 @@
+<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/app/other_files/screen_shots/Promotional%20picture/Promotional%20picture_00036.png" hspace="10">
+
 # ACG Player X
+
+### LingYun 工作室 (零昀)
+#### Android 下一款简洁的 Material Design 音乐播放器.
 
 ## 酷安: https://www.coolapk.com/apk/209705
 ## 手机乐园: https://soft.shouji.com.cn/down/1565093.html
@@ -6,13 +11,6 @@
 ## uptodown.com: 
 ## PlayStore: https://play.google.com/store/apps/details?id=top.geek_studio.chenlongcould.musicplayer.Common.ps
 ## catappult.io:
-## getjar.mobi:
-## f-droid.org:
-
-## ℃_C
-## chenlongcould
-## Geek Studio
-## Crypto Studio
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE.txt)
 
@@ -20,8 +18,6 @@
 ## Old Version: https://github.com/AugustToko/ACG-Player
 
 **A material designed local music player for Android.**
-
-<img src="https://raw.githubusercontent.com/AugustToko/ACG-Player/master/app/other_files/screen_shots/Promotional%20picture/Promotional%20picture_00036.png" hspace="10">
 
 ![Screenshots](./art/art.jpg?raw=true)
 
