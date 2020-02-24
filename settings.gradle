@@ -1,1 +1,2 @@
 include ':app', ':appthemehelper'
+rootProject.name = "ACG Player X"

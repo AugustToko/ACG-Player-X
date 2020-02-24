@@ -121,8 +121,8 @@ android {
 dependencies {
     implementation files('src/main/libs/live2d_android.jar')
     implementation 'androidx.core:core:1.2.0'
-    implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
-    implementation 'androidx.legacy:legacy-support-core-ui:1.0.0'
+//    implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
+//    implementation 'androidx.legacy:legacy-support-core-ui:1.0.0'
     implementation 'androidx.media:media:1.1.0'
     implementation 'androidx.fragment:fragment:1.2.2'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
