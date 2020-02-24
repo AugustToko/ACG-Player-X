@@ -112,8 +112,6 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
     AppCompatButton adrianWebsite;
     @BindView(R.id.hitokoto_website)
     AppCompatButton hitokotoWebsite;
-    @BindView(R.id.weiran_website)
-    AppCompatButton weiranWebsite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +167,6 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
         adrianTwitter.setOnClickListener(this);
         adrianWebsite.setOnClickListener(this);
         hitokotoWebsite.setOnClickListener(this);
-        weiranWebsite.setOnClickListener(this);
     }
 
     @Override
@@ -244,8 +241,6 @@ public class AboutActivity extends AbsBaseActivity implements View.OnClickListen
             openUrl(ADRIAN_WEBSITE);
         } else if (v == hitokotoWebsite) {
             openUrl(HITOKOTO_WEBSITE);
-        } else if (v == weiranWebsite) {
-            openUrl(WEIRAN_WEBSITE);
         }
     }
 
