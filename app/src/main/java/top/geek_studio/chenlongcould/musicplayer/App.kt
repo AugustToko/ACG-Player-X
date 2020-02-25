@@ -31,19 +31,6 @@ class App : MultiDexApplication() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             DynamicShortcutManager(this).initDynamicShortcuts()
         }
-
-//        // Instantiate a FlutterEngine.
-//        flutterEngine = FlutterEngine(this)
-//
-//        // Start executing Dart code to pre-warm the FlutterEngine.
-//        flutterEngine.dartExecutor.executeDartEntrypoint(
-//                DartExecutor.DartEntrypoint.createDefault()
-//        )
-//
-//        // Cache the FlutterEngine to be used by FlutterActivity.
-//        FlutterEngineCache
-//                .getInstance()
-//                .put("my_engine_id", flutterEngine)
     }
 
 
@@ -60,10 +47,6 @@ class App : MultiDexApplication() {
          */
         val isProVersion: Boolean
             get() = true
-
-//        val flutterEngineId = "my_engine_id"
-
-//        lateinit var flutterEngine: FlutterEngine
     }
 
 }
