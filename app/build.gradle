@@ -65,11 +65,11 @@ android {
         }
 
         release4GooglePlay {
-            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
-            keyAlias getProperty(properties, 'keyAlias')
-            storePassword getProperty(properties, 'storePassword')
-            keyPassword getProperty(properties, 'keyPassword')
+//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
+//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
+//            keyAlias getProperty(properties, 'keyAlias')
+//            storePassword getProperty(properties, 'storePassword')
+//            keyPassword getProperty(properties, 'keyPassword')
         }
     }
     buildTypes {
