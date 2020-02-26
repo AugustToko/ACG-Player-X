@@ -42,7 +42,7 @@ static def getProperty(@Nullable Properties properties, String name) {
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '29.0.2'
+    buildToolsVersion '29.0.3'
     defaultConfig {
         multiDexEnabled = true
         minSdkVersion 16
@@ -57,19 +57,19 @@ android {
     }
     signingConfigs {
         release {
-//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould.jks')
-//            keyAlias getProperty(properties, 'keyAlias')
-//            storePassword getProperty(properties, 'storePassword')
-//            keyPassword getProperty(properties, 'keyPassword')
+            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
+            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould.jks')
+            keyAlias getProperty(properties, 'keyAlias')
+            storePassword getProperty(properties, 'storePassword')
+            keyPassword getProperty(properties, 'keyPassword')
         }
 
         release4GooglePlay {
-//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
-//            keyAlias getProperty(properties, 'keyAlias')
-//            storePassword getProperty(properties, 'storePassword')
-//            keyPassword getProperty(properties, 'keyPassword')
+            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
+            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
+            keyAlias getProperty(properties, 'keyAlias')
+            storePassword getProperty(properties, 'storePassword')
+            keyPassword getProperty(properties, 'keyPassword')
         }
     }
     buildTypes {
