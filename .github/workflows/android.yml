@@ -14,7 +14,7 @@ jobs:
         with:
           java-version: 1.8
       - name: Decrypt large secret
-        run: ./.github/scripts/decrypt_secret.sh
+        run: ./.github/scripts/ds.sh
         env:
           LARGE_SECRET_PASSPHRASE: ${{ secrets.KEY_PASS }}
       - name: Build with Gradle
