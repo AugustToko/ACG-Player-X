@@ -57,8 +57,8 @@ android {
     }
     signingConfigs {
         release {
-            Properties properties = getProperties('..\\.github\\workflows\\keystore.properties')
-            storeFile file('..\\.github\\workflows\\key.jks')
+            Properties properties = getProperties('$GITHUB_WORKSPACE\\.github\\workflows\\keystore.properties')
+            storeFile file('$GITHUB_WORKSPACE\\.github\\workflows\\key.jks')
             keyAlias getProperty(properties, 'keyAlias')
             storePassword getProperty(properties, 'storePassword')
             keyPassword getProperty(properties, 'keyPassword')
