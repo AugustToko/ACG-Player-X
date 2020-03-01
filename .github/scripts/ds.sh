@@ -2,7 +2,7 @@
 
 # Decrypt the file
 gpg --quiet --batch --yes --decrypt --passphrase="$LARGE_SECRET_PASSPHRASE" \
---output $GITHUB_WORKSPACE/android/key.properties $GITHUB_WORKSPACE/.github/secrets/keystore.properties.gpg
+--output $GITHUB_WORKSPACE/.github/secrets/keystore.properties $GITHUB_WORKSPACE/.github/secrets/keystore.properties.gpg
 
 echo "Decrypt key.properties done"
 
