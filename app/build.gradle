@@ -56,20 +56,26 @@ android {
         applicationIdSuffix = 'Common'
     }
     signingConfigs {
-        release {
-            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould.jks')
-            keyAlias getProperty(properties, 'keyAlias')
-            storePassword getProperty(properties, 'storePassword')
-            keyPassword getProperty(properties, 'keyPassword')
-        }
-
-        release4GooglePlay {
-            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
-            keyAlias getProperty(properties, 'keyAlias')
-            storePassword getProperty(properties, 'storePassword')
-            keyPassword getProperty(properties, 'keyPassword')
+//        release {
+//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
+//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould.jks')
+//            keyAlias getProperty(properties, 'keyAlias')
+//            storePassword getProperty(properties, 'storePassword')
+//            keyPassword getProperty(properties, 'keyPassword')
+//        }
+//
+//        release4GooglePlay {
+//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
+//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
+//            keyAlias getProperty(properties, 'keyAlias')
+//            storePassword getProperty(properties, 'storePassword')
+//            keyPassword getProperty(properties, 'keyPassword')
+//        }
+        demo {
+            storeFile file('..\\demo.jks')
+            storePassword '123456'
+            keyAlias 'key0'
+            keyPassword '123456'
         }
     }
     buildTypes {
@@ -77,18 +83,18 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.demo
         }
         debug {
             versionNameSuffix ' DEBUG (' + gitBranch() + ')'
         }
-        release4playstore {
-            applicationIdSuffix = '.ps'
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release4GooglePlay
-        }
+//        release4playstore {
+//            applicationIdSuffix = '.ps'
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            signingConfig signingConfigs.release4GooglePlay
+//        }
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
