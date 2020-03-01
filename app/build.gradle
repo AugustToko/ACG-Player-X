@@ -3,11 +3,11 @@ import javax.annotation.Nullable
 
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.firebase-perf'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-android'
-apply plugin: 'io.fabric'
 //apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'io.fabric'
 
 static def gitBranch() {
     def branch = 'GitHub'
@@ -56,14 +56,14 @@ android {
         applicationIdSuffix = 'Common'
     }
     signingConfigs {
-//        release {
-//            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
-//            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould.jks')
-//            keyAlias getProperty(properties, 'keyAlias')
-//            storePassword getProperty(properties, 'storePassword')
-//            keyPassword getProperty(properties, 'keyPassword')
-//        }
-//
+        release {
+            Properties properties = getProperties('..\\.github\\workflows\\keystore.properties')
+            storeFile file('..\\.github\\workflows\\key.jks')
+            keyAlias getProperty(properties, 'keyAlias')
+            storePassword getProperty(properties, 'storePassword')
+            keyPassword getProperty(properties, 'keyPassword')
+        }
+
 //        release4GooglePlay {
 //            Properties properties = getProperties('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\keystore.properties')
 //            storeFile file('C:\\Users\\chenlongcould\\Desktop\\AndroidStudio_KEY_Store\\as\\chenlongcould4googleplay.jks')
@@ -71,19 +71,13 @@ android {
 //            storePassword getProperty(properties, 'storePassword')
 //            keyPassword getProperty(properties, 'keyPassword')
 //        }
-        demo {
-            storeFile file('..\\demo.jks')
-            storePassword '123456'
-            keyAlias 'key0'
-            keyPassword '123456'
-        }
     }
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.demo
+            signingConfig signingConfigs.release
         }
         debug {
             versionNameSuffix ' DEBUG (' + gitBranch() + ')'
