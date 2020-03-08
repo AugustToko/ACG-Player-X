@@ -13,11 +13,9 @@ package top.geek_studio.chenlongcould.musicplayer.helper;
 
 import android.provider.MediaStore;
 
-import java.nio.file.AccessDeniedException;
-
 /**
  * Holds all of the sort orders for each list type.
- *
+ * <p>
  * 保存每个列表类型的所有排序顺序。
  *
  * @author chenlongcould (Modify)
@@ -93,10 +91,12 @@ public final class SortOrder {
         String SONG_YEAR = MediaStore.Audio.Media.YEAR + " DESC";
 
         /* Song sort order duration */
-        String SONG_DURATION = MediaStore.Audio.Media.DURATION + " DESC";
+        String SONG_DURATION_REV = MediaStore.Audio.Media.DURATION + " DESC";
+        String SONG_DURATION = MediaStore.Audio.Media.DURATION;
 
         /* Song sort order date */
-        String SONG_DATE = MediaStore.Audio.Media.DATE_ADDED + " DESC";
+        String SONG_DATE_REV = MediaStore.Audio.Media.DATE_ADDED + " DESC";
+        String SONG_DATE = MediaStore.Audio.Media.DATE_ADDED;
     }
 
     /**
@@ -114,7 +114,7 @@ public final class SortOrder {
                 + MediaStore.Audio.Media.DEFAULT_SORT_ORDER;
 
         /* Album song sort order duration */
-        String SONG_DURATION = SongSortOrder.SONG_DURATION;
+        String SONG_DURATION = SongSortOrder.SONG_DURATION_REV;
     }
 
     /**

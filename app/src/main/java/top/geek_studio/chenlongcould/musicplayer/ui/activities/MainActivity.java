@@ -199,7 +199,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             showChangelog();
         }
 
-        mViewModel = ViewModelProviders.of(this).get(DataViewModel.class);
+        mViewModel =  ViewModelProviders.of(this).get(DataViewModel.class);
 
         RemoteConfigUtil.checkAllowUseNetPlayer(mViewModel);
 
@@ -311,7 +311,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
             Toast.makeText(this, R.string.folder_view_is_a_pro_feature, Toast.LENGTH_LONG).show();
             startActivityForResult(new Intent(this, PurchaseActivity.class), PURCHASE_REQUEST);
             key = LIBRARY;
-        }
+    }
 
         // 更新最后选择
         PreferenceUtil.getInstance(this).setLastMusicChooser(key);
@@ -514,7 +514,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     handler.postDelayed(() -> startActivityForResult(new Intent(MainActivity.this, PurchaseActivity.class), PURCHASE_REQUEST), DRAWER_WAIT_TIME);
                     break;
                 case R.id.action_scan:
-                    new Handler().postDelayed(() -> {
+                    handler.postDelayed(() -> {
                         ScanMediaFolderChooserDialog dialog = ScanMediaFolderChooserDialog.create();
                         dialog.show(getSupportFragmentManager(), "SCAN_MEDIA_FOLDER_CHOOSER");
                     }, DRAWER_WAIT_TIME);
@@ -536,6 +536,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                 case R.id.nav_debug: {
                     break;
                 }
+                default:
+                    break;
             }
             return true;
         });

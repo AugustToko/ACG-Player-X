@@ -102,12 +102,12 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     protected String loadSortOrder() {
-        return PreferenceUtil.getInstance(getActivity()).getSongSortOrder();
+        return PreferenceUtil.getInstance(requireContext()).getSongSortOrder();
     }
 
     @Override
     protected void saveSortOrder(String sortOrder) {
-        PreferenceUtil.getInstance(getActivity()).setSongSortOrder(sortOrder);
+        PreferenceUtil.getInstance(requireContext()).setSongSortOrder(sortOrder);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     protected void saveGridSize(int gridSize) {
-        PreferenceUtil.getInstance(getActivity()).setSongGridSize(gridSize);
+        PreferenceUtil.getInstance(requireContext()).setSongGridSize(gridSize);
     }
 
     @Override
@@ -132,17 +132,17 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
 
     @Override
     protected void saveGridSizeLand(int gridSize) {
-        PreferenceUtil.getInstance(getActivity()).setSongGridSizeLand(gridSize);
+        PreferenceUtil.getInstance(requireContext()).setSongGridSizeLand(gridSize);
     }
 
     @Override
     public void saveUsePalette(boolean usePalette) {
-        PreferenceUtil.getInstance(getActivity()).setSongColoredFooters(usePalette);
+        PreferenceUtil.getInstance(requireContext()).setSongColoredFooters(usePalette);
     }
 
     @Override
     public boolean loadUsePalette() {
-        return PreferenceUtil.getInstance(getActivity()).songColoredFooters();
+        return PreferenceUtil.getInstance(requireContext()).songColoredFooters();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.library;
 
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,6 +29,7 @@ import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.common.ATHToolbarActivity;
 import com.kabouzeid.appthemehelper.util.TabLayoutUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.Util;
 
 /**
- * 媒体库 Fragment
+ * MainActivity -> 媒体库 Fragment -> 各个 Page
  */
 public class LibraryFragment extends AbsMainActivityFragment
         implements CabHolder, ViewPager.OnPageChangeListener,
@@ -299,7 +299,7 @@ public class LibraryFragment extends AbsMainActivityFragment
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(@NotNull Menu menu) {
         super.onPrepareOptionsMenu(menu);
         final Activity activity = getActivity();
         if (activity == null) return;
@@ -441,10 +441,10 @@ public class LibraryFragment extends AbsMainActivityFragment
     }
 
     /**
-     * 排序处理
+     * 排序处理菜单
      *
      * @param fragment      frag
-     * @param sortOrderMenu 子menu, (排序)
+     * @param sortOrderMenu 子 menu, (排序)
      */
     private void setUpSortOrderMenu(@NonNull AbsLibraryPagerRecyclerViewCustomGridSizeFragment fragment, @NonNull SubMenu sortOrderMenu) {
         // 获取排序
@@ -479,6 +479,14 @@ public class LibraryFragment extends AbsMainActivityFragment
                     .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_ALBUM));
             sortOrderMenu.add(0, R.id.action_song_sort_order_year, 4, R.string.sort_order_year)
                     .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_YEAR));
+            sortOrderMenu.add(0, R.id.action_song_sort_order_date, 5, R.string.sort_order_date)
+                    .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_DATE));
+            sortOrderMenu.add(0, R.id.action_song_sort_order_date_desc, 6, R.string.sort_order_date_desc)
+                    .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_DATE_REV));
+            sortOrderMenu.add(0, R.id.action_song_sort_order_duration, 7, R.string.sort_order_duration)
+                    .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_DURATION));
+            sortOrderMenu.add(0, R.id.action_song_sort_order_duration_desc, 8, R.string.sort_order_duration_desc)
+                    .setChecked(currentSortOrder.equals(SortOrder.SongSortOrder.SONG_DURATION_REV));
         }
 
         sortOrderMenu.setGroupCheckable(0, true, true);
@@ -533,6 +541,18 @@ public class LibraryFragment extends AbsMainActivityFragment
                 case R.id.action_song_sort_order_year:
                     sortOrder = SortOrder.SongSortOrder.SONG_YEAR;
                     break;
+                case R.id.action_song_sort_order_date:
+                    sortOrder = SortOrder.SongSortOrder.SONG_DATE;
+                    break;
+                case R.id.action_song_sort_order_date_desc:
+                    sortOrder = SortOrder.SongSortOrder.SONG_DATE_REV;
+                    break;
+                case R.id.action_song_sort_order_duration:
+                    sortOrder = SortOrder.SongSortOrder.SONG_DURATION;
+                    break;
+                case R.id.action_song_sort_order_duration_desc:
+                    sortOrder = SortOrder.SongSortOrder.SONG_DURATION_REV;
+                    break;
             }
         }
 
@@ -565,8 +585,6 @@ public class LibraryFragment extends AbsMainActivityFragment
      */
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        /////////
-
 //        if (position == 0) {
 //            appbar.setAlpha(positionOffset);
 //            if (positionOffset == 0) appbar.setVisibility(View.GONE);
@@ -612,7 +630,6 @@ public class LibraryFragment extends AbsMainActivityFragment
      * 获取 Fragment 对应 subtitle
      *
      * @param position pager index
-     *
      * @return subtitle
      */
     @NonNull

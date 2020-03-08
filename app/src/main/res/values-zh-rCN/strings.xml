@@ -301,4 +301,8 @@
     <string name="yuepic">乐图</string>
     <string name="netsearch">网络搜索</string>
     <string name="data_overview">数据概览</string>
+    <string name="sort_order_date">添加日期</string>
+    <string name="sort_order_date_desc">添加日期(倒序)</string>
+    <string name="sort_order_duration">时长</string>
+    <string name="sort_order_duration_desc">时长(倒序)</string>
 </resources>

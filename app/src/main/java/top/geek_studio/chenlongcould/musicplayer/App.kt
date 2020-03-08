@@ -33,7 +33,6 @@ class App : MultiDexApplication() {
         }
     }
 
-
     companion object {
 
         /**
