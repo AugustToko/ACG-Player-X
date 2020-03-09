@@ -156,8 +156,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         @Override
         public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
             // 设置模糊位移
-            MainActivity.super.setBlur(slideOffset, false);
-            MainActivity.super.translationRootView(slideOffset, 'x');
+            setBlur(slideOffset, false);
+            translationRootView(slideOffset, 'x');
         }
 
         @Override

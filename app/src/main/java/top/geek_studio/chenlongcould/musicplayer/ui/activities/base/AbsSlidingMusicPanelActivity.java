@@ -18,7 +18,9 @@ import androidx.annotation.LayoutRes;
 import androidx.fragment.app.Fragment;
 
 import com.github.mmin18.widget.RealtimeBlurView;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
+
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import butterknife.BindView;
@@ -63,7 +65,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 存储正在播放的音乐的数据
-     * */
+     */
     private NowPlayingScreen currentNowPlayingScreen;
 
     private AbsPlayerFragment playerFragment;
@@ -72,12 +74,12 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 值动画
-     * */
+     */
     private ValueAnimator navigationBarColorAnimator;
 
     /**
      * ARGB
-     * */
+     */
     private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
 
     /**
@@ -87,7 +89,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 覆盖模糊
-     * */
+     */
     private RealtimeBlurView realtimeBlurView;
 
     @Override
@@ -166,14 +168,14 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 设置拖动视图
-     * */
+     */
     public void setAntiDragView(View antiDragView) {
         slidingUpPanelLayout.setAntiDragView(antiDragView);
     }
 
     /**
      * 创建 view
-     * */
+     */
     protected abstract View createContentView();
 
     @Override
@@ -200,9 +202,9 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     /**
      * 当面板滑动时回调
      *
-     * @param panel 面板
+     * @param panel       面板
      * @param slideOffset 偏移值
-     * */
+     */
     @Override
     public void onPanelSlide(View panel, @FloatRange(from = 0, to = 1) float slideOffset) {
 
@@ -242,7 +244,6 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * @param transition  是否将 Activity ROOT view 位移
      */
     protected void setBlur(float slideOffset, boolean transition) {
-        if (!PreferenceUtil.getInstance(getApplicationContext()).isUseBlur()) return;
         realtimeBlurView.setVisibility(View.VISIBLE);
 
 //        if (slideOffset > 0) realtimeBlurView.setVisibility(View.VISIBLE);
@@ -250,7 +251,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
         realtimeBlurView.invalidate();
         if (transition) realtimeBlurView.setTranslationY(0 - slideOffset * 120);
-        realtimeBlurView.setAlpha((float) (slideOffset * 1.5));
+        realtimeBlurView.setAlpha((float) (PreferenceUtil.getInstance(getApplicationContext()).isUseBlur() ? (slideOffset * 1.5) : 0));
 //        realtimeBlurView.setBlurRadius(slideOffset * 50);
     }
 
@@ -270,10 +271,10 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     /**
      * 滑动面板状态改变
      *
-     * @param panel 面板
+     * @param panel         面板
      * @param previousState 之前状态
-     * @param newState 现在状态
-     * */
+     * @param newState      现在状态
+     */
     @Override
     public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
         switch (newState) {
@@ -301,7 +302,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 面板被折叠
      *
      * @param panel 面板
-     * */
+     */
     public void onPanelCollapsed(View panel) {
         // restore values
         super.setLightStatusbar(lightStatusbar);
@@ -317,7 +318,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 面板展开
      *
      * @param panel 面板
-     * */
+     */
     public void onPanelExpanded(View panel) {
         // setting fragments values
         int playerFragmentColor = playerFragment.getPaletteColor();
@@ -334,7 +335,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 设置 mini player alpha 值, 并进行判断是否需要隐藏
      *
      * @param progress 值
-     * */
+     */
     private void setMiniPlayerAlphaProgress(@FloatRange(from = 0, to = 1) float progress) {
         if (miniPlayerFragment.getView() == null) return;
         float alpha = 1 - progress;
@@ -347,21 +348,21 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 获取面板状态
      *
      * @return 面板状态
-     * */
+     */
     public SlidingUpPanelLayout.PanelState getPanelState() {
         return slidingUpPanelLayout == null ? null : slidingUpPanelLayout.getPanelState();
     }
 
     /**
      * 折叠面板
-     * */
+     */
     public void collapsePanel() {
         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
     }
 
     /**
      * 展开面板
-     * */
+     */
     public void expandPanel() {
         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
     }
@@ -370,7 +371,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 隐藏上拉
      *
      * @param hide 隐藏上拉
-     * */
+     */
     public void hideBottomBar(final boolean hide) {
         if (hide) {
             slidingUpPanelLayout.setPanelHeight(0);
@@ -390,7 +391,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 返回键
-     * */
+     */
     @Override
     public void onBackPressed() {
         if (!handleBackPress()) super.onBackPressed();
@@ -412,7 +413,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
     /**
      * 调色盘颜色变更回调
-     * */
+     */
     @Override
     public void onPaletteColorChanged() {
         if (getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
@@ -426,7 +427,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 设置状态颜色模式
      *
      * @param enabled isLight
-     * */
+     */
     @Override
     public void setLightStatusbar(boolean enabled) {
         lightStatusbar = enabled;
@@ -439,7 +440,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 设置导航栏颜色
      *
      * @param color 颜色
-     * */
+     */
     @Override
     public void setNavigationbarColor(int color) {
         this.navigationbarColor = color;
@@ -453,7 +454,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
      * 导航栏颜色动画
      *
      * @param color 目标色
-     * */
+     */
     private void animateNavigationBarColor(int color) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel();
