@@ -6,8 +6,10 @@ import android.app.Dialog;
 import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Environment;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -31,18 +33,24 @@ import androidx.transition.Fade;
 import com.afollestad.materialcab.MaterialCab;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.common.ATHToolbarActivity;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
+
 import top.geek_studio.chenlongcould.musicplayer.Common.R;
+
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,6 +62,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import top.geek_studio.chenlongcould.musicplayer.adapter.SongFileAdapter;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
+import top.geek_studio.chenlongcould.musicplayer.helper.SortOrder;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongMenuHelper;
 import top.geek_studio.chenlongcould.musicplayer.helper.menu.SongsMenuHelper;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.CabHolder;
@@ -78,6 +87,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
 
     protected static final String PATH = "path";
     protected static final String CRUMBS = "crumbs";
+    private static final String TAG = FoldersFragment.class.getSimpleName();
 
     private Unbinder unbinder;
 
@@ -101,8 +111,15 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
     private SongFileAdapter adapter;
     private MaterialCab cab;
 
-    public FoldersFragment() {
-    }
+    public static final String A_Z_ORDER = "FOLDERS_ORDER_A_Z";
+    public static final String Z_A_ORDER = "FOLDERS_ORDER_Z_A";
+    public static final String DATE_ORDER = "FOLDERS_ORDER_DATE";
+    public static final String DATE_ORDER_REV = "FOLDERS_ORDER_DATE_DESC";
+
+    /**
+     * 当前排序模式
+     */
+    private String currentSortOrder;
 
     public static FoldersFragment newInstance(Context context) {
         return newInstance(PreferenceUtil.getInstance(context).getStartDirectory());
@@ -153,6 +170,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
             breadCrumbs.restoreFromStateWrapper(savedInstanceState.getParcelable(CRUMBS));
             LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this);
         }
+        currentSortOrder = PreferenceUtil.getInstance(requireActivity()).getFolderSortOrder();
     }
 
     @Override
@@ -181,17 +199,17 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
     }
 
     private void setUpAppbarColor() {
-        int primaryColor = ThemeStore.primaryColor(getActivity());
+        int primaryColor = ThemeStore.primaryColor(requireActivity());
         appbar.setBackgroundColor(primaryColor);
         toolbar.setBackgroundColor(primaryColor);
         breadCrumbs.setBackgroundColor(primaryColor);
-        breadCrumbs.setActivatedContentColor(ToolbarContentTintHelper.toolbarTitleColor(getActivity(), primaryColor));
-        breadCrumbs.setDeactivatedContentColor(ToolbarContentTintHelper.toolbarSubtitleColor(getActivity(), primaryColor));
+        breadCrumbs.setActivatedContentColor(ToolbarContentTintHelper.toolbarTitleColor(requireActivity(), primaryColor));
+        breadCrumbs.setDeactivatedContentColor(ToolbarContentTintHelper.toolbarSubtitleColor(requireActivity(), primaryColor));
     }
 
     private void setUpToolbar() {
         toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
-        getActivity().setTitle(R.string.app_name);
+        requireActivity().setTitle(R.string.app_name);
         getMainActivity().setSupportActionBar(toolbar);
     }
 
@@ -200,7 +218,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
     }
 
     private void setUpRecyclerView() {
-        ViewUtil.setUpFastScrollRecyclerViewColor(getActivity(), recyclerView, ThemeStore.accentColor(getActivity()));
+        ViewUtil.setUpFastScrollRecyclerViewColor(getActivity(), recyclerView, ThemeStore.accentColor(requireActivity()));
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -259,16 +277,73 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NotNull Menu menu, @NotNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_folders, menu);
-        ToolbarContentTintHelper.handleOnCreateOptionsMenu(getActivity(), toolbar, menu, ATHToolbarActivity.getToolbarBackgroundColor(toolbar));
+        final Menu sortOrderMenu = menu.findItem(R.id.action_sort_folders_order).getSubMenu();
+        sortOrderMenu.clear();
+        sortOrderMenu.add(0, R.id.action_folders_sort_order_name, 0, R.string.sort_order_a_z)
+                .setChecked(currentSortOrder.equals(A_Z_ORDER));
+        sortOrderMenu.add(0, R.id.action_folders_sort_order_name_desc, 1, R.string.sort_order_z_a)
+                .setChecked(currentSortOrder.equals(Z_A_ORDER));
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            sortOrderMenu.add(0, R.id.action_folders_sort_order_date, 2, R.string.sort_order_date)
+                    .setChecked(currentSortOrder.equals(DATE_ORDER));
+            sortOrderMenu.add(0, R.id.action_folders_sort_order_date_desc, 3, R.string.sort_order_date_desc)
+                    .setChecked(currentSortOrder.equals(DATE_ORDER_REV));
+        }
+
+        sortOrderMenu.setGroupCheckable(0, true, true);
+        ToolbarContentTintHelper.handleOnCreateOptionsMenu(requireActivity(), toolbar, menu, ATHToolbarActivity.getToolbarBackgroundColor(toolbar));
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(@NotNull Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        ToolbarContentTintHelper.handleOnPrepareOptionsMenu(getActivity(), toolbar);
+        ToolbarContentTintHelper.handleOnPrepareOptionsMenu(requireActivity(), toolbar);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_go_to_start_directory:
+                setCrumb(new Crumb(FileUtil.safeGetCanonicalFile(PreferenceUtil.getInstance(requireActivity()).getStartDirectory())), true);
+                return true;
+            case R.id.action_scan:
+                Crumb crumb = getActiveCrumb();
+                if (crumb != null) {
+                    new ArrayListPathsAsyncTask(getActivity(), this::scanPaths).execute(new ArrayListPathsAsyncTask.LoadingInfo(crumb.getFile(), AUDIO_FILE_FILTER));
+                }
+                return true;
+            case R.id.action_folders_sort_order_date:
+                setAndSaveSortOrder(DATE_ORDER);
+                item.setChecked(true);
+                return true;
+            case R.id.action_folders_sort_order_date_desc:
+                setAndSaveSortOrder(DATE_ORDER_REV);
+                item.setChecked(true);
+                return true;
+            case R.id.action_folders_sort_order_name:
+                setAndSaveSortOrder(A_Z_ORDER);
+                item.setChecked(true);
+                return true;
+            case R.id.action_folders_sort_order_name_desc:
+                setAndSaveSortOrder(Z_A_ORDER);
+                item.setChecked(true);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * 设置和保存排序
+     */
+    private void setAndSaveSortOrder(final String order) {
+        currentSortOrder = order;
+        PreferenceUtil.getInstance(requireContext()).setFoldersSortOrder(order);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
     }
 
     public static final FileFilter AUDIO_FILE_FILTER = file -> !file.isHidden() && (file.isDirectory() ||
@@ -297,22 +372,6 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_go_to_start_directory:
-                setCrumb(new Crumb(FileUtil.safeGetCanonicalFile(PreferenceUtil.getInstance(getActivity()).getStartDirectory())), true);
-                return true;
-            case R.id.action_scan:
-                Crumb crumb = getActiveCrumb();
-                if (crumb != null) {
-                    new ArrayListPathsAsyncTask(getActivity(), this::scanPaths).execute(new ArrayListPathsAsyncTask.LoadingInfo(crumb.getFile(), AUDIO_FILE_FILTER));
-                }
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onFileSelected(File file) {
         final File canonicalFile = FileUtil.safeGetCanonicalFile(file); // important as we compare the path value later
         if (canonicalFile.isDirectory()) {
@@ -330,9 +389,9 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
                 if (startIndex > -1) {
                     MusicPlayerRemote.openQueue(songs, startIndex, true);
                 } else {
-                    Snackbar.make(coordinatorLayout, Html.fromHtml(String.format(getString(R.string.not_listed_in_media_store), canonicalFile.getName())), Snackbar.LENGTH_LONG)
+                    Snackbar.make(coordinatorLayout, Html.fromHtml(String.format(getString(R.string.not_listed_in_media_store), canonicalFile.getName())), BaseTransientBottomBar.LENGTH_LONG)
                             .setAction(R.string.action_scan, v -> scanPaths(new String[]{canonicalFile.getPath()}))
-                            .setActionTextColor(ThemeStore.accentColor(getActivity()))
+                            .setActionTextColor(ThemeStore.accentColor(requireActivity()))
                             .show();
                 }
             }).execute(new ListSongsAsyncTask.LoadingInfo(toList(canonicalFile.getParentFile()), fileFilter, getFileComparator()));
@@ -344,10 +403,10 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
         final int itemId = item.getItemId();
         new ListSongsAsyncTask(getActivity(), null, (songs, extra) -> {
             if (!songs.isEmpty()) {
-                SongsMenuHelper.handleMenuClick(getActivity(), songs, itemId);
+                SongsMenuHelper.handleMenuClick(requireActivity(), songs, itemId);
             }
             if (songs.size() != files.size()) {
-                Snackbar.make(coordinatorLayout, R.string.some_files_are_not_listed_in_the_media_store, Snackbar.LENGTH_LONG)
+                Snackbar.make(coordinatorLayout, R.string.some_files_are_not_listed_in_the_media_store, BaseTransientBottomBar.LENGTH_LONG)
                         .setAction(R.string.action_scan, v -> {
                             String[] paths = new String[files.size()];
                             for (int i = 0; i < files.size(); i++) {
@@ -355,7 +414,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
                             }
                             scanPaths(paths);
                         })
-                        .setActionTextColor(ThemeStore.accentColor(getActivity()))
+                        .setActionTextColor(ThemeStore.accentColor(requireActivity()))
                         .show();
             }
         }).execute(new ListSongsAsyncTask.LoadingInfo(files, AUDIO_FILE_FILTER, getFileComparator()));
@@ -373,8 +432,36 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
         } else if (!lhs.isDirectory() && rhs.isDirectory()) {
             return 1;
         } else {
-            return lhs.getName().compareToIgnoreCase
-                    (rhs.getName());
+            switch (currentSortOrder) {
+                case A_Z_ORDER:
+                    return lhs.getName().compareToIgnoreCase(rhs.getName());
+                case Z_A_ORDER:
+                    return -lhs.getName().compareToIgnoreCase(rhs.getName());
+                case DATE_ORDER:
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        try {
+                            final BasicFileAttributes att_lhs = Files.readAttributes(lhs.toPath(), BasicFileAttributes.class);
+                            final BasicFileAttributes att_rhs = Files.readAttributes(rhs.toPath(), BasicFileAttributes.class);
+
+                            return att_lhs.creationTime().toMillis() > att_rhs.creationTime().toMillis() ? -1 : 1;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                case DATE_ORDER_REV:
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        try {
+                            final BasicFileAttributes att_lhs = Files.readAttributes(lhs.toPath(), BasicFileAttributes.class);
+                            final BasicFileAttributes att_rhs = Files.readAttributes(rhs.toPath(), BasicFileAttributes.class);
+
+                            return att_lhs.creationTime().toMillis() < att_rhs.creationTime().toMillis() ? -1 : 1;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                default:
+                    return lhs.getName().compareToIgnoreCase(rhs.getName());
+            }
         }
     };
 
@@ -396,12 +483,12 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
                     case R.id.action_delete_from_device:
                         new ListSongsAsyncTask(getActivity(), null, (songs, extra) -> {
                             if (!songs.isEmpty()) {
-                                SongsMenuHelper.handleMenuClick(getActivity(), songs, itemId);
+                                SongsMenuHelper.handleMenuClick(requireActivity(), songs, itemId);
                             }
                         }).execute(new ListSongsAsyncTask.LoadingInfo(toList(file), AUDIO_FILE_FILTER, getFileComparator()));
                         return true;
                     case R.id.action_set_as_start_directory:
-                        PreferenceUtil.getInstance(getActivity()).setStartDirectory(file);
+                        PreferenceUtil.getInstance(requireActivity()).setStartDirectory(file);
                         Toast.makeText(getActivity(), String.format(getString(R.string.new_start_directory), file.getPath()), Toast.LENGTH_SHORT).show();
                         return true;
                     case R.id.action_scan:
@@ -427,11 +514,11 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
                     case R.id.action_delete_from_device:
                         new ListSongsAsyncTask(getActivity(), null, (songs, extra) -> {
                             if (!songs.isEmpty()) {
-                                SongMenuHelper.handleMenuClick(getActivity(), songs.get(0), itemId);
+                                SongMenuHelper.handleMenuClick(requireActivity(), songs.get(0), itemId);
                             } else {
                                 Snackbar.make(coordinatorLayout, Html.fromHtml(String.format(getString(R.string.not_listed_in_media_store), file.getName())), Snackbar.LENGTH_LONG)
                                         .setAction(R.string.action_scan, v -> scanPaths(new String[]{FileUtil.safeGetCanonicalPath(file)}))
-                                        .setActionTextColor(ThemeStore.accentColor(getActivity()))
+                                        .setActionTextColor(ThemeStore.accentColor(requireActivity()))
                                         .show();
                             }
                         }).execute(new ListSongsAsyncTask.LoadingInfo(toList(file), AUDIO_FILE_FILTER, getFileComparator()));
@@ -474,6 +561,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
         }
     }
 
+    @NotNull
     @Override
     public Loader<List<File>> onCreateLoader(int id, Bundle args) {
         return new AsyncFileLoader(this);
@@ -489,6 +577,9 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
         updateAdapter(new LinkedList<>());
     }
 
+    /**
+     * Loader
+     */
     private static class AsyncFileLoader extends WrappedAsyncTaskLoader<List<File>> {
         private WeakReference<FoldersFragment> fragmentWeakReference;
 
@@ -499,16 +590,16 @@ public class FoldersFragment extends AbsMainActivityFragment implements CabHolde
 
         @Override
         public List<File> loadInBackground() {
-            FoldersFragment foldersFragment = fragmentWeakReference.get();
+            final FoldersFragment foldersFragment = fragmentWeakReference.get();
             File directory = null;
             if (foldersFragment != null) {
-                Crumb crumb = foldersFragment.getActiveCrumb();
+                final Crumb crumb = foldersFragment.getActiveCrumb();
                 if (crumb != null) {
                     directory = crumb.getFile();
                 }
             }
             if (directory != null) {
-                List<File> files = FileUtil.listFiles(directory, AUDIO_FILE_FILTER);
+                final List<File> files = FileUtil.listFiles(directory, AUDIO_FILE_FILTER);
                 Collections.sort(files, foldersFragment.getFileComparator());
                 return files;
             } else {

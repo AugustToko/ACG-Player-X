@@ -45,6 +45,7 @@ public final class PreferenceUtil {
     public static final String ALBUM_SORT_ORDER = "album_sort_order";
     public static final String ALBUM_SONG_SORT_ORDER = "album_song_sort_order";
     public static final String SONG_SORT_ORDER = "song_sort_order";
+    public static final String FOLDERS_SORT_ORDER = "folders_sort_order";
     public static final String GENRE_SORT_ORDER = "genre_sort_order";
 
     public static final String ALBUM_GRID_SIZE = "album_grid_size";
@@ -298,9 +299,19 @@ public final class PreferenceUtil {
         return mPreferences.getString(SONG_SORT_ORDER, SortOrder.SongSortOrder.SONG_A_Z);
     }
 
+    public final String getFolderSortOrder() {
+        return mPreferences.getString(FOLDERS_SORT_ORDER, FoldersFragment.A_Z_ORDER);
+    }
+
     public void setSongSortOrder(final String sortOrder) {
         final SharedPreferences.Editor editor = mPreferences.edit();
         editor.putString(SONG_SORT_ORDER, sortOrder);
+        editor.commit();
+    }
+
+    public void setFoldersSortOrder(final String sortOrder) {
+        final SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putString(FOLDERS_SORT_ORDER, sortOrder);
         editor.commit();
     }
 

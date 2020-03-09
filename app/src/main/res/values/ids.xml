@@ -19,5 +19,10 @@
     <item name="action_song_sort_order_date" type="id" />
     <item name="action_song_sort_order_date_desc" type="id" />
 
+    <item name="action_folders_sort_order_name" type="id" />
+    <item name="action_folders_sort_order_name_desc" type="id" />
+    <item name="action_folders_sort_order_date" type="id" />
+    <item name="action_folders_sort_order_date_desc" type="id" />
+
     <item name="action_multi_select_adapter_check_all" type="id" />
 </resources>
