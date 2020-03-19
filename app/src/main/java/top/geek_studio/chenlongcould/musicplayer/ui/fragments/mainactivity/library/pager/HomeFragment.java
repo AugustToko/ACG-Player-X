@@ -2,17 +2,14 @@ package top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libr
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.Display;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -21,13 +18,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.common.views.ATEPrimaryTextView;
 import com.kabouzeid.appthemehelper.common.views.ATESecondaryTextView;
 
@@ -50,13 +44,9 @@ import top.geek_studio.chenlongcould.musicplayer.Constants;
 import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter;
 import top.geek_studio.chenlongcould.musicplayer.helper.MusicPlayerRemote;
 import top.geek_studio.chenlongcould.musicplayer.interfaces.TransDataCallback;
-import top.geek_studio.chenlongcould.musicplayer.live2d.LAppLive2DManager;
-import top.geek_studio.chenlongcould.musicplayer.live2d.LAppView;
-import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.FileManager;
-import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.SoundManager;
 import top.geek_studio.chenlongcould.musicplayer.loader.SongLoader;
 import top.geek_studio.chenlongcould.musicplayer.model.Hitokoto;
-import top.geek_studio.chenlongcould.musicplayer.model.Home;
+import top.geek_studio.chenlongcould.musicplayer.model.HomeData;
 import top.geek_studio.chenlongcould.musicplayer.model.Playlist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.HistoryPlaylist;
 import top.geek_studio.chenlongcould.musicplayer.model.smartplaylist.LastAddedPlaylist;
@@ -67,7 +57,9 @@ import top.geek_studio.chenlongcould.musicplayer.ui.fragments.mainactivity.libra
 import top.geek_studio.chenlongcould.musicplayer.util.Compressor;
 import top.geek_studio.chenlongcould.musicplayer.util.HitokotoUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.MatDialogUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.MusicUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.NavigationUtil;
+import top.geek_studio.chenlongcould.musicplayer.util.PlaylistsUtil;
 import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil;
 import top.geek_studio.chenlongcould.musicplayer.views.CircularImageView;
 import top.geek_studio.chenlongcould.musicplayer.views.RetroChip;
@@ -76,7 +68,6 @@ import top.geek_studio.chenlongcould.musicplayer.views.RetroChip;
  * HomePage
  *
  * @author : chenlongcould
- * @date : 2019/10/03/10
  */
 public class HomeFragment extends AbsLibraryPagerFragment {
 
@@ -113,14 +104,14 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     ///////////////////// HITOKOTO VIEW /////////////////
 
-    /**
-     * 监听 UserData
-     */
-    private Observer<FirebaseUser> userObserver = firebaseUser -> {
-        if (firebaseUser == null) {
-            setUpUserData();
-        }
-    };
+//    /**
+//     * 监听 UserData
+//     */
+//    private Observer<FirebaseUser> userObserver = firebaseUser -> {
+//        if (firebaseUser == null) {
+//            setUpUserData();
+//        }
+//    };
 
     /**
      * Disp
@@ -129,8 +120,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     @Override
     public String getSubTitle() {
-        if (isAdded()) return getString(R.string.home);
-        else return "Home";
+        return getString(R.string.home);
     }
 
     @Nullable
@@ -174,49 +164,48 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 return false;
             });
 
-            userInfoContainer.setOnClickListener(v -> {
-
-//                try {
-//                    //包名
-//                    String pkName = appCompatActivity.getPackageName();
-//                    //versionName
-//                    String versionName = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionName;
-//                    //versionCode
-//                    int versionCode = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionCode;
-//                } catch (Exception e) {
-//                    e.printStackTrace();
+//            userInfoContainer.setOnClickListener(v -> {
+//
+////                try {
+////                    //包名
+////                    String pkName = appCompatActivity.getPackageName();
+////                    //versionName
+////                    String versionName = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionName;
+////                    //versionCode
+////                    int versionCode = appCompatActivity.getPackageManager().getPackageInfo(pkName, 0).versionCode;
+////                } catch (Exception e) {
+////                    e.printStackTrace();
+////                }
+//
+////                if ("zh-rCN".equals(Locale.getDefault().getCountry()) && !appCompatActivity.getPackageName().toLowerCase().contains("debug")) {
+////                    Toast.makeText(appCompatActivity, "Service is not available in your country/area.", Toast.LENGTH_SHORT).show();
+////                    return;
+////                }
+//
+//                final MainActivity mainActivity = getLibraryFragment().getMainActivity();
+//                FirebaseUser user = mainActivity.mViewModel.userData.getValue();
+//                if (user != null && user.getDisplayName() != null) {
+//                    new MaterialDialog.Builder(mainActivity)
+//                            .title("User Info")
+//                            .content(user.getDisplayName())
+//                            .negativeText("Logout")
+//                            .onNegative((dialog, which) -> mainActivity.logout())
+//                            .show();
+//                } else {
+//                    mainActivity.startLoginActivity();
 //                }
-
-//                if ("zh-rCN".equals(Locale.getDefault().getCountry()) && !appCompatActivity.getPackageName().toLowerCase().contains("debug")) {
-//                    Toast.makeText(appCompatActivity, "Service is not available in your country/area.", Toast.LENGTH_SHORT).show();
-//                    return;
-//                }
-
-                final MainActivity mainActivity = getLibraryFragment().getMainActivity();
-                FirebaseUser user = mainActivity.mViewModel.userData.getValue();
-                if (user != null && user.getDisplayName() != null) {
-                    new MaterialDialog.Builder(mainActivity)
-                            .title("User Info")
-                            .content(user.getDisplayName())
-                            .negativeText("Logout")
-                            .onNegative((dialog, which) -> mainActivity.logout())
-                            .show();
-                } else {
-                    mainActivity.startLoginActivity();
-                }
-            });
+//            });
 
             // 监听 userData, 同时设置 User
+//            appCompatActivity.mViewModel.userData.observeForever(userObserver);
+//
+//            final FirebaseUser user = appCompatActivity.mViewModel.userData.getValue();
 
-            appCompatActivity.mViewModel.userData.observeForever(userObserver);
-
-            final FirebaseUser user = appCompatActivity.mViewModel.userData.getValue();
-
-            if (user != null) {
-                setUpUserData(user);
-            } else {
-                setUpUserData();
-            }
+//            if (user != null) {
+//                setUpUserData(user);
+//            } else {
+            setUpUserData();
+//            }
 
         }
 
@@ -322,20 +311,20 @@ public class HomeFragment extends AbsLibraryPagerFragment {
 
     }
 
-    /**
-     * 设置 用户信息
-     *
-     * @param userData data
-     */
-    public void setUpUserData(@Nullable FirebaseUser userData) {
-        if (userData == null) {
-            setUpUserData();
-        } else {
-            userName.setText(userData.getDisplayName());
-            Uri uri = userData.getPhotoUrl();
-            if (uri != null) Glide.with(getActivity()).load(userData.getPhotoUrl()).into(userImage);
-        }
-    }
+//    /**
+//     * 设置 用户信息
+//     *
+//     * @param userData data
+//     */
+//    public void setUpUserData(@Nullable FirebaseUser userData) {
+//        if (userData == null) {
+//            setUpUserData();
+//        } else {
+//            userName.setText(userData.getDisplayName());
+//            Uri uri = userData.getPhotoUrl();
+//            if (uri != null) Glide.with(getActivity()).load(userData.getPhotoUrl()).into(userImage);
+//        }
+//    }
 
     private void setUpHomeData(@Nullable MainActivity activity) {
 
@@ -357,7 +346,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             activity.mViewModel.setArtistsUpdateObs(activity, data -> CustomThreadPool.post(() -> {
                 if (data.size() == 0) return;
 
-                final Home home = new Home(
+                final HomeData home = new HomeData(
                         0,
                         R.string.recent_artists,
                         0,
@@ -373,7 +362,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             activity.mViewModel.setAlbumsUpdateObs(activity, data -> CustomThreadPool.post(() -> {
                 if (data.size() == 0) return;
 
-                final Home home = new Home(
+                final HomeData home = new HomeData(
                         1,
                         R.string.recent_albums,
                         0,
@@ -390,15 +379,11 @@ public class HomeFragment extends AbsLibraryPagerFragment {
                 if (data.size() == 0) return;
 
                 final List<Playlist> playlists = new ArrayList<>();
+                playlists.add(MusicUtil.getFavoritesPlaylist(requireContext()));
 
-                for (Playlist p : data) {
-                    // ID 判断, 小于 0 为自创 playlist, 参考 AbsSmartPlaylist
-                    if (p.id > 0) playlists.add(p);
-                }
-
-                final Home home = new Home(
+                final HomeData home = new HomeData(
                         4,
-                        R.string.playlists,
+                        R.string.favorites,
                         0,
                         playlists,
                         HomeAdapter.PLAYLISTS,
@@ -491,22 +476,22 @@ public class HomeFragment extends AbsLibraryPagerFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).mViewModel.userData.removeObserver(userObserver);
-        }
+//        if (getActivity() instanceof MainActivity) {
+//            ((MainActivity) getActivity()).mViewModel.userData.removeObserver(userObserver);
+//        }
     }
 
     /**
      * 管理 Home 数据
      */
     private static class HomeDataManager {
-        private HashSet<Home> homeList = new HashSet<>();
+        private HashSet<HomeData> homeList = new HashSet<>();
 
-        private Home recentArtist;
+        private HomeData recentArtist;
 
-        private Home recentAlbum;
+        private HomeData recentAlbum;
 
-        private Home recentPlaylist;
+        private HomeData recentPlaylist;
 
         private HomeAdapter adapter;
 
@@ -514,7 +499,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             this.adapter = adapter;
         }
 
-        public synchronized void update(@NonNull final Activity activity, @NonNull Home home) {
+        public synchronized void update(@NonNull final Activity activity, @NonNull HomeData home) {
             boolean need = false;
 
             if (home.getHomeSection() == HomeAdapter.RECENT_ALBUMS) {
@@ -586,7 +571,7 @@ public class HomeFragment extends AbsLibraryPagerFragment {
             }
         }
 
-        private boolean isSame(Home h1, Home h2) {
+        private boolean isSame(HomeData h1, HomeData h2) {
             return h1.getArrayList().size() == h2.getArrayList().size() && h1.getHomeSection() == h2.getHomeSection();
         }
     }

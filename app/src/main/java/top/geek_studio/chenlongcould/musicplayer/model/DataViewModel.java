@@ -7,9 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.lauzy.freedom.library.Lrc;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -45,7 +42,7 @@ public class DataViewModel extends ViewModel {
      * */
     public MutableLiveData<Hitokoto> HitokotoData = new MutableLiveData<>();
 
-    public MutableLiveData<FirebaseUser> userData = new MutableLiveData<>();
+//    public MutableLiveData<FirebaseUser> userData = new MutableLiveData<>();
 
     public MutableLiveData<YuePic> yuePicData = new MutableLiveData<>();
 

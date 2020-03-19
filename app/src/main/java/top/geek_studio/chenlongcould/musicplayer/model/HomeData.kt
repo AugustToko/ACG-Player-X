@@ -26,11 +26,11 @@ import top.geek_studio.chenlongcould.musicplayer.adapter.HomeAdapter
  * @param homeSection
  * @param icon 图标
  * */
-class Home(val priority: Int,
-           @StringRes val title: Int,
-           @StringRes val subTitle: Int,
-           val arrayList: List<*>,
-           @HomeAdapter.Companion.HomeSection
+class HomeData(val priority: Int,
+               @StringRes val title: Int,
+               @StringRes val subTitle: Int,
+               val arrayList: List<*>,
+               @HomeAdapter.Companion.HomeSection
            val homeSection: Int,
-           @DrawableRes
+               @DrawableRes
            val icon: Int)

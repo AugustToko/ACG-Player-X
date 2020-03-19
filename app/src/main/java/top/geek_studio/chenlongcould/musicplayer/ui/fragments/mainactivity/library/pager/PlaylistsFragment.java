@@ -78,7 +78,6 @@ public class PlaylistsFragment extends AbsLibraryPagerRecyclerViewFragment<Playl
     @Override
     public void onMediaStoreChanged() {
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-//        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @NonNull

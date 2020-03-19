@@ -31,14 +31,9 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
-import com.firebase.ui.auth.AuthUI;
-import com.firebase.ui.auth.FirebaseUiException;
-import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
@@ -431,36 +426,36 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
                     checkSetUpPro();
                 }
                 break;
-            case RC_SIGN_IN:
-                IdpResponse response = IdpResponse.fromResultIntent(data);
-                if (resultCode == RESULT_OK) {
-                    Log.d(TAG, "onActivityResult: OK");
-                    // Successfully signed in
-                    final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                    if (user != null) {
-                        mViewModel.userData.postValue(user);
-
-                        if (currentFragment instanceof LibraryFragment) {
-                            final Fragment fragment = ((LibraryFragment) currentFragment).getCurrentFragment();
-                            if (fragment instanceof HomeFragment) {
-                                ((HomeFragment) fragment).setUpUserData(user);
-                            }
-                        }
-                    }
-                } else {
-                    // Sign in failed. If response is null the user canceled the
-                    // sign-in flow using the back button. Otherwise check
-                    // response.getError().getErrorCode() and handle the error.
-                    // ...
-                    Log.d(TAG, "onActivityResult: Failed");
-                    if (response != null) {
-                        FirebaseUiException exception = response.getError();
-                        if (exception != null) {
-                            Toast.makeText(this, exception.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-                break;
+//            case RC_SIGN_IN:
+//                IdpResponse response = IdpResponse.fromResultIntent(data);
+//                if (resultCode == RESULT_OK) {
+//                    Log.d(TAG, "onActivityResult: OK");
+//                    // Successfully signed in
+//                    final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//                    if (user != null) {
+//                        mViewModel.userData.postValue(user);
+//
+//                        if (currentFragment instanceof LibraryFragment) {
+//                            final Fragment fragment = ((LibraryFragment) currentFragment).getCurrentFragment();
+//                            if (fragment instanceof HomeFragment) {
+//                                ((HomeFragment) fragment).setUpUserData(user);
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    // Sign in failed. If response is null the user canceled the
+//                    // sign-in flow using the back button. Otherwise check
+//                    // response.getError().getErrorCode() and handle the error.
+//                    // ...
+//                    Log.d(TAG, "onActivityResult: Failed");
+//                    if (response != null) {
+//                        FirebaseUiException exception = response.getError();
+//                        if (exception != null) {
+//                            Toast.makeText(this, exception.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
+//                }
+//                break;
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -801,36 +796,36 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         }
     }
 
-    public void startLoginActivity() {
-        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.EmailBuilder().build(),
-                new AuthUI.IdpConfig.PhoneBuilder().build()
-//                        new AuthUI.IdpConfig.GoogleBuilder().build(),
-//                        new AuthUI.IdpConfig.FacebookBuilder().build(),
-//                        new AuthUI.IdpConfig.TwitterBuilder().build()
-        );
+//    public void startLoginActivity() {
+//        List<AuthUI.IdpConfig> providers = Arrays.asList(
+//                new AuthUI.IdpConfig.EmailBuilder().build(),
+//                new AuthUI.IdpConfig.PhoneBuilder().build()
+////                        new AuthUI.IdpConfig.GoogleBuilder().build(),
+////                        new AuthUI.IdpConfig.FacebookBuilder().build(),
+////                        new AuthUI.IdpConfig.TwitterBuilder().build()
+//        );
+//
+//        startActivityForResult(
+//                AuthUI.getInstance()
+//                        .createSignInIntentBuilder()
+//                        .setAvailableProviders(providers)
+//                        .setLogo(R.mipmap.ic_launcher_round)      // Set logo drawable
+//                        .setTheme(PreferenceUtil.getInstance(getApplicationContext()).getGeneralTheme())
+////                        .setTosAndPrivacyPolicyUrls(
+////                                "https://www.crypto-studio.com/acg-player/privacy-policy.html",
+////                                "https://www.crypto-studio.com/acg-player/privacy-policy.html")
+//                        .build(),
+//                MainActivity.RC_SIGN_IN);
+//    }
 
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .setLogo(R.mipmap.ic_launcher_round)      // Set logo drawable
-                        .setTheme(PreferenceUtil.getInstance(getApplicationContext()).getGeneralTheme())
-//                        .setTosAndPrivacyPolicyUrls(
-//                                "https://www.crypto-studio.com/acg-player/privacy-policy.html",
-//                                "https://www.crypto-studio.com/acg-player/privacy-policy.html")
-                        .build(),
-                MainActivity.RC_SIGN_IN);
-    }
-
-    /**
-     * 退出登陆
-     */
-    public void logout() {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(task -> mViewModel.userData.setValue(null));
-    }
+//    /**
+//     * 退出登陆
+//     */
+//    public void logout() {
+//        AuthUI.getInstance()
+//                .signOut(this)
+//                .addOnCompleteListener(task -> mViewModel.userData.setValue(null));
+//    }
 
     /**
      * 用于 Fragment 回调

@@ -21,7 +21,7 @@ import top.geek_studio.chenlongcould.musicplayer.util.PreferenceUtil
 
 class HomeAdapter(
         private val activity: AppCompatActivity,
-        private var homes: List<Home>,
+        private var homes: List<HomeData>,
         private val displayMetrics: DisplayMetrics
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -63,7 +63,7 @@ class HomeAdapter(
         return homes.size
     }
 
-    fun swapData(finalList: List<Home>) {
+    fun swapData(finalList: List<HomeData>) {
         homes = finalList
         notifyDataSetChanged()
     }
@@ -84,7 +84,7 @@ class HomeAdapter(
     }
 
     private inner class AlbumViewHolder(view: View) : AbsHomeViewItem(view) {
-        fun bindView(home: Home) {
+        fun bindView(home: HomeData) {
             if (home.arrayList.isEmpty()) return
 
             recyclerView.apply {
@@ -96,7 +96,7 @@ class HomeAdapter(
     }
 
     private inner class ArtistViewHolder(view: View) : AbsHomeViewItem(view) {
-        fun bindView(home: Home) {
+        fun bindView(home: HomeData) {
             if (home.arrayList.isEmpty()) return
 
             recyclerView.apply {
@@ -110,7 +110,7 @@ class HomeAdapter(
     }
 
     private inner class PlaylistViewHolder(view: View) : AbsHomeViewItem(view) {
-        fun bindView(home: Home) {
+        fun bindView(home: HomeData) {
             if (home.arrayList.isEmpty()) return
 
             val songs = PlaylistSongLoader.getPlaylistSongList(activity, (home.arrayList[0] as Playlist).id)
