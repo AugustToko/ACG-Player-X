@@ -35,6 +35,5 @@ class RetroChip @JvmOverloads constructor(
         chipIcon?.setTintList(ColorStateList.valueOf(iconColor))
         setTextColor(iconColor)
         chipStrokeColor = ColorStateList.valueOf(dividerColor)
-
     }
 }

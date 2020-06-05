@@ -1,6 +1,3 @@
-//noinspection GradleDependency
-import javax.annotation.Nullable
-
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.firebase-perf'
 //apply plugin: 'kotlin-kapt'
@@ -36,16 +33,16 @@ def getProperties(String fileName) {
     return properties
 }
 
-static def getProperty(@Nullable Properties properties, String name) {
+static def getProperty(Properties properties, String name) {
     return properties.getProperty(name) ?: "$name missing"
 }
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '29.0.2'
+    buildToolsVersion '29.0.3'
     defaultConfig {
         multiDexEnabled = true
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 29
         renderscriptTargetApi 29
         vectorDrawables.useSupportLibrary = true
@@ -124,17 +121,17 @@ dependencies {
 //    implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
 //    implementation 'androidx.legacy:legacy-support-core-ui:1.0.0'
     implementation 'androidx.media:media:1.1.0'
-    implementation 'androidx.fragment:fragment:1.2.2'
+    implementation 'androidx.fragment:fragment:1.2.4'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.gridlayout:gridlayout:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.palette:palette:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'com.google.android.material:material:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.percentlayout:percentlayout:1.0.0'
-    implementation 'androidx.preference:preference:1.1.0'
+    implementation 'androidx.preference:preference:1.1.1'
     implementation 'androidx.legacy:legacy-preference-v14:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.github.kabouzeid:app-theme-helper:1.3.10'
@@ -152,11 +149,11 @@ dependencies {
     implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar') {
         transitive = true
     }
-    implementation 'com.jakewharton:butterknife:10.2.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.6.2'
-    implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.jakewharton:butterknife:10.2.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+    implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.anjlab.android.iab.v3:library:1.1.0'
     implementation 'de.psdev.licensesdialog:licensesdialog:2.1.0'
     implementation 'com.github.bumptech.glide:glide:3.8.0'
@@ -169,20 +166,20 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // RX
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.13'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
     // Okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     // firebase
-    implementation 'com.google.firebase:firebase-analytics:17.2.2'
+    implementation 'com.google.firebase:firebase-analytics:17.4.3'
 //    implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
 //    implementation 'com.google.firebase:firebase-auth:19.2.0'
-    implementation 'com.google.firebase:firebase-database:19.2.1'
-    implementation 'com.google.firebase:firebase-core:17.2.2'
-    implementation 'com.google.firebase:firebase-perf:19.0.5'
+    implementation 'com.google.firebase:firebase-database:19.3.0'
+    implementation 'com.google.firebase:firebase-core:17.4.3'
+    implementation 'com.google.firebase:firebase-perf:19.0.7'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
-    implementation 'com.google.firebase:firebase-messaging:20.1.0'
-    implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.3'
-    implementation 'org.jsoup:jsoup:1.12.1'
+    implementation 'com.google.firebase:firebase-messaging:20.2.0'
+    implementation 'com.google.firebase:firebase-inappmessaging-display:19.0.7'
+    implementation 'org.jsoup:jsoup:1.13.1'
     // 歌词
     implementation 'com.github.Lauzy:LyricView:1.0.4'
 //    implementation project(path: ':flutter')

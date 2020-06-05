@@ -1,7 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer
 
+import android.app.Application
 import android.os.Build
-import androidx.multidex.MultiDexApplication
 import com.kabouzeid.appthemehelper.ThemeStore
 import top.geek_studio.chenlongcould.musicplayer.Common.R
 import top.geek_studio.chenlongcould.musicplayer.appshortcuts.DynamicShortcutManager
@@ -12,7 +12,7 @@ import top.geek_studio.chenlongcould.musicplayer.appshortcuts.DynamicShortcutMan
  * @author chenlongcould (Modify)
  * @author Karim Abou Zeid (kabouzeid)
  */
-class App : MultiDexApplication() {
+class App : Application() {
 
     override fun onCreate() {
         super.onCreate()

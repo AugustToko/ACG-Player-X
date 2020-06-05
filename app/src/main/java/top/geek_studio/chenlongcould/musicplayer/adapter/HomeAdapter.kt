@@ -111,7 +111,7 @@ class HomeAdapter(
 
     private inner class PlaylistViewHolder(view: View) : AbsHomeViewItem(view) {
         fun bindView(home: HomeData) {
-            if (home.arrayList.isEmpty()) return
+            if (home.arrayList.isEmpty() || (home.arrayList[0] as Playlist).id < 0) return
 
             val songs = PlaylistSongLoader.getPlaylistSongList(activity, (home.arrayList[0] as Playlist).id)
             recyclerView.apply {
