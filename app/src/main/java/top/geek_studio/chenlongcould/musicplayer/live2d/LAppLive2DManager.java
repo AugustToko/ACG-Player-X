@@ -11,6 +11,8 @@ import android.graphics.PixelFormat;
 import android.util.Log;
 import android.view.View;
 
+import androidx.annotation.Nullable;
+
 import top.geek_studio.chenlongcould.musicplayer.live2d.framework.jp.live2d.framework.L2DViewMatrix;
 import top.geek_studio.chenlongcould.musicplayer.live2d.framework.jp.live2d.framework.Live2DFramework;
 import top.geek_studio.chenlongcould.musicplayer.live2d.utils.android.FileManager;
@@ -20,7 +22,6 @@ import top.geek_studio.chenlongcould.musicplayer.threadPool.CustomThreadPool;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.annotation.Nullable;
 import javax.microedition.khronos.opengles.GL10;
 
 import jp.live2d.Live2D;
