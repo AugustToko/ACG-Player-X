@@ -24,6 +24,11 @@ data class UserPlaylist(
     val updatedAtMs: Long,
 )
 
+internal enum class PlaylistMoveDestination {
+    START,
+    END,
+}
+
 class PlaylistRepository(
     context: Context,
 ) {
@@ -130,6 +135,18 @@ class PlaylistRepository(
         }
     }
 
+    suspend fun replaceSongs(
+        playlistId: String,
+        mediaIds: Collection<String>,
+        nowMs: Long = System.currentTimeMillis(),
+    ) {
+        updatePlaylist(playlistId, nowMs) { _, target ->
+            target.copy(
+                mediaIds = appendPlaylistMediaIds(emptyList(), mediaIds),
+            )
+        }
+    }
+
     suspend fun removeSong(
         playlistId: String,
         mediaId: String,
@@ -137,7 +154,9 @@ class PlaylistRepository(
     ) {
         if (mediaId.isBlank()) return
         updatePlaylist(playlistId, nowMs) { _, target ->
-            target.copy(mediaIds = target.mediaIds.filterNot { it == mediaId })
+            target.copy(
+                mediaIds = removePlaylistMediaIds(target.mediaIds, listOf(mediaId)),
+            )
         }
     }
 
@@ -164,9 +183,7 @@ class PlaylistRepository(
         playlistId: String,
         nowMs: Long = System.currentTimeMillis(),
     ) {
-        updatePlaylist(playlistId, nowMs) { _, target ->
-            target.copy(mediaIds = emptyList())
-        }
+        replaceSongs(playlistId, emptyList(), nowMs)
     }
 
     suspend fun removeUnavailableSongs(
@@ -255,6 +272,36 @@ internal fun appendPlaylistMediaIds(
             .filter(seen::add)
             .forEach(::add)
     }
+
+internal fun removePlaylistMediaIds(
+    current: List<String>,
+    removals: Collection<String>,
+): List<String> {
+    if (current.isEmpty() || removals.isEmpty()) return current
+    val removalSet = removals.asSequence().filter(String::isNotBlank).toHashSet()
+    if (removalSet.isEmpty()) return current
+    return current.filterNot(removalSet::contains)
+}
+
+internal fun movePlaylistMediaIds(
+    current: List<String>,
+    movingMediaIds: Collection<String>,
+    destination: PlaylistMoveDestination,
+): List<String> {
+    if (current.size < 2 || movingMediaIds.isEmpty()) return current
+    val requested = movingMediaIds.asSequence().filter(String::isNotBlank).toHashSet()
+    if (requested.isEmpty()) return current
+
+    val moving = current.filter(requested::contains)
+    if (moving.isEmpty()) return current
+    val remaining = current.filterNot(requested::contains)
+    val reordered =
+        when (destination) {
+            PlaylistMoveDestination.START -> moving + remaining
+            PlaylistMoveDestination.END -> remaining + moving
+        }
+    return reordered.takeUnless { it == current } ?: current
+}
 
 internal fun swapPlaylistMediaIds(
     current: List<String>,
