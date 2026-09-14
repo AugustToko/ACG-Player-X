@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已经迁移到 **Jetpack Compose + Material 3 + Media3**，旧版 Java/XML/Fragment 实现保留为迁移参考，但不再参与默认构建。
 
-当前开发版本：**2.0.0-alpha04**。
+当前开发版本：**2.0.0-alpha05**。
 
 ## 当前能力
 
@@ -10,9 +10,12 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 - 使用 Android Storage Access Framework 持久授权一个或多个音乐目录
 - 未授予全盘媒体权限时，仍可只浏览和播放用户授权目录
 - 递归读取 MediaStore 未索引的音频，并与系统媒体库合并、去重
-- 按歌曲、专辑、艺术家和文件夹浏览
+- 按歌曲、收藏、最近播放、专辑、艺术家和文件夹浏览
 - 跨标题、艺术家、专辑、文件夹名称及可读目录路径搜索
 - 精确进入某张专辑、某位艺术家或某个文件夹，并可继续在集合内搜索
+- 收藏状态通过 DataStore 持久化，同时支持 MediaStore 与 SAF 曲目
+- 最近播放只在歌曲实际开始播放时记录，自动去重、最近优先，最多保留 100 首
+- 从桌面长按应用图标直接进入“收藏”或“最近播放”，冷启动和热启动均可正确路由
 - 读取真实专辑封面；任意文档 URI 支持音频内嵌封面回退、采样和 LRU 缓存
 - 监听 MediaStore 变化，新增、删除或修改音乐后自动去抖刷新
 - Media3 ExoPlayer 后台播放与 MediaSession 系统控制
@@ -27,7 +30,7 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 - Android 13+ 播放通知权限引导
 - Material 3 动态配色、亮色、深色与跟随系统主题
 - 手机底部导航与大屏 Navigation Rail 响应式布局
-- DataStore 设置和 SAF 目录列表持久化
+- DataStore 设置、SAF 目录、收藏和最近播放持久化
 
 ## 技术基线
 
@@ -50,10 +53,11 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 
 ```text
 modern-app/                       当前活动的 Compose 应用
-  src/main/kotlin/.../data/       MediaStore、SAF、路径解析与 DataStore
+  src/main/kotlin/.../data/       MediaStore、SAF、收藏/历史、路径与 DataStore
   src/main/kotlin/.../lyrics/     LRC 解析、内部缓存与歌词状态
   src/main/kotlin/.../model/      领域模型与 MediaItem 映射
   src/main/kotlin/.../playback/   Media3 服务、控制器、队列与状态恢复
+  src/main/kotlin/.../shortcuts/  Android 动态快捷入口
   src/main/kotlin/.../ui/         Compose 页面、封面和通用组件
 app/                              旧版应用源码，仅供迁移参考
 appthemehelper/                   旧版主题辅助源码，仅供迁移参考
@@ -72,7 +76,7 @@ Gradle 中逻辑模块仍为 `:app`，但通过 `settings.gradle.kts` 映射到 
   :app:assembleDebug
 ```
 
-GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、SAF 音频识别、稳定文档 ID、目录路径编码、跨来源去重，以及 LRC 时间轴和活动行匹配。
+GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、SAF 音频识别、稳定文档 ID、目录路径编码、跨来源去重、收藏切换、最近播放排序/上限，以及 LRC 时间轴和活动行匹配。
 
 ## 权限与本地数据
 
@@ -92,6 +96,14 @@ GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试
 
 当同一首歌同时存在于 MediaStore 和授权目录中时，应用优先保留 MediaStore 条目；重叠授权目录中的完全相同文档 URI 也会去重。失效授权、提供程序字段异常和扫描截断会显示在设置页，而不会阻塞其他可用音乐来源。
 
+## 收藏与最近播放语义
+
+收藏使用稳定媒体 ID 存储，因此 MediaStore 正数 ID 和 SAF 稳定负数 ID 可以共存。曲目暂时不可用时不会破坏收藏记录；当来源重新可用，曲目会再次出现在收藏列表。
+
+最近播放只在播放器真正进入播放状态时写入，不会把单纯恢复队列或停留在暂停状态的歌曲误记为已播放。同一曲目再次播放时会移动到列表首位而不会重复；历史最多保留 100 个媒体 ID。当前音乐来源中已不可用的历史项会在界面中过滤，但不会在读取时破坏性清除。
+
+收藏与最近播放都支持继续搜索，并以当前可见列表作为新的播放队列。桌面动态快捷入口通过统一的 `MainUiState` 导航状态路由，因此无论应用是否已经运行，都能进入正确页面。
+
 ## 播放与歌词恢复语义
 
 播放器会保存队列结构、当前索引、播放位置、随机模式和循环模式。队列只在时间线发生变化时写入，位置采用轻量周期保存，避免持续序列化大型音乐库。服务或进程重新创建后会恢复上下文并保持暂停，防止应用在后台无意自动出声。
@@ -100,7 +112,7 @@ GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试
 
 ## 迁移状态
 
-本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词和可视化队列已经迁入 Compose 模块。仍待迁移的重点包括歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
+本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词、可视化队列、收藏、最近播放和桌面快捷入口已经迁入 Compose 模块。仍待迁移的重点包括高级智能列表、歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
 
 - 详细技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
 - 功能差距矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
