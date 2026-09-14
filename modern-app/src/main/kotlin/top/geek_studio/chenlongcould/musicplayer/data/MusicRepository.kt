@@ -236,12 +236,17 @@ class MusicRepository(
 internal fun resolveMediaStoreDateMs(
     dateAddedSeconds: Long,
     dateModifiedSeconds: Long,
-): Long =
-    maxOf(dateAddedSeconds, dateModifiedSeconds)
-        .coerceAtLeast(0L)
-        .let { seconds ->
-            if (seconds == 0L || seconds > Long.MAX_VALUE / 1_000L) 0L else seconds * 1_000L
-        }
+): Long {
+    val seconds =
+        dateAddedSeconds
+            .takeIf { it > 0L }
+            ?: dateModifiedSeconds.coerceAtLeast(0L)
+    return if (seconds == 0L || seconds > Long.MAX_VALUE / 1_000L) {
+        0L
+    } else {
+        seconds * 1_000L
+    }
+}
 
 internal fun mergeMusicSources(
     mediaStoreSongs: List<Song>,
