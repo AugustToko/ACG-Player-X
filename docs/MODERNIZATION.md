@@ -35,6 +35,7 @@ MainActivity
   └── AcgPlayerApp
         ├── LibraryScreen
         ├── PlaylistsScreen
+        │     ├── M3U/M3U8 transfer bar
         │     ├── playlist overview
         │     ├── playlist detail
         │     └── searchable song picker
@@ -54,6 +55,8 @@ MainViewModel
 
 PlaylistViewModel
   ├── PlaylistRepository
+  ├── PlaylistTransferRepository
+  │     └── M3uPlaylistCodec
   └── PlayerConnection ── same MediaSession
 
 PlaybackService
@@ -66,14 +69,14 @@ PlaybackService
 
 `MainViewModel` 暴露 `StateFlow<MainUiState>`，负责音乐库、权限、授权目录、智能列表、主题、播放状态和歌词。主目的地由 `MainUiState.destination` 驱动，桌面快捷入口在 `MainActivity.onCreate()` 和 `onNewIntent()` 中转交 ViewModel。
 
-歌单使用独立 `PlaylistViewModel`，避免把所有歌单编辑状态继续塞进主 ViewModel。当前歌单入口由 Compose shell 的 `rememberSaveable` 控制，并拥有独立返回栈；后续可统一迁移到类型安全导航和可恢复 route。
+歌单使用独立 `PlaylistViewModel`，避免把所有歌单编辑和文件传输状态塞进主 ViewModel。当前歌单入口由 Compose shell 的 `rememberSaveable` 控制，并拥有独立返回栈；后续可统一迁移到类型安全导航和可恢复 route。
 
 ### 音乐来源链路
 
-- MediaStore 分版本读取 `RELATIVE_PATH` 或 `DATA`
+- MediaStore 分版本读取 `RELATIVE_PATH` 或 `DATA`，同时保留 `DISPLAY_NAME`
 - MediaStore 最近添加时间优先使用 `DATE_ADDED`，缺失时回退 `DATE_MODIFIED`
 - SAF 使用 OpenDocumentTree 持久只读授权
-- `DocumentTreeMusicScanner` 使用 DocumentsContract BFS
+- `DocumentTreeMusicScanner` 使用 DocumentsContract BFS，并保存文档显示名
 - 单目录限制 20,000 项、32 层，并检测已访问目录 ID
 - SAF 曲目通过完整 URI 的 SHA-256 生成稳定负数 ID
 - MediaStore 与 SAF 按 URI 和元数据指纹合并，冲突时优先 MediaStore
@@ -82,34 +85,35 @@ PlaybackService
 ### 自定义歌单链路
 
 ```text
-PlaylistsScreen
+PlaylistsScreen / PlaylistTransferBar
   ↓ events
 PlaylistViewModel
-  ↓ mutations / Flow
-PlaylistRepository
-  ↓
-Preferences DataStore (user_playlists)
+  ├── PlaylistRepository ── Preferences DataStore
+  └── PlaylistTransferRepository ── OpenDocument/CreateDocument
+                                      ↓
+                                M3uPlaylistCodec
 ```
 
-`UserPlaylist` 保存：
+`UserPlaylist` 保存 UUID、规范化名称、有序媒体 ID 列表以及创建/更新时间。歌单不直接保存文件路径或复制音频。MediaStore 正数 ID 和 SAF 稳定负数 ID 可以混排。解析时根据当前完整音乐库恢复歌曲对象；无法解析的项目保留在 DataStore 中，因此可移动存储恢复后歌曲会重新出现。
 
-- UUID 歌单 ID
-- 规范化名称
-- 有序媒体 ID 列表
-- 创建与更新时间
-
-歌单不直接保存文件路径或复制音频。MediaStore 正数 ID 和 SAF 稳定负数 ID 可以混排。解析时根据当前完整音乐库恢复歌曲对象；无法解析的项目保留在 DataStore 中，因此可移动存储恢复后歌曲会重新出现。
-
-歌单 mutation 包括：
-
-- 创建、重命名、删除
-- 单曲和批量添加，保持已有顺序并去重
-- 移出、清空、相邻/任意项目交换
-- 显式清理当前不可用项目
-
-名称会折叠连续空白、限制为 80 个字符，并进行忽略大小写的同名校验。持久格式转义换行、制表符、回车和反斜杠；解码器跳过损坏行而不阻塞其他歌单。
+歌单 mutation 包括创建、重命名、删除、单曲/批量添加、移出、清空、顺序交换和显式清理失效项目。名称会折叠连续空白、限制为 80 个字符，并进行忽略大小写的同名校验。持久格式转义换行、制表符、回车和反斜杠；解码器跳过损坏行而不阻塞其他歌单。
 
 歌单播放仍通过同一个 `MediaSessionService`。`PlaylistViewModel` 只负责把解析后的有序歌曲转换为 Media3 队列，不创建第二个 ExoPlayer。
+
+### M3U/M3U8 互操作链路
+
+导入通过 `OpenDocument`，单文件最大 4 MB，最多解析 20,000 个位置条目。解码优先 UTF-8/UTF-8 BOM，失败时回退 GB18030。解析器支持标准 `#EXTM3U`、`#PLAYLIST` 和 `#EXTINF`，忽略未知注释。
+
+匹配按可靠性递减：
+
+1. 当前设备存在的 `#ACGPLAYER-MEDIA-ID`
+2. 精确内容 URI
+3. 显示文件名与目录提示
+4. 标题、艺术家和允许 3 秒误差的时长
+
+多个候选无法唯一收敛时标记为歧义并跳过，不静默选错。重复媒体 ID按首次出现顺序去重。导入名称冲突时使用递增后缀。
+
+导出通过 `CreateDocument` 写入 UTF-8 M3U8。除标准 EXTINF 外，还写入可被第三方播放器安全忽略的 `#ACGPLAYER-MEDIA-ID`、文件名和目录注释。当前不可用项目使用 `acg-player://media/<id>` 占位，重新导入本应用时可恢复其顺序；其他播放器可忽略这些不可解析位置。
 
 ### 智能音乐库链路
 
@@ -156,17 +160,17 @@ Preferences DataStore (user_playlists)
 - 收藏、最近播放、最近添加、最常播放与未播放
 - 自定义歌单概览、详情、搜索和歌曲选择器
 - 歌单创建、重命名、删除、添加、移除、排序、清空和失效项清理
-- 歌单顺序播放与随机播放
+- 歌单顺序播放、随机播放和 M3U/M3U8 导入导出
 - 四个 Android 动态快捷入口
 - 真实/内嵌封面、迷你播放器和全屏播放页
 - Media3 队列编辑与恢复
 - 本地同步 LRC 歌词、点击跳转和偏移调整
-- 权限、空内容、错误、加载和 Provider warning 状态
+- 权限、空内容、错误、加载、传输结果和 Provider warning 状态
 
 尚未达到完整产品能力：
 
 - 发布级仪器化测试和性能基准
-- M3U/M3U8 歌单导入导出、拖拽、多选和撤销
+- 歌单拖拽、多选、撤销、导入预览/手工映射及历史 MediaStore Playlist 导入
 - SAF 增量索引、磁盘缓存和 Provider 变更监听
 - 规则智能列表与播放完成度统计
 - 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
@@ -184,6 +188,7 @@ Preferences DataStore (user_playlists)
 | 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC + Compose 同步列表 + 本地导入 |
 | 全盘扫描 / legacy storage | MediaStore + OpenDocumentTree |
 | MediaStore Playlist + Loader/Dialog | App-private PlaylistRepository + Compose 歌单 UI |
+| 无可移植歌单协议 | M3U/M3U8 codec + SAF 单文件导入导出 + 分层重匹配 |
 | 旧 Shortcut Launcher Activity | ViewModel route + MainActivity 冷/热 Intent |
 | 临时收藏/历史 | DataStore 收藏、最近播放与 PlaybackStats |
 | AppThemeHelper | Material 3 ColorScheme + DataStore |
@@ -196,7 +201,9 @@ Preferences DataStore (user_playlists)
 
 现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名和服务凭据。
 
-用户导入歌词仅保存到应用内部存储。SAF 只保存系统授予的目录 URI 和只读权限。收藏、历史、播放统计和歌单仅保存本地媒体标识及必要元数据，不上传行为数据，也不复制音频。
+用户导入歌词仅保存到应用内部存储。SAF 目录只保存系统授予的 URI 和只读权限。收藏、历史、播放统计和歌单仅保存本地媒体标识及必要元数据，不上传行为数据，也不复制音频。
+
+M3U 导入只读取用户显式选择的单个文档；导出只写入用户显式创建的目标文档。应用仍不申请共享存储写权限。
 
 ## 7. 验证门禁
 
@@ -215,23 +222,25 @@ CI 执行：
 - SAF 音频识别、稳定 ID、路径编码和跨来源去重
 - 收藏、最近播放、播放统计和智能列表排序
 - 歌单名称规范化、转义编解码、去重、顺序交换和失效项解析
+- M3U 标准字段、跨设备 ID 回退、文件名/元数据匹配、歧义保护、离线 ID 和安全文件名
 - LRC 时间线、偏移和活动行匹配
 
 合并前仍建议人工验收：
 
 1. Android 8、12、13、16/17 的媒体、通知和 SAF 权限流程
-2. SD 卡、USB、云盘和第三方 Provider 暂时离线后的歌单恢复
-3. 重名、特殊字符名称、损坏 DataStore 行和大型歌单
-4. 歌单批量添加、连续排序、清空、失效项清理和随机播放
-5. MediaSession、锁屏、蓝牙、音频焦点和服务重建
-6. 10,000 首混合库、数千首歌单、超大队列和封面内存压力
-7. 手机、平板、横屏、折叠屏、TalkBack 和高对比度
+2. 不同系统文件选择器与第三方 Provider 的 M3U 导入和 CreateDocument 覆盖行为
+3. VLC、foobar2000、AIMP 等生成的绝对路径、相对路径和 URI 歌单样本
+4. SD 卡、USB、云盘暂时离线后的歌单与离线 M3U ID 恢复
+5. 重名、特殊字符、损坏行、重复条目、歧义文件名和超限文件
+6. MediaSession、锁屏、蓝牙、音频焦点和服务重建
+7. 10,000 首混合库、数千首歌单、超大队列和封面内存压力
+8. 手机、平板、横屏、折叠屏、TalkBack 和高对比度
 
 ## 8. 后续优先级
 
 ### P0：发布可用性
 
-- MediaSession、OpenDocumentTree、歌单、快捷入口、歌词导入和进程回收仪器化测试
+- MediaSession、OpenDocumentTree、歌单/M3U、快捷入口、歌词导入和进程回收仪器化测试
 - Baseline Profile、Macrobenchmark、混合大库和大型歌单基准
 - SAF 权限撤销、文件移动和播放错误恢复
 - OEM 前台服务、通知与 Launcher 验证
@@ -239,7 +248,8 @@ CI 执行：
 ### P1：歌单与数据体验
 
 - 长按拖拽、批量选择、Snackbar 撤销
-- M3U/M3U8 导入导出与历史 MediaStore Playlist 只读导入
+- M3U 导入预览、歧义手工映射、可选相对路径导出
+- 历史 MediaStore Playlist 只读导入
 - 类型安全、可恢复的统一导航与歌单深链
 - 规则智能列表、播放完成度和时间窗口统计
 - SAF 增量索引、磁盘缓存与目录面包屑

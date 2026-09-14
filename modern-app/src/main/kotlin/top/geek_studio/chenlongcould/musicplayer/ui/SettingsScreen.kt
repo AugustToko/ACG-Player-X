@@ -165,6 +165,7 @@ fun SettingsScreen(
                     StatusItem("收藏歌曲", "$favoriteSongCount 首")
                     StatusItem("最近播放", "$recentSongCount 条")
                     StatusItem("自定义歌单", "$playlistCount 个")
+                    StatusItem("M3U / M3U8 互操作", "已启用")
                     StatusItem(
                         "播放通知权限",
                         if (notificationPermissionRequired) "未授予" else "已就绪",
@@ -192,6 +193,7 @@ fun SettingsScreen(
                     StatusItem("同步 LRC 歌词", "已迁移")
                     StatusItem("播放队列编辑", "已迁移")
                     StatusItem("自定义歌单", "已迁移")
+                    StatusItem("M3U / M3U8 导入导出", "已迁移")
                     StatusItem("收藏与最近播放", "已迁移")
                     StatusItem("最近添加 / 常听 / 未播放", "已迁移")
                     StatusItem("桌面长按快捷入口", "4 个")

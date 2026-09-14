@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用已经迁移到 **Jetpack Compose + Material 3 + Media3**；旧版 Java/XML/Fragment 源码仍保留为迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha07**。
+当前开发版本：**2.0.0-alpha08**。
 
 ## 当前能力
 
@@ -28,6 +28,9 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用已经迁
 - 统计可用歌曲、总时长和当前不可用项目
 - SAF 目录暂时离线或权限失效时，只隐藏当前不可用歌曲，不破坏歌单结构
 - 可显式清理当前不可用项目；不会删除设备上的音频文件
+- 通过系统文件选择器导入 M3U/M3U8，并导出标准 UTF-8 M3U8
+- 导入时按 ACG 媒体 ID、内容 URI、文件名/目录、标题/艺术家/时长逐级匹配；多候选时不会猜测
+- 导出时写入标准 `#EXTINF`，并附带可忽略的 ACG 元数据，以便跨 MediaStore、SAF、设备迁移和离线恢复
 
 ### 智能音乐库
 
@@ -59,6 +62,7 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用已经迁
 - Material 3 动态配色、亮色、深色与跟随系统主题
 - 手机 Bottom Navigation 与大屏 Navigation Rail 响应式布局
 - 独立歌单入口、歌单详情页和系统返回处理
+- 歌单页内置 M3U/M3U8 导入导出栏、导出选择器和结果提示
 - DataStore 设置、授权目录、歌单和本地音乐行为状态持久化
 
 ## 技术基线
@@ -82,7 +86,7 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用已经迁
 
 ```text
 modern-app/                       当前活动的 Compose 应用
-  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单与 DataStore
+  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U 与 DataStore
   src/main/kotlin/.../lyrics/     LRC 解析、内部缓存与歌词状态
   src/main/kotlin/.../model/      领域模型与 MediaItem 映射
   src/main/kotlin/.../playback/   Media3 服务、控制器、队列与状态恢复
@@ -105,27 +109,32 @@ Gradle 中逻辑模块仍为 `:app`，但通过 `settings.gradle.kts` 映射到 
   :app:assembleDebug
 ```
 
-GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、MediaStore 时间回退、SAF 音频识别、稳定文档 ID、跨来源去重、收藏、播放统计、智能列表、歌单编解码/顺序/失效项，以及 LRC 时间轴和活动行匹配。
+GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、MediaStore 时间回退、SAF 音频识别、稳定文档 ID、跨来源去重、收藏、播放统计、智能列表、歌单编解码/顺序/失效项、M3U 解析/重匹配/离线 ID 保留，以及 LRC 时间轴和活动行匹配。
 
 ## 权限与本地数据
 
 - Android 13 及以上系统媒体库：`READ_MEDIA_AUDIO`
 - Android 12L 及以下系统媒体库：`READ_EXTERNAL_STORAGE`
 - 用户指定目录：系统 `OpenDocumentTree` + 持久只读 URI 权限
+- M3U/M3U8：系统 `OpenDocument` 与 `CreateDocument`，仅访问用户选择的文件
 - Android 13 及以上播放通知：`POST_NOTIFICATIONS`
 - 后台播放：`FOREGROUND_SERVICE` 与 `FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
 系统媒体权限和 SAF 目录权限相互独立。用户可以不授予全盘媒体权限，只授权特定目录；应用会保存目录 URI，但不会上传路径或音频内容。移除目录时会释放对应持久权限。
 
-收藏、历史、播放统计和自定义歌单只保存在设备本地。歌单保存名称、时间戳和媒体 ID 顺序，不复制音乐文件。应用不请求写入共享存储、不启用明文网络，也不使用 `requestLegacyExternalStorage`。
+收藏、历史、播放统计和自定义歌单只保存在设备本地。歌单保存名称、时间戳和媒体 ID 顺序，不复制音乐文件。M3U 导入只读取用户选择的文件，导出只写入用户选择的目标。应用不请求写入共享存储、不启用明文网络，也不使用 `requestLegacyExternalStorage`。
 
-## 歌单语义
+## 歌单与 M3U 语义
 
 MediaStore 使用系统正数 ID，SAF 文档使用由 URI 派生的稳定负数 ID，因此二者可以出现在同一歌单中。歌单按照保存的媒体 ID 顺序解析当前可用歌曲。
 
 当 SD 卡、USB、云盘或 SAF 目录暂时不可访问时，歌单保留原始项目，界面只显示当前可播放内容并报告不可用数量。恢复来源后，对应歌曲会重新出现。只有用户主动选择“清理失效项”时，才会移除这些媒体 ID。
 
-同名歌单采用忽略大小写的唯一性校验；名称会折叠多余空白并限制为 80 个字符。歌单名称中的换行、制表符和反斜杠使用转义格式持久化。
+M3U8 导出以 UTF-8 写入标准 `#EXTM3U`、`#PLAYLIST` 与 `#EXTINF`。额外的 `#ACGPLAYER-*` 注释可被其他播放器安全忽略，同时保存媒体 ID、文件名和目录提示。当前不可用项目使用 `acg-player://media/<id>` 占位，因此重新导入本应用时仍可保留其顺序。
+
+导入支持 UTF-8、UTF-8 BOM，并在解码失败时回退 GB18030。匹配顺序为：当前设备可用的显式媒体 ID、精确内容 URI、文件名与目录、标题/艺术家/时长。存在多个候选时条目会被标记为歧义并跳过，不会静默选错歌曲。单文件限制为 4 MB，最多解析 20,000 条。
+
+同名导入歌单会自动生成递增后缀。歌单名称会折叠多余空白并限制为 80 个字符；名称中的换行、制表符和反斜杠使用转义格式持久化。
 
 ## 智能列表语义
 
@@ -141,9 +150,9 @@ MediaStore 使用系统正数 ID，SAF 文档使用由 URI 派生的稳定负数
 
 ## 迁移状态
 
-本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、自定义歌单、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词、可视化队列、收藏、最近播放和基础智能列表已经迁入 Compose 模块。
+本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、自定义歌单、M3U/M3U8 互操作、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词、可视化队列、收藏、最近播放和基础智能列表已经迁入 Compose 模块。
 
-仍待迁移的重点包括 M3U 导入导出、规则智能列表、歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
+仍待迁移的重点包括歌单拖拽/多选/撤销、历史 MediaStore Playlist 只读导入、规则智能列表、歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
 
 - 详细技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
 - 功能差距矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
