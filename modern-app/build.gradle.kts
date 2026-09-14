@@ -11,8 +11,8 @@ android {
         applicationId = "top.geek_studio.chenlongcould.musicplayer"
         minSdk = 23
         targetSdk = 37
-        versionCode = 210
-        versionName = "2.0.0-alpha11"
+        versionCode = 211
+        versionName = "2.0.0-alpha12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -59,7 +59,18 @@ android {
     }
 
     testOptions {
+        animationsDisabled = true
         unitTests.isIncludeAndroidResources = true
+
+        managedDevices {
+            localDevices {
+                create("pixel2Api35") {
+                    device = "Pixel 2"
+                    apiLevel = 35
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
     }
 }
 
@@ -84,6 +95,13 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
 }
