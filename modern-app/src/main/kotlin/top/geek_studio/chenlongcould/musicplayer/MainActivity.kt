@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         AppShortcuts.publish(this)
-        dispatchNavigationIntent(intent)
+        dispatchShortcutAction(intent?.action)
 
         setContent {
             val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -36,12 +36,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        dispatchNavigationIntent(intent)
+        setIntent(intent)
+        dispatchShortcutAction(intent.action)
     }
 
-    internal fun dispatchNavigationIntent(intent: Intent?) {
-        intent ?: return
-        setIntent(intent)
-        viewModel.handleShortcutAction(intent.action)
+    internal fun dispatchShortcutAction(action: String?) {
+        viewModel.handleShortcutAction(action)
     }
 }

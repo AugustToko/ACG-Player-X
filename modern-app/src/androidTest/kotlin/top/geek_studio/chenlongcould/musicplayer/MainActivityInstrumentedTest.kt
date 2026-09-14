@@ -1,6 +1,5 @@
 package top.geek_studio.chenlongcould.musicplayer
 
-import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -33,10 +32,7 @@ class MainActivityInstrumentedTest {
     @Test
     fun warmShortcutRoutesToFavorites() {
         composeRule.activityRule.scenario.onActivity { activity ->
-            activity.dispatchNavigationIntent(
-                Intent(activity, MainActivity::class.java)
-                    .setAction(AppShortcuts.ACTION_OPEN_FAVORITES),
-            )
+            activity.dispatchShortcutAction(AppShortcuts.ACTION_OPEN_FAVORITES)
         }
 
         composeRule.waitForIdle()
