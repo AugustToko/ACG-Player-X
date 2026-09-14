@@ -330,6 +330,8 @@ private fun DestinationContent(
                 isManagingAuthorizedFolders = state.isManagingAuthorizedFolders,
                 mediaStoreSongCount = state.mediaStoreSongCount,
                 authorizedFolderSongCount = state.authorizedFolderSongCount,
+                favoriteSongCount = state.favoriteMediaIds.size,
+                recentSongCount = state.recentMediaIds.size,
                 onThemeModeChange = viewModel::setThemeMode,
                 onRequestNotificationPermission = onRequestNotificationPermission,
                 onAddAuthorizedFolder = onAddAuthorizedFolder,
