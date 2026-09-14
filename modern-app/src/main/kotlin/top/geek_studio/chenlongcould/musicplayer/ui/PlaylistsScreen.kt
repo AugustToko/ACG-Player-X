@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package top.geek_studio.chenlongcould.musicplayer.ui
 
 import android.net.Uri
@@ -15,14 +17,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +52,6 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkImage
 import top.geek_studio.chenlongcould.musicplayer.ui.components.formatDuration
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistsScreen(
     playlistState: PlaylistUiState,
@@ -153,20 +152,8 @@ private fun PlaylistOverview(
         errorMessage?.let { message ->
             PlaylistErrorCard(message = message, onDismiss = onClearError)
         }
-
         if (isWorking) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                Text(
-                    text = "正在保存歌单…",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            WorkingIndicator("正在保存歌单…")
         }
 
         if (playlists.isEmpty()) {
@@ -177,10 +164,7 @@ private fun PlaylistOverview(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(
-                    items = playlists,
-                    key = UserPlaylist::id,
-                ) { playlist ->
+                items(items = playlists, key = UserPlaylist::id) { playlist ->
                     val songs = remember(librarySongs, playlist) {
                         resolvePlaylistSongs(librarySongs, playlist)
                     }
@@ -213,7 +197,6 @@ private fun PlaylistOverview(
             },
         )
     }
-
     renameTarget?.let { playlist ->
         PlaylistNameDialog(
             title = "重命名歌单",
@@ -226,7 +209,6 @@ private fun PlaylistOverview(
             },
         )
     }
-
     deleteTarget?.let { playlist ->
         ConfirmationDialog(
             title = "删除歌单？",
@@ -241,7 +223,6 @@ private fun PlaylistOverview(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaylistDetail(
     playlist: UserPlaylist,
@@ -316,6 +297,9 @@ private fun PlaylistDetail(
         errorMessage?.let { message ->
             PlaylistErrorCard(message = message, onDismiss = onClearError)
         }
+        if (isWorking) {
+            WorkingIndicator("正在更新歌单…")
+        }
 
         PlaylistSummaryCard(
             playlist = playlist,
@@ -333,7 +317,10 @@ private fun PlaylistDetail(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
             placeholder = { Text("搜索歌单内歌曲") },
             trailingIcon = {
                 if (query.isNotEmpty()) {
@@ -357,10 +344,7 @@ private fun PlaylistDetail(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
-                items(
-                    items = visibleSongs,
-                    key = Song::id,
-                ) { song ->
+                items(items = visibleSongs, key = Song::id) { song ->
                     val fullIndex = playlistSongs.indexOfFirst { it.id == song.id }
                     val previousSong = playlistSongs.getOrNull(fullIndex - 1)
                     val nextSong = playlistSongs.getOrNull(fullIndex + 1)
@@ -409,7 +393,6 @@ private fun PlaylistDetail(
             onDismiss = { showAddSongs = false },
         )
     }
-
     if (showRename) {
         PlaylistNameDialog(
             title = "重命名歌单",
@@ -422,7 +405,6 @@ private fun PlaylistDetail(
             },
         )
     }
-
     if (showClearConfirmation) {
         ConfirmationDialog(
             title = "清空歌单？",
@@ -433,6 +415,25 @@ private fun PlaylistDetail(
                 showClearConfirmation = false
                 onClearSongs(playlist.id)
             },
+        )
+    }
+}
+
+@Composable
+private fun WorkingIndicator(message: String) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -667,9 +668,7 @@ private fun SongPickerDialog(
                 )
                 if (candidates.isNotEmpty()) {
                     TextButton(
-                        onClick = {
-                            onAddSongs(candidates.map { it.id.toString() })
-                        },
+                        onClick = { onAddSongs(candidates.map { it.id.toString() }) },
                     ) {
                         Text("添加当前 ${candidates.size} 首")
                     }
@@ -684,7 +683,7 @@ private fun SongPickerDialog(
                     }
                 } else {
                     LazyColumn(Modifier.weight(1f)) {
-                        items(candidates, key = Song::id) { song ->
+                        items(items = candidates, key = Song::id) { song ->
                             ListItem(
                                 leadingContent = {
                                     ArtworkImage(
@@ -714,9 +713,7 @@ private fun SongPickerDialog(
                                 },
                                 trailingContent = {
                                     TextButton(
-                                        onClick = {
-                                            onAddSongs(listOf(song.id.toString()))
-                                        },
+                                        onClick = { onAddSongs(listOf(song.id.toString())) },
                                     ) {
                                         Text("添加")
                                     }
