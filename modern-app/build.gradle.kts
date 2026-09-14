@@ -86,6 +86,9 @@ baselineProfile {
     automaticGenerationDuringBuild = false
     mergeIntoMain = true
     saveInSrc = true
+    filter {
+        include("top.geek_studio.chenlongcould.musicplayer.**")
+    }
 }
 
 dependencies {
