@@ -95,7 +95,7 @@ fun SettingsScreen(
             item {
                 SettingsCard(
                     title = "音乐来源",
-                    subtitle = "SAF 授权目录不需要全盘存储权限，可读取 MediaStore 未索引的音乐。",
+                    subtitle = "SAF 授权目录不需要完整媒体权限，可读取 MediaStore 未索引的音乐。",
                 ) {
                     StatusItem("系统媒体库", "$mediaStoreSongCount 首")
                     StatusItem("授权目录", "${authorizedFolders.size} 个 · $authorizedFolderSongCount 首")
@@ -193,6 +193,8 @@ fun SettingsScreen(
                     StatusItem("同步 LRC 歌词", "已迁移")
                     StatusItem("播放队列编辑", "已迁移")
                     StatusItem("自定义歌单", "已迁移")
+                    StatusItem("歌单批量编辑与撤销", "已迁移")
+                    StatusItem("歌单长按拖拽排序", "已迁移")
                     StatusItem("M3U / M3U8 导入导出", "已迁移")
                     StatusItem("收藏与最近播放", "已迁移")
                     StatusItem("最近添加 / 常听 / 未播放", "已迁移")
@@ -207,7 +209,7 @@ fun SettingsScreen(
                     subtitle = "ACG Player X ${BuildConfig.VERSION_NAME}",
                 ) {
                     Text(
-                        text = "这是 2.0 Compose 重写分支。旧源码仍保留在仓库的 app/ 目录中，仅作为功能迁移参考，不参与构建。",
+                        text = "这是 2.0 Compose 重写分支。旧源码保留在仓库 app/ 目录，仅作为功能迁移参考，不参与构建。",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
