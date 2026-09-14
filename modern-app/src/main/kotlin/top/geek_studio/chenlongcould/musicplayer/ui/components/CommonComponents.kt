@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledIconButton
@@ -200,7 +199,7 @@ private fun GlyphButton(
 }
 
 fun formatDuration(durationMs: Long): String {
-    val totalSeconds = (durationMs.coerceAtLeast(0L) / 1_000L)
+    val totalSeconds = durationMs.coerceAtLeast(0L) / 1_000L
     val minutes = totalSeconds / 60L
     val seconds = totalSeconds % 60L
     return "$minutes:${seconds.toString().padStart(2, '0')}"
