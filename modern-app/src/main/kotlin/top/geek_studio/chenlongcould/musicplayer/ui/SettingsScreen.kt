@@ -37,6 +37,8 @@ fun SettingsScreen(
     isManagingAuthorizedFolders: Boolean,
     mediaStoreSongCount: Int,
     authorizedFolderSongCount: Int,
+    favoriteSongCount: Int,
+    recentSongCount: Int,
     onThemeModeChange: (ThemeMode) -> Unit,
     onRequestNotificationPermission: () -> Unit,
     onAddAuthorizedFolder: () -> Unit,
@@ -159,6 +161,8 @@ fun SettingsScreen(
                     StatusItem("音频焦点", "自动管理")
                     StatusItem("队列与进度恢复", "已启用")
                     StatusItem("可视化播放队列", "已启用")
+                    StatusItem("收藏歌曲", "$favoriteSongCount 首")
+                    StatusItem("最近播放", "$recentSongCount 条")
                     StatusItem(
                         "播放通知权限",
                         if (notificationPermissionRequired) "未授予" else "已就绪",
@@ -185,6 +189,8 @@ fun SettingsScreen(
                     StatusItem("播放状态恢复", "已迁移")
                     StatusItem("同步 LRC 歌词", "已迁移")
                     StatusItem("播放队列编辑", "已迁移")
+                    StatusItem("收藏与最近播放", "已迁移")
+                    StatusItem("桌面长按快捷入口", "已迁移")
                     StatusItem("Live2D / 标签编辑 / 小组件", "待兼容迁移")
                 }
             }
