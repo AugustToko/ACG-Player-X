@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -11,8 +12,8 @@ android {
         applicationId = "top.geek_studio.chenlongcould.musicplayer"
         minSdk = 23
         targetSdk = 37
-        versionCode = 211
-        versionName = "2.0.0-alpha12"
+        versionCode = 212
+        versionName = "2.0.0-alpha13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -30,6 +31,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+        }
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
         }
     }
 
@@ -75,6 +82,12 @@ android {
     }
 }
 
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    mergeIntoMain = true
+    saveInSrc = true
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
@@ -87,6 +100,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.androidx.compose.ui)
@@ -94,6 +108,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
+
+    baselineProfile(project(":benchmark"))
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

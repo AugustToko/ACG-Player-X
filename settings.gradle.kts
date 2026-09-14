@@ -18,3 +18,4 @@ rootProject.name = "ACG Player X"
 
 include(":app")
 project(":app").projectDir = file("modern-app")
+include(":benchmark")
