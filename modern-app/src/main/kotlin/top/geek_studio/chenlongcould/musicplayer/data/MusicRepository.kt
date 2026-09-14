@@ -8,13 +8,26 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 
+data class MusicLibraryResult(
+    val songs: List<Song>,
+    val warnings: List<String>,
+    val mediaStoreSongCount: Int,
+    val authorizedFolderSongCount: Int,
+)
+
 class MusicRepository(
-    private val context: Context,
+    context: Context,
 ) {
+    private val appContext = context.applicationContext
+    private val documentTreeScanner = DocumentTreeMusicScanner(appContext)
+    private val authorizedFolderCache = linkedMapOf<String, DocumentTreeScanResult>()
+    private val cacheLock = Any()
+
     private val collection: Uri
         get() =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -23,7 +36,98 @@ class MusicRepository(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             }
 
-    suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun loadSongs(): List<Song> =
+        loadSongs(
+            includeMediaStore = true,
+            authorizedFolders = emptyList(),
+            refreshAuthorizedFolders = false,
+        ).songs
+
+    suspend fun loadSongs(
+        includeMediaStore: Boolean,
+        authorizedFolders: List<AuthorizedFolder>,
+        refreshAuthorizedFolders: Boolean,
+    ): MusicLibraryResult = withContext(Dispatchers.IO) {
+        val warnings = mutableListOf<String>()
+        val mediaStoreSongs =
+            if (includeMediaStore) {
+                runCatching { loadMediaStoreSongs() }
+                    .onFailure { throwable ->
+                        warnings +=
+                            "系统媒体库读取失败：" +
+                                (throwable.localizedMessage ?: "未知错误")
+                    }
+                    .getOrDefault(emptyList())
+            } else {
+                emptyList()
+            }
+
+        val activeFolderUris =
+            authorizedFolders
+                .filter(AuthorizedFolder::isAvailable)
+                .map(AuthorizedFolder::uriString)
+                .toSet()
+        synchronized(cacheLock) {
+            authorizedFolderCache.keys.retainAll(activeFolderUris)
+        }
+
+        val authorizedSongs = mutableListOf<Song>()
+        authorizedFolders.forEach { folder ->
+            val result =
+                if (!folder.isAvailable) {
+                    documentTreeScanner.scan(folder)
+                } else {
+                    val cached =
+                        if (refreshAuthorizedFolders) {
+                            null
+                        } else {
+                            synchronized(cacheLock) {
+                                authorizedFolderCache[folder.uriString]
+                            }
+                        }
+                    cached ?: documentTreeScanner.scan(folder).also { scanned ->
+                        synchronized(cacheLock) {
+                            authorizedFolderCache[folder.uriString] = scanned
+                        }
+                    }
+                }
+
+            authorizedSongs += result.songs
+            warnings += result.warnings
+        }
+
+        val mergedSongs = mergeMusicSources(mediaStoreSongs, authorizedSongs)
+        MusicLibraryResult(
+            songs = mergedSongs,
+            warnings = warnings.distinct(),
+            mediaStoreSongCount = mediaStoreSongs.size,
+            authorizedFolderSongCount = mergedSongs.count { it.id < 0L },
+        )
+    }
+
+    fun observeChanges(onChanged: () -> Unit): AutoCloseable {
+        val resolver = appContext.contentResolver
+        val observer =
+            object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    onChanged()
+                }
+
+                override fun onChange(
+                    selfChange: Boolean,
+                    uri: Uri?,
+                ) {
+                    onChanged()
+                }
+            }
+
+        resolver.registerContentObserver(collection, true, observer)
+        return AutoCloseable {
+            runCatching { resolver.unregisterContentObserver(observer) }
+        }
+    }
+
+    private fun loadMediaStoreSongs(): List<Song> {
         val pathColumnName =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Audio.Media.RELATIVE_PATH
@@ -44,7 +148,7 @@ class MusicRepository(
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val sortOrder = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
 
-        context.contentResolver.query(
+        return appContext.contentResolver.query(
             collection,
             projection,
             selection,
@@ -106,28 +210,6 @@ class MusicRepository(
         } ?: emptyList()
     }
 
-    fun observeChanges(onChanged: () -> Unit): AutoCloseable {
-        val resolver = context.contentResolver
-        val observer =
-            object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    onChanged()
-                }
-
-                override fun onChange(
-                    selfChange: Boolean,
-                    uri: Uri?,
-                ) {
-                    onChanged()
-                }
-            }
-
-        resolver.registerContentObserver(collection, true, observer)
-        return AutoCloseable {
-            runCatching { resolver.unregisterContentObserver(observer) }
-        }
-    }
-
     private fun String?.orUnknown(fallback: String): String =
         this
             ?.takeUnless { it.isBlank() || it == MediaStore.UNKNOWN_STRING }
@@ -137,3 +219,39 @@ class MusicRepository(
         const val ALBUM_ART_BASE_URI = "content://media/external/audio/albumart"
     }
 }
+
+internal fun mergeMusicSources(
+    mediaStoreSongs: List<Song>,
+    authorizedFolderSongs: List<Song>,
+): List<Song> {
+    val result = mutableListOf<Song>()
+    val seenUris = hashSetOf<String>()
+    val mediaStoreFingerprints = hashSetOf<String>()
+
+    mediaStoreSongs.forEach { song ->
+        if (seenUris.add(song.contentUri)) {
+            result += song
+            mediaStoreFingerprints += song.sourceFingerprint()
+        }
+    }
+
+    authorizedFolderSongs.forEach { song ->
+        if (!seenUris.add(song.contentUri)) return@forEach
+        if (song.sourceFingerprint() in mediaStoreFingerprints) return@forEach
+        result += song
+    }
+
+    return result.sortedWith(
+        compareBy<Song> { it.title.lowercase(Locale.ROOT) }
+            .thenBy { it.artist.lowercase(Locale.ROOT) }
+            .thenBy(Song::id),
+    )
+}
+
+private fun Song.sourceFingerprint(): String =
+    listOf(
+        title.trim().lowercase(Locale.ROOT),
+        artist.trim().lowercase(Locale.ROOT),
+        album.trim().lowercase(Locale.ROOT),
+        (durationMs / 1_000L).toString(),
+    ).joinToString("|")

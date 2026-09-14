@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolder
+import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolderRepository
 import top.geek_studio.chenlongcould.musicplayer.data.MusicRepository
 import top.geek_studio.chenlongcould.musicplayer.data.SettingsRepository
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
@@ -43,22 +45,35 @@ data class CollectionFilter(
 data class MainUiState(
     val songs: List<Song> = emptyList(),
     val totalSongCount: Int = 0,
+    val mediaStoreSongCount: Int = 0,
+    val authorizedFolderSongCount: Int = 0,
     val query: String = "",
     val section: LibrarySection = LibrarySection.SONGS,
     val activeFilter: CollectionFilter? = null,
     val permissionChecked: Boolean = false,
     val hasAudioPermission: Boolean = false,
+    val authorizedFolders: List<AuthorizedFolder> = emptyList(),
+    val libraryWarnings: List<String> = emptyList(),
+    val authorizedFolderError: String? = null,
+    val isManagingAuthorizedFolders: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val playback: PlaybackUiState = PlaybackUiState(),
     val lyrics: LyricsUiState = LyricsUiState(),
-)
+) {
+    val hasAuthorizedFolderAccess: Boolean
+        get() = authorizedFolders.any(AuthorizedFolder::isAvailable)
+
+    val hasLibraryAccess: Boolean
+        get() = hasAudioPermission || hasAuthorizedFolderAccess
+}
 
 class MainViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
     private val musicRepository = MusicRepository(application)
+    private val authorizedFolderRepository = AuthorizedFolderRepository(application)
     private val settingsRepository = SettingsRepository(application)
     private val lyricsRepository = LyricsRepository(application)
     private val playerConnection = PlayerConnection(application, viewModelScope)
@@ -67,16 +82,38 @@ class MainViewModel(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     private var library: List<Song> = emptyList()
+    private var authorizedFolders: List<AuthorizedFolder> = emptyList()
     private var hasLoadedLibrary = false
     private var libraryObserver: AutoCloseable? = null
     private var observerRefreshJob: Job? = null
     private var loadJob: Job? = null
     private var lyricsJob: Job? = null
+    private var folderJob: Job? = null
 
     init {
         viewModelScope.launch {
             settingsRepository.themeMode.collect { mode ->
                 _uiState.update { it.copy(themeMode = mode) }
+            }
+        }
+
+        viewModelScope.launch {
+            authorizedFolderRepository.folders.collect { folders ->
+                val previousSignature = authorizedFolders.folderSignature()
+                authorizedFolders = folders
+                _uiState.update {
+                    it.copy(
+                        authorizedFolders = folders,
+                        isManagingAuthorizedFolders = false,
+                    )
+                }
+
+                if (previousSignature != folders.folderSignature()) {
+                    loadLibrary(
+                        showLoading = !hasLoadedLibrary,
+                        refreshAuthorizedFolders = true,
+                    )
+                }
             }
         }
 
@@ -92,6 +129,7 @@ class MainViewModel(
     }
 
     fun onAudioPermissionChanged(granted: Boolean) {
+        val permissionChanged = _uiState.value.hasAudioPermission != granted
         _uiState.update {
             it.copy(
                 permissionChecked = true,
@@ -102,26 +140,83 @@ class MainViewModel(
 
         if (granted) {
             ensureLibraryObserver()
-            if (!hasLoadedLibrary) {
-                refreshLibrary()
-            }
         } else {
             stopLibraryObserver()
-            loadJob?.cancel()
-            library = emptyList()
-            hasLoadedLibrary = false
-            _uiState.update {
-                it.copy(
-                    songs = emptyList(),
-                    totalSongCount = 0,
-                    isLoading = false,
+        }
+
+        if (_uiState.value.hasLibraryAccess) {
+            if (permissionChanged || !hasLoadedLibrary) {
+                loadLibrary(
+                    showLoading = true,
+                    refreshAuthorizedFolders = false,
                 )
             }
+        } else {
+            clearLibrary()
         }
     }
 
     fun refreshLibrary() {
-        loadLibrary(showLoading = true)
+        loadLibrary(
+            showLoading = true,
+            refreshAuthorizedFolders = true,
+        )
+    }
+
+    fun addAuthorizedFolder(uri: Uri) {
+        folderJob?.cancel()
+        folderJob =
+            viewModelScope.launch {
+                _uiState.update {
+                    it.copy(
+                        isManagingAuthorizedFolders = true,
+                        authorizedFolderError = null,
+                    )
+                }
+                try {
+                    authorizedFolderRepository.addFolder(uri)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (throwable: Throwable) {
+                    _uiState.update {
+                        it.copy(
+                            isManagingAuthorizedFolders = false,
+                            authorizedFolderError =
+                                throwable.localizedMessage ?: "目录授权失败",
+                        )
+                    }
+                }
+            }
+    }
+
+    fun removeAuthorizedFolder(uriString: String) {
+        folderJob?.cancel()
+        folderJob =
+            viewModelScope.launch {
+                _uiState.update {
+                    it.copy(
+                        isManagingAuthorizedFolders = true,
+                        authorizedFolderError = null,
+                    )
+                }
+                try {
+                    authorizedFolderRepository.removeFolder(uriString)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (throwable: Throwable) {
+                    _uiState.update {
+                        it.copy(
+                            isManagingAuthorizedFolders = false,
+                            authorizedFolderError =
+                                throwable.localizedMessage ?: "移除目录失败",
+                        )
+                    }
+                }
+            }
+    }
+
+    fun clearAuthorizedFolderError() {
+        _uiState.update { it.copy(authorizedFolderError = null) }
     }
 
     fun updateQuery(query: String) {
@@ -302,6 +397,7 @@ class MainViewModel(
         observerRefreshJob?.cancel()
         loadJob?.cancel()
         lyricsJob?.cancel()
+        folderJob?.cancel()
         stopLibraryObserver()
         playerConnection.close()
         super.onCleared()
@@ -322,8 +418,15 @@ class MainViewModel(
         publishFilteredLibrary()
     }
 
-    private fun loadLibrary(showLoading: Boolean) {
-        if (!_uiState.value.hasAudioPermission) return
+    private fun loadLibrary(
+        showLoading: Boolean,
+        refreshAuthorizedFolders: Boolean,
+    ) {
+        val current = _uiState.value
+        if (!current.hasAudioPermission && authorizedFolders.none(AuthorizedFolder::isAvailable)) {
+            clearLibrary()
+            return
+        }
 
         loadJob?.cancel()
         loadJob =
@@ -333,10 +436,24 @@ class MainViewModel(
                 }
 
                 try {
-                    library = musicRepository.loadSongs()
+                    val result =
+                        musicRepository.loadSongs(
+                            includeMediaStore = _uiState.value.hasAudioPermission,
+                            authorizedFolders = authorizedFolders,
+                            refreshAuthorizedFolders = refreshAuthorizedFolders,
+                        )
+                    library = result.songs
                     hasLoadedLibrary = true
                     publishFilteredLibrary()
-                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            mediaStoreSongCount = result.mediaStoreSongCount,
+                            authorizedFolderSongCount = result.authorizedFolderSongCount,
+                            libraryWarnings = result.warnings,
+                        )
+                    }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (throwable: Throwable) {
@@ -348,6 +465,23 @@ class MainViewModel(
                     }
                 }
             }
+    }
+
+    private fun clearLibrary() {
+        loadJob?.cancel()
+        library = emptyList()
+        hasLoadedLibrary = false
+        _uiState.update {
+            it.copy(
+                songs = emptyList(),
+                totalSongCount = 0,
+                mediaStoreSongCount = 0,
+                authorizedFolderSongCount = 0,
+                libraryWarnings = emptyList(),
+                isLoading = false,
+                errorMessage = null,
+            )
+        }
     }
 
     private fun loadLyrics(mediaId: String?) {
@@ -417,7 +551,10 @@ class MainViewModel(
                 observerRefreshJob =
                     viewModelScope.launch {
                         delay(MEDIASTORE_REFRESH_DEBOUNCE_MS)
-                        loadLibrary(showLoading = false)
+                        loadLibrary(
+                            showLoading = false,
+                            refreshAuthorizedFolders = false,
+                        )
                     }
             }
     }
@@ -452,6 +589,9 @@ class MainViewModel(
             )
         }
     }
+
+    private fun List<AuthorizedFolder>.folderSignature(): List<Pair<String, Boolean>> =
+        map { it.uriString to it.isAvailable }
 
     private companion object {
         const val MEDIASTORE_REFRESH_DEBOUNCE_MS = 650L

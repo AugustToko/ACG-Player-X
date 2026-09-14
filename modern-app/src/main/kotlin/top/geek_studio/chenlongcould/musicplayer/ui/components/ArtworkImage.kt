@@ -1,8 +1,9 @@
 package top.geek_studio.chenlongcould.musicplayer.ui.components
 
-import android.content.ContentResolver
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.util.LruCache
@@ -33,7 +34,7 @@ fun ArtworkImage(
     requestSize: Dp = 256.dp,
     contentDescription: String? = null,
 ) {
-    val resolver = LocalContext.current.contentResolver
+    val context = LocalContext.current
     val requestSizePx =
         with(LocalDensity.current) {
             requestSize.roundToPx().coerceAtLeast(MIN_THUMBNAIL_SIZE_PX)
@@ -50,7 +51,7 @@ fun ArtworkImage(
                 withContext(Dispatchers.IO) {
                     candidates.firstNotNullOfOrNull { uri ->
                         ArtworkBitmapLoader.load(
-                            resolver = resolver,
+                            context = context.applicationContext,
                             uri = uri,
                             requestSizePx = requestSizePx,
                         )
@@ -86,13 +87,16 @@ private object ArtworkBitmapLoader {
         }
 
     fun load(
-        resolver: ContentResolver,
+        context: Context,
         uri: Uri,
         requestSizePx: Int,
     ): Bitmap? {
         val cacheKey = "$uri@$requestSizePx"
-        cache.get(cacheKey)?.let { return it }
+        synchronized(cache) {
+            cache.get(cacheKey)?.let { return it }
+        }
 
+        val resolver = context.contentResolver
         val bitmap =
             runCatching {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -102,21 +106,25 @@ private object ArtworkBitmapLoader {
                         null,
                     )
                 } else {
-                    decodeSampledBitmap(resolver, uri, requestSizePx)
+                    decodeSampledBitmap(context, uri, requestSizePx)
                 }
             }.getOrNull()
+                ?: decodeEmbeddedArtwork(context, uri, requestSizePx)
 
         if (bitmap != null) {
-            cache.put(cacheKey, bitmap)
+            synchronized(cache) {
+                cache.put(cacheKey, bitmap)
+            }
         }
         return bitmap
     }
 
     private fun decodeSampledBitmap(
-        resolver: ContentResolver,
+        context: Context,
         uri: Uri,
         requestSizePx: Int,
     ): Bitmap? {
+        val resolver = context.contentResolver
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         resolver.openInputStream(uri)?.use { input ->
             BitmapFactory.decodeStream(input, null, bounds)
@@ -131,6 +139,39 @@ private object ArtworkBitmapLoader {
         return resolver.openInputStream(uri)?.use { input ->
             BitmapFactory.decodeStream(input, null, options)
         }
+    }
+
+    private fun decodeEmbeddedArtwork(
+        context: Context,
+        uri: Uri,
+        requestSizePx: Int,
+    ): Bitmap? {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(context, uri)
+            val bytes = retriever.embeddedPicture ?: return null
+            decodeSampledByteArray(bytes, requestSizePx)
+        } catch (_: Throwable) {
+            null
+        } finally {
+            runCatching { retriever.release() }
+        }
+    }
+
+    private fun decodeSampledByteArray(
+        bytes: ByteArray,
+        requestSizePx: Int,
+    ): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        val options =
+            BitmapFactory.Options().apply {
+                inSampleSize = calculateSampleSize(bounds, requestSizePx)
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
     }
 
     private fun calculateSampleSize(
