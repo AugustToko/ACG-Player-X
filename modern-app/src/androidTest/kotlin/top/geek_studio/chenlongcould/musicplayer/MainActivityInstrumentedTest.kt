@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -34,7 +33,7 @@ class MainActivityInstrumentedTest {
     @Test
     fun warmShortcutRoutesToFavorites() {
         composeRule.activityRule.scenario.onActivity { activity ->
-            activity.onNewIntent(
+            activity.startActivity(
                 Intent(activity, MainActivity::class.java)
                     .setAction(AppShortcuts.ACTION_OPEN_FAVORITES),
             )
