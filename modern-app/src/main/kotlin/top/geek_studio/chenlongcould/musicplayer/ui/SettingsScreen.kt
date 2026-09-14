@@ -196,6 +196,7 @@ fun SettingsScreen(
                     StatusItem("歌单批量编辑与撤销", "已迁移")
                     StatusItem("歌单长按拖拽排序", "已迁移")
                     StatusItem("M3U / M3U8 导入导出", "已迁移")
+                    StatusItem("M3U 导入预览与手工映射", "已迁移")
                     StatusItem("收藏与最近播放", "已迁移")
                     StatusItem("最近添加 / 常听 / 未播放", "已迁移")
                     StatusItem("桌面长按快捷入口", "4 个")
