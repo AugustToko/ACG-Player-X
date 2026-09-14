@@ -26,13 +26,7 @@ data class PlaylistImportPreview(
         get() = entries.count { it.selectedMediaId != null }
 
     val attentionCount: Int
-        get() =
-            entries.count { entry ->
-                entry.selectedMediaId == null ||
-                    entry.status == PlaylistImportEntryStatus.AMBIGUOUS ||
-                    entry.status == PlaylistImportEntryStatus.UNMATCHED ||
-                    entry.status == PlaylistImportEntryStatus.DUPLICATE
-            }
+        get() = entries.count { it.selectedMediaId == null }
 }
 
 data class PlaylistImportResult(
