@@ -427,25 +427,37 @@ private fun AppContent(
                 onExport = onExportPlaylist,
                 onDismissInfo = playlistViewModel::clearInfoMessage,
             )
-            PlaylistsScreen(
-                playlistState = playlistState,
-                librarySongs = state.songs,
-                currentMediaId = state.playback.mediaId,
-                onOpenPlaylist = playlistViewModel::openPlaylist,
-                onClosePlaylist = playlistViewModel::closePlaylist,
-                onCreatePlaylist = playlistViewModel::createPlaylist,
-                onRenamePlaylist = playlistViewModel::renamePlaylist,
-                onDeletePlaylist = playlistViewModel::deletePlaylist,
-                onAddSongs = playlistViewModel::addSongs,
-                onRemoveSong = playlistViewModel::removeSong,
-                onSwapSongs = playlistViewModel::swapSongs,
-                onClearSongs = playlistViewModel::clearSongs,
-                onRemoveUnavailableSongs = playlistViewModel::removeUnavailableSongs,
-                onPlaySong = playlistViewModel::playSong,
-                onPlayAll = playlistViewModel::playAll,
-                onClearError = playlistViewModel::clearError,
-                modifier = Modifier.weight(1f),
-            )
+            Box(Modifier.weight(1f)) {
+                PlaylistsScreen(
+                    playlistState = playlistState,
+                    librarySongs = state.songs,
+                    currentMediaId = state.playback.mediaId,
+                    onOpenPlaylist = playlistViewModel::openPlaylist,
+                    onClosePlaylist = playlistViewModel::closePlaylist,
+                    onCreatePlaylist = playlistViewModel::createPlaylist,
+                    onRenamePlaylist = playlistViewModel::renamePlaylist,
+                    onDeletePlaylist = playlistViewModel::deletePlaylist,
+                    onAddSongs = playlistViewModel::addSongs,
+                    onRemoveSong = playlistViewModel::removeSong,
+                    onSwapSongs = playlistViewModel::swapSongs,
+                    onClearSongs = playlistViewModel::clearSongs,
+                    onRemoveUnavailableSongs = playlistViewModel::removeUnavailableSongs,
+                    onPlaySong = playlistViewModel::playSong,
+                    onPlayAll = playlistViewModel::playAll,
+                    onClearError = playlistViewModel::clearError,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                PlaylistBatchEditorOverlay(
+                    state = playlistState,
+                    librarySongs = state.songs,
+                    onMoveToStart = playlistViewModel::moveSongsToStart,
+                    onMoveToEnd = playlistViewModel::moveSongsToEnd,
+                    onRemoveSongs = playlistViewModel::removeSongs,
+                    onUndo = playlistViewModel::undoLastPlaylistMutation,
+                    onDismissUndo = playlistViewModel::clearUndoMessage,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     } else {
         DestinationContent(
