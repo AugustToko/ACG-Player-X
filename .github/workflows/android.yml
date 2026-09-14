@@ -43,7 +43,7 @@ jobs:
           :app:testDebugUnitTest
           :app:assembleDebug
           :app:assembleDebugAndroidTest
-          :benchmark:assembleBenchmark
+          :benchmark:assembleBenchmarkBenchmark
 
   instrumentation:
     name: API 35 managed-device tests
@@ -121,7 +121,7 @@ jobs:
       - name: Run macrobenchmark smoke suite
         run: >-
           ./gradlew --no-daemon --info
-          :benchmark:pixel2Api35BenchmarkAndroidTest
+          :benchmark:pixel2Api35BenchmarkBenchmarkAndroidTest
           -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
 
       - name: Upload profiles and benchmark reports
