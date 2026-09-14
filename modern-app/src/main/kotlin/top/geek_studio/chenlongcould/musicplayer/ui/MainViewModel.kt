@@ -16,9 +16,13 @@ import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolder
 import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolderRepository
 import top.geek_studio.chenlongcould.musicplayer.data.LibraryStateRepository
 import top.geek_studio.chenlongcould.musicplayer.data.MusicRepository
+import top.geek_studio.chenlongcould.musicplayer.data.PlaybackStats
 import top.geek_studio.chenlongcould.musicplayer.data.SettingsRepository
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
+import top.geek_studio.chenlongcould.musicplayer.data.resolveMostPlayedSongs
 import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentSongs
+import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentlyAddedSongs
+import top.geek_studio.chenlongcould.musicplayer.data.resolveUnplayedSongs
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsRepository
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
@@ -36,6 +40,9 @@ enum class LibrarySection {
     SONGS,
     FAVORITES,
     RECENT,
+    RECENTLY_ADDED,
+    MOST_PLAYED,
+    UNPLAYED,
     ALBUMS,
     ARTISTS,
     FOLDERS,
@@ -61,6 +68,10 @@ data class MainUiState(
     val authorizedFolderSongCount: Int = 0,
     val favoriteMediaIds: Set<String> = emptySet(),
     val recentMediaIds: List<String> = emptyList(),
+    val playbackStats: Map<String, PlaybackStats> = emptyMap(),
+    val playedSongCount: Int = 0,
+    val unplayedSongCount: Int = 0,
+    val totalPlayCount: Long = 0L,
     val query: String = "",
     val section: LibrarySection = LibrarySection.SONGS,
     val activeFilter: CollectionFilter? = null,
@@ -128,6 +139,13 @@ class MainViewModel(
         }
 
         viewModelScope.launch {
+            libraryStateRepository.playbackStats.collect { stats ->
+                _uiState.update { it.copy(playbackStats = stats) }
+                publishFilteredLibrary()
+            }
+        }
+
+        viewModelScope.launch {
             authorizedFolderRepository.folders.collect { folders ->
                 val previousSignature = authorizedFolders.folderSignature()
                 authorizedFolders = folders
@@ -180,6 +198,8 @@ class MainViewModel(
             when (action) {
                 AppShortcuts.ACTION_OPEN_FAVORITES -> LibrarySection.FAVORITES
                 AppShortcuts.ACTION_OPEN_RECENT -> LibrarySection.RECENT
+                AppShortcuts.ACTION_OPEN_RECENTLY_ADDED -> LibrarySection.RECENTLY_ADDED
+                AppShortcuts.ACTION_OPEN_MOST_PLAYED -> LibrarySection.MOST_PLAYED
                 else -> null
             } ?: return
 
@@ -555,6 +575,9 @@ class MainViewModel(
                 totalSongCount = 0,
                 mediaStoreSongCount = 0,
                 authorizedFolderSongCount = 0,
+                playedSongCount = 0,
+                unplayedSongCount = 0,
+                totalPlayCount = 0L,
                 libraryWarnings = emptyList(),
                 isLoading = false,
                 errorMessage = null,
@@ -657,6 +680,21 @@ class MainViewModel(
                         recentMediaIds = current.recentMediaIds,
                     )
 
+                LibrarySection.RECENTLY_ADDED ->
+                    resolveRecentlyAddedSongs(library)
+
+                LibrarySection.MOST_PLAYED ->
+                    resolveMostPlayedSongs(
+                        songs = library,
+                        playbackStats = current.playbackStats,
+                    )
+
+                LibrarySection.UNPLAYED ->
+                    resolveUnplayedSongs(
+                        songs = library,
+                        playbackStats = current.playbackStats,
+                    )
+
                 else ->
                     when (val filter = current.activeFilter) {
                         null -> library
@@ -671,11 +709,20 @@ class MainViewModel(
                     }
             }
         val visibleSongs = filterSongs(sectionSongs, current.query)
+        val availableStats =
+            library.mapNotNull { song ->
+                current.playbackStats[song.id.toString()]
+            }
+        val playedSongCount = availableStats.count { it.playCount > 0 }
+        val totalPlayCount = availableStats.sumOf { it.playCount.toLong() }
 
         _uiState.update {
             it.copy(
                 songs = visibleSongs,
                 totalSongCount = library.size,
+                playedSongCount = playedSongCount,
+                unplayedSongCount = (library.size - playedSongCount).coerceAtLeast(0),
+                totalPlayCount = totalPlayCount,
             )
         }
     }

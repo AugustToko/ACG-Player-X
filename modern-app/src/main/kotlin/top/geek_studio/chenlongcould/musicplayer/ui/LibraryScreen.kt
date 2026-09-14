@@ -44,6 +44,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import top.geek_studio.chenlongcould.musicplayer.data.displayMusicFolderPath
 import top.geek_studio.chenlongcould.musicplayer.data.isAuthorizedFolderPath
 import top.geek_studio.chenlongcould.musicplayer.model.Song
@@ -150,6 +153,7 @@ fun LibraryScreen(
                     EmptyLibraryState(
                         section = state.section,
                         hasQuery = state.query.isNotBlank() || state.activeFilter != null,
+                        libraryIsEmpty = state.totalSongCount == 0,
                         onAddAuthorizedFolder = onAddAuthorizedFolder,
                     )
                 }
@@ -177,6 +181,15 @@ private fun librarySummary(state: MainUiState): String =
 
         LibrarySection.RECENT ->
             "最近播放 ${state.songs.size} 首 · 最多保留 100 首"
+
+        LibrarySection.RECENTLY_ADDED ->
+            "最近添加 ${state.songs.size} 首 · 按可用时间排序"
+
+        LibrarySection.MOST_PLAYED ->
+            "常听 ${state.songs.size} 首 · 累计 ${state.totalPlayCount} 次播放"
+
+        LibrarySection.UNPLAYED ->
+            "未播放 ${state.songs.size} 首 · 已播放 ${state.playedSongCount} 首"
 
         else ->
             when {
@@ -252,6 +265,9 @@ private fun LibrarySectionSelector(
                             LibrarySection.SONGS -> "歌曲"
                             LibrarySection.FAVORITES -> "收藏"
                             LibrarySection.RECENT -> "最近"
+                            LibrarySection.RECENTLY_ADDED -> "新添加"
+                            LibrarySection.MOST_PLAYED -> "常听"
+                            LibrarySection.UNPLAYED -> "未播放"
                             LibrarySection.ALBUMS -> "专辑"
                             LibrarySection.ARTISTS -> "艺术家"
                             LibrarySection.FOLDERS -> "文件夹"
@@ -301,6 +317,42 @@ private fun LibraryContent(
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
+
+        LibrarySection.RECENTLY_ADDED -> {
+            SmartSongSection(
+                title = "最近添加",
+                message = "MediaStore 使用入库时间；授权目录使用文档最后修改时间。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song -> formatAddedDate(song.dateAddedMs) },
+            )
+        }
+
+        LibrarySection.MOST_PLAYED -> {
+            SmartSongSection(
+                title = "最常播放",
+                message = "按本机记录的播放次数排序；次数相同则最近播放优先。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song ->
+                    val count = state.playbackStats[song.id.toString()]?.playCount ?: 0
+                    "$count 次播放"
+                },
+            )
+        }
+
+        LibrarySection.UNPLAYED -> {
+            SmartSongSection(
+                title = "尚未播放",
+                message = "当前可用音乐库中还没有进入播放状态的歌曲。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { "尚未播放" },
+            )
         }
 
         LibrarySection.ALBUMS -> {
@@ -378,6 +430,33 @@ private fun LibraryContent(
 }
 
 @Composable
+private fun SmartSongSection(
+    title: String,
+    message: String,
+    state: MainUiState,
+    onPlaySong: (Song) -> Unit,
+    onToggleFavorite: (Song) -> Unit,
+    contextLabel: (Song) -> String?,
+) {
+    Column(Modifier.fillMaxSize()) {
+        SmartListHeader(
+            title = title,
+            message = message,
+            visibleCount = state.songs.size,
+        )
+        SongList(
+            songs = state.songs,
+            currentMediaId = state.playback.mediaId,
+            favoriteMediaIds = state.favoriteMediaIds,
+            onPlaySong = onPlaySong,
+            onToggleFavorite = onToggleFavorite,
+            contextLabel = contextLabel,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
 private fun SongList(
     songs: List<Song>,
     currentMediaId: String?,
@@ -385,6 +464,7 @@ private fun SongList(
     onPlaySong: (Song) -> Unit,
     onToggleFavorite: (Song) -> Unit,
     modifier: Modifier = Modifier,
+    contextLabel: (Song) -> String? = { null },
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -399,6 +479,7 @@ private fun SongList(
                 song = song,
                 isPlaying = currentMediaId == mediaId,
                 isFavorite = mediaId in favoriteMediaIds,
+                contextLabel = contextLabel(song),
                 onClick = { onPlaySong(song) },
                 onToggleFavorite = { onToggleFavorite(song) },
             )
@@ -415,9 +496,19 @@ private fun SongRow(
     song: Song,
     isPlaying: Boolean,
     isFavorite: Boolean,
+    contextLabel: String?,
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
 ) {
+    val supportingText =
+        buildList {
+            add(song.artist)
+            add(song.album)
+            add(song.folderName)
+            if (isAuthorizedFolderPath(song.folderPath)) add("SAF")
+            contextLabel?.takeIf(String::isNotBlank)?.let(::add)
+        }.joinToString(" • ")
+
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
@@ -459,9 +550,7 @@ private fun SongRow(
         },
         supportingContent = {
             Text(
-                text =
-                    "${song.artist} • ${song.album} • ${song.folderName}" +
-                        if (isAuthorizedFolderPath(song.folderPath)) " • SAF" else "",
+                text = supportingText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -534,6 +623,44 @@ private fun RecentHistoryHeader(
             }
         }
     }
+}
+
+@Composable
+private fun SmartListHeader(
+    title: String,
+    message: String,
+    visibleCount: Int,
+) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(
+                text = "$title · $visibleCount 首",
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private fun formatAddedDate(dateAddedMs: Long): String {
+    if (dateAddedMs <= 0L) return "添加时间未知"
+    return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(dateAddedMs))
 }
 
 private data class CollectionSummary(
@@ -820,20 +947,29 @@ private fun ErrorState(
 private fun EmptyLibraryState(
     section: LibrarySection,
     hasQuery: Boolean,
+    libraryIsEmpty: Boolean,
     onAddAuthorizedFolder: () -> Unit,
 ) {
     val title =
         when {
             hasQuery -> "没有匹配的歌曲"
+            libraryIsEmpty -> "音乐库为空"
             section == LibrarySection.FAVORITES -> "还没有收藏歌曲"
             section == LibrarySection.RECENT -> "还没有播放记录"
+            section == LibrarySection.MOST_PLAYED -> "还没有播放统计"
+            section == LibrarySection.UNPLAYED -> "当前歌曲都已播放过"
+            section == LibrarySection.RECENTLY_ADDED -> "没有可排序的歌曲"
             else -> "音乐库为空"
         }
     val message =
         when {
             hasQuery -> "清除搜索或集合筛选后再试。"
+            libraryIsEmpty -> "可以刷新系统媒体库，或授权另一个音乐目录。"
             section == LibrarySection.FAVORITES -> "点击歌曲右侧的星标即可加入收藏。"
             section == LibrarySection.RECENT -> "开始播放歌曲后，这里会按最近顺序记录。"
+            section == LibrarySection.MOST_PLAYED -> "开始播放歌曲后，这里会按累计次数排序。"
+            section == LibrarySection.UNPLAYED -> "当前音乐库里的歌曲已经全部产生播放记录。"
+            section == LibrarySection.RECENTLY_ADDED -> "当前音乐来源没有提供可用的时间信息。"
             else -> "可以刷新系统媒体库，或授权另一个音乐目录。"
         }
 
@@ -856,7 +992,7 @@ private fun EmptyLibraryState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        if (!hasQuery && section !in setOf(LibrarySection.FAVORITES, LibrarySection.RECENT)) {
+        if (!hasQuery && libraryIsEmpty) {
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onAddAuthorizedFolder) {
                 Text("添加授权目录")
