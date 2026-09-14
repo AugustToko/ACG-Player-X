@@ -11,9 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistImportResult
+import top.geek_studio.chenlongcould.musicplayer.data.PlaylistMoveDestination
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistRepository
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistTransferRepository
 import top.geek_studio.chenlongcould.musicplayer.data.UserPlaylist
+import top.geek_studio.chenlongcould.musicplayer.data.movePlaylistMediaIds
+import top.geek_studio.chenlongcould.musicplayer.data.removePlaylistMediaIds
+import top.geek_studio.chenlongcould.musicplayer.data.swapPlaylistMediaIds
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.playback.PlayerConnection
 
@@ -22,6 +26,8 @@ data class PlaylistUiState(
     val activePlaylistId: String? = null,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
+    val undoMessage: String? = null,
+    val undoToken: Long = 0L,
     val isWorking: Boolean = false,
 ) {
     val activePlaylist: UserPlaylist?
@@ -39,6 +45,8 @@ class PlaylistViewModel(
     val uiState: StateFlow<PlaylistUiState> = _uiState.asStateFlow()
 
     private var pendingOperations = 0
+    private var undoSequence = 0L
+    private var pendingUndo: PlaylistUndoSnapshot? = null
 
     init {
         viewModelScope.launch {
@@ -52,11 +60,17 @@ class PlaylistViewModel(
                             },
                     )
                 }
+                pendingUndo?.let { undo ->
+                    if (playlists.none { it.id == undo.playlistId }) {
+                        clearUndoState()
+                    }
+                }
             }
         }
     }
 
     fun openPlaylist(playlistId: String) {
+        clearUndoState()
         _uiState.update { state ->
             state.copy(
                 activePlaylistId = playlistId.takeIf { id -> state.playlists.any { it.id == id } },
@@ -67,6 +81,7 @@ class PlaylistViewModel(
     }
 
     fun closePlaylist() {
+        clearUndoState()
         _uiState.update {
             it.copy(
                 activePlaylistId = null,
@@ -164,8 +179,28 @@ class PlaylistViewModel(
         playlistId: String,
         mediaId: String,
     ) {
-        launchMutation {
-            repository.removeSong(playlistId, mediaId)
+        removeSongs(playlistId, listOf(mediaId))
+    }
+
+    fun removeSongs(
+        playlistId: String,
+        mediaIds: Collection<String>,
+    ) {
+        val requested = mediaIds.asSequence().filter(String::isNotBlank).toSet()
+        if (requested.isEmpty()) return
+
+        mutatePlaylistMediaIds(playlistId) { current ->
+            val updated = removePlaylistMediaIds(current, requested)
+            val removedCount = current.size - updated.size
+            PlaylistMediaEdit(
+                mediaIds = updated,
+                undoMessage =
+                    if (removedCount == 1) {
+                        "已从歌单移出 1 首歌曲"
+                    } else {
+                        "已从歌单移出 $removedCount 首歌曲"
+                    },
+            )
         }
     }
 
@@ -174,14 +209,49 @@ class PlaylistViewModel(
         firstMediaId: String,
         secondMediaId: String,
     ) {
-        launchMutation {
-            repository.swapSongs(playlistId, firstMediaId, secondMediaId)
+        mutatePlaylistMediaIds(playlistId) { current ->
+            PlaylistMediaEdit(
+                mediaIds =
+                    swapPlaylistMediaIds(
+                        current = current,
+                        firstMediaId = firstMediaId,
+                        secondMediaId = secondMediaId,
+                    ),
+                undoMessage = "已调整歌曲顺序",
+            )
         }
     }
 
+    fun moveSongsToStart(
+        playlistId: String,
+        mediaIds: Collection<String>,
+    ) {
+        moveSongs(
+            playlistId = playlistId,
+            mediaIds = mediaIds,
+            destination = PlaylistMoveDestination.START,
+            undoMessage = "已将所选歌曲移到歌单顶部",
+        )
+    }
+
+    fun moveSongsToEnd(
+        playlistId: String,
+        mediaIds: Collection<String>,
+    ) {
+        moveSongs(
+            playlistId = playlistId,
+            mediaIds = mediaIds,
+            destination = PlaylistMoveDestination.END,
+            undoMessage = "已将所选歌曲移到歌单底部",
+        )
+    }
+
     fun clearSongs(playlistId: String) {
-        launchMutation {
-            repository.clearSongs(playlistId)
+        mutatePlaylistMediaIds(playlistId) { _ ->
+            PlaylistMediaEdit(
+                mediaIds = emptyList(),
+                undoMessage = "已清空歌单",
+            )
         }
     }
 
@@ -189,9 +259,32 @@ class PlaylistViewModel(
         playlistId: String,
         availableMediaIds: Set<String>,
     ) {
-        launchMutation {
-            repository.removeUnavailableSongs(playlistId, availableMediaIds)
+        mutatePlaylistMediaIds(playlistId) { current ->
+            val updated = current.filter(availableMediaIds::contains)
+            val removedCount = current.size - updated.size
+            PlaylistMediaEdit(
+                mediaIds = updated,
+                undoMessage = "已清理 $removedCount 个当前不可用项目",
+            )
         }
+    }
+
+    fun undoLastPlaylistMutation() {
+        val undo = pendingUndo ?: return
+        launchMutation(clearUndoAtStart = false) {
+            repository.replaceSongs(undo.playlistId, undo.mediaIds)
+            pendingUndo = null
+            _uiState.update {
+                it.copy(
+                    undoMessage = null,
+                    infoMessage = "已撤销上一步歌单修改",
+                )
+            }
+        }
+    }
+
+    fun clearUndoMessage() {
+        clearUndoState()
     }
 
     fun playSong(
@@ -224,9 +317,87 @@ class PlaylistViewModel(
         super.onCleared()
     }
 
-    private fun launchMutation(block: suspend () -> Unit) {
+    private fun moveSongs(
+        playlistId: String,
+        mediaIds: Collection<String>,
+        destination: PlaylistMoveDestination,
+        undoMessage: String,
+    ) {
+        val requested = mediaIds.asSequence().filter(String::isNotBlank).toSet()
+        if (requested.isEmpty()) return
+
+        mutatePlaylistMediaIds(playlistId) { current ->
+            PlaylistMediaEdit(
+                mediaIds =
+                    movePlaylistMediaIds(
+                        current = current,
+                        movingMediaIds = requested,
+                        destination = destination,
+                    ),
+                undoMessage = undoMessage,
+            )
+        }
+    }
+
+    private fun mutatePlaylistMediaIds(
+        playlistId: String,
+        transform: (List<String>) -> PlaylistMediaEdit,
+    ) {
+        launchMutation {
+            val before =
+                _uiState.value.playlists.firstOrNull { it.id == playlistId }
+                    ?: throw IllegalArgumentException("要编辑的歌单已不存在")
+            val edit = transform(before.mediaIds)
+            if (edit.mediaIds == before.mediaIds) return@launchMutation
+
+            repository.replaceSongs(
+                playlistId = playlistId,
+                mediaIds = edit.mediaIds,
+            )
+            publishUndo(
+                playlist = before,
+                message = edit.undoMessage,
+            )
+        }
+    }
+
+    private fun publishUndo(
+        playlist: UserPlaylist,
+        message: String,
+    ) {
+        undoSequence =
+            if (undoSequence == Long.MAX_VALUE) {
+                1L
+            } else {
+                undoSequence + 1L
+            }
+        pendingUndo =
+            PlaylistUndoSnapshot(
+                playlistId = playlist.id,
+                mediaIds = playlist.mediaIds,
+            )
+        _uiState.update {
+            it.copy(
+                undoMessage = message,
+                undoToken = undoSequence,
+            )
+        }
+    }
+
+    private fun clearUndoState() {
+        pendingUndo = null
+        _uiState.update { it.copy(undoMessage = null) }
+    }
+
+    private fun launchMutation(
+        clearUndoAtStart: Boolean = true,
+        block: suspend () -> Unit,
+    ) {
         viewModelScope.launch {
             pendingOperations += 1
+            if (clearUndoAtStart) {
+                clearUndoState()
+            }
             _uiState.update {
                 it.copy(
                     isWorking = true,
@@ -250,6 +421,16 @@ class PlaylistViewModel(
             }
         }
     }
+
+    private data class PlaylistMediaEdit(
+        val mediaIds: List<String>,
+        val undoMessage: String,
+    )
+
+    private data class PlaylistUndoSnapshot(
+        val playlistId: String,
+        val mediaIds: List<String>,
+    )
 }
 
 private fun buildImportSuccessMessage(result: PlaylistImportResult): String =
