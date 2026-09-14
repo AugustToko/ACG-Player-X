@@ -10,20 +10,25 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import top.geek_studio.chenlongcould.musicplayer.data.PlaylistImportPreview
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistImportResult
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistMoveDestination
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistRepository
 import top.geek_studio.chenlongcould.musicplayer.data.PlaylistTransferRepository
 import top.geek_studio.chenlongcould.musicplayer.data.UserPlaylist
+import top.geek_studio.chenlongcould.musicplayer.data.finalizePlaylistImport
 import top.geek_studio.chenlongcould.musicplayer.data.movePlaylistMediaIds
 import top.geek_studio.chenlongcould.musicplayer.data.removePlaylistMediaIds
 import top.geek_studio.chenlongcould.musicplayer.data.swapPlaylistMediaIds
+import top.geek_studio.chenlongcould.musicplayer.data.updatePlaylistImportName
+import top.geek_studio.chenlongcould.musicplayer.data.updatePlaylistImportSelection
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.playback.PlayerConnection
 
 data class PlaylistUiState(
     val playlists: List<UserPlaylist> = emptyList(),
     val activePlaylistId: String? = null,
+    val importPreview: PlaylistImportPreview? = null,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
     val undoMessage: String? = null,
@@ -103,7 +108,57 @@ class PlaylistViewModel(
         librarySongs: List<Song>,
     ) {
         launchMutation {
-            val imported = transferRepository.importPlaylist(uri, librarySongs)
+            val preview = transferRepository.prepareImport(uri, librarySongs)
+            _uiState.update {
+                it.copy(
+                    importPreview = preview,
+                    infoMessage = null,
+                )
+            }
+        }
+    }
+
+    fun updateImportPreviewName(name: String) {
+        _uiState.update { state ->
+            val preview = state.importPreview ?: return@update state
+            state.copy(
+                importPreview = updatePlaylistImportName(preview, name),
+                errorMessage = null,
+            )
+        }
+    }
+
+    fun updateImportEntrySelection(
+        entryIndex: Int,
+        mediaId: String?,
+    ) {
+        _uiState.update { state ->
+            val preview = state.importPreview ?: return@update state
+            state.copy(
+                importPreview =
+                    updatePlaylistImportSelection(
+                        preview = preview,
+                        entryIndex = entryIndex,
+                        mediaId = mediaId,
+                    ),
+                errorMessage = null,
+            )
+        }
+    }
+
+    fun cancelImportPreview() {
+        _uiState.update {
+            it.copy(
+                importPreview = null,
+                errorMessage = null,
+            )
+        }
+    }
+
+    fun confirmImportPreview() {
+        val preview = _uiState.value.importPreview ?: return
+        launchMutation {
+            val imported = finalizePlaylistImport(preview)
             require(imported.mediaIds.isNotEmpty()) {
                 buildImportFailureMessage(imported)
             }
@@ -115,6 +170,7 @@ class PlaylistViewModel(
             _uiState.update {
                 it.copy(
                     activePlaylistId = created.id,
+                    importPreview = null,
                     infoMessage = buildImportSuccessMessage(imported),
                 )
             }
@@ -459,20 +515,22 @@ class PlaylistViewModel(
 private fun buildImportSuccessMessage(result: PlaylistImportResult): String =
     buildString {
         append("已导入 ${result.mediaIds.size} 项")
-        if (result.matchedCount > 0) append("，匹配 ${result.matchedCount} 首当前歌曲")
+        if (result.matchedCount > 0) append("，自动匹配 ${result.matchedCount} 首")
+        if (result.manuallyMappedCount > 0) append("，手工映射 ${result.manuallyMappedCount} 首")
         if (result.preservedUnavailableCount > 0) {
             append("，保留 ${result.preservedUnavailableCount} 个暂不可用 ACG 项")
         }
-        val skipped = result.unmatchedCount + result.ambiguousCount
-        if (skipped > 0) append("，跳过 $skipped 条无法可靠匹配的外部路径")
+        val unresolved = result.unmatchedCount + result.ambiguousCount
+        if (unresolved > 0) append("，跳过 $unresolved 条仍未匹配的外部路径")
+        if (result.skippedCount > 0) append("，排除 ${result.skippedCount} 条")
         if (result.duplicateCount > 0) append("，去重 ${result.duplicateCount} 条")
         if (result.truncated) append("；文件条目超过上限，已截断")
     }
 
 private fun buildImportFailureMessage(result: PlaylistImportResult): String =
     buildString {
-        append("未能把歌单条目匹配到当前音乐库")
-        if (result.ambiguousCount > 0) append("；${result.ambiguousCount} 条存在多个候选")
-        if (result.unmatchedCount > 0) append("；${result.unmatchedCount} 条路径或元数据不匹配")
-        append("。请先恢复对应 MediaStore 或 SAF 音乐来源后重试")
+        append("预览中没有选择可导入的歌曲")
+        if (result.ambiguousCount > 0) append("；${result.ambiguousCount} 条仍存在多个候选")
+        if (result.unmatchedCount > 0) append("；${result.unmatchedCount} 条路径或元数据未匹配")
+        append("。请手工映射至少一项，或恢复对应 MediaStore / SAF 音乐来源")
     }
