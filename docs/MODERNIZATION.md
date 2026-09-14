@@ -11,6 +11,7 @@
 - 单个 `MainActivity` 承担导航、权限、Live2D、网络检查、弹窗和页面切换
 - 播放 UI 与 Fragment/第三方滑动面板强耦合
 - 旧歌词页依赖硬编码在线接口，LRC 解析器主体实际上未完成
+- 收藏、历史和桌面快捷入口依赖旧数据库、Activity 路由与服务状态
 - 依赖版本散落且部分来自 JCenter/JitPack
 - 仓库跟踪签名文件、Firebase 配置和 AAB 构建产物
 
@@ -31,8 +32,13 @@
 
 ```text
 MainActivity
+  ├── publish dynamic launcher shortcuts
+  ├── route cold/warm shortcut intents
   └── AcgPlayerApp (Compose responsive shell)
         ├── LibraryScreen
+        │     ├── songs / favorites / recent
+        │     ├── albums / artists / folders
+        │     └── search and collection filters
         ├── NowPlayingScreen
         │     ├── cover pane
         │     ├── synchronized lyrics pane
@@ -40,6 +46,7 @@ MainActivity
         └── SettingsScreen
 
 MainViewModel
+  ├── MainUiState.destination
   ├── MusicRepository
   │     ├── MediaStore query + ContentObserver
   │     ├── DocumentTreeMusicScanner
@@ -48,6 +55,9 @@ MainViewModel
   ├── AuthorizedFolderRepository
   │     ├── OpenDocumentTree persisted read grants
   │     └── DataStore directory registry
+  ├── LibraryStateRepository
+  │     ├── favorite media IDs
+  │     └── bounded recent playback order
   ├── LyricsRepository
   │     ├── pure Kotlin LRC parser
   │     ├── internal per-media cache
@@ -59,9 +69,11 @@ MainViewModel
                                  └── PlaybackStateStore
 ```
 
-### 状态管理
+### 状态管理与导航
 
-`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、MediaStore 权限、授权目录、扫描警告、查询、精确集合筛选、主题、播放状态和当前歌词均以不可变状态驱动 Compose。系统媒体权限与 SAF 目录访问互相独立，因此用户拒绝全盘媒体权限后仍可通过指定目录使用播放器。
+`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、MediaStore 权限、授权目录、扫描警告、查询、集合筛选、收藏、最近播放、主题、播放状态、当前歌词和顶层目标页面均以不可变状态驱动 Compose。
+
+顶层导航不再只存在于 Composable 的临时状态，而是由 `MainUiState.destination` 驱动。`MainActivity` 在冷启动 `onCreate` 和热启动 `onNewIntent` 中统一解析 Shortcut action，使桌面长按“收藏”或“最近播放”能够可靠切换到音乐库对应分区，同时清理不相关的查询和集合过滤。
 
 ### 音乐来源链路
 
@@ -75,6 +87,17 @@ MainViewModel
 - MediaStore 与 SAF 合并时优先 MediaStore，并按 URI 与元数据指纹去重
 - SAF 扫描结果使用进程内缓存；MediaStore 变更不会重复扫描所有文档树，手动刷新会强制重扫
 - 权限失效、提供程序异常、深度或数量截断作为非阻断 warning 展示
+
+### 收藏与最近播放链路
+
+- `LibraryStateRepository` 使用 Preferences DataStore 保存收藏媒体 ID 集合和最近播放有序列表
+- MediaStore 正数 ID 与 SAF 稳定负数 ID 使用同一协议，不依赖文件绝对路径
+- 收藏切换为幂等集合操作，来源暂时不可用时不破坏记录
+- 最近播放只在 `PlaybackUiState.isPlaying` 为真且媒体发生切换时写入，避免恢复暂停队列产生虚假历史
+- 同一媒体再次播放会移动到首位并去重，列表上限为 100
+- 展示最近播放时按持久顺序解析当前音乐库；不可用项被忽略但不破坏性删除
+- 收藏和最近播放都支持现有全文搜索，并以当前可见歌曲作为播放队列
+- 最近播放提供显式清空入口
 
 ### 播放与队列链路
 
@@ -112,6 +135,8 @@ MainViewModel
 
 - Material 3 主题、动态配色、edge-to-edge 与响应式导航
 - MediaStore 与 SAF 双来源歌曲、专辑、艺术家和文件夹浏览
+- 收藏与最近播放智能分区、星标切换、清空历史和分区内搜索
+- 桌面长按收藏/最近播放快捷入口，支持冷启动与热启动
 - 联合搜索、精确集合筛选和集合内搜索
 - 首次页支持“授予媒体权限”或“选择音乐目录”两种入口
 - 设置页支持添加、移除、重新扫描目录，并展示权限状态和扫描 warning
@@ -125,13 +150,14 @@ MainViewModel
 
 尚未达到完整产品能力：
 
+- 高级智能列表、播放次数统计、最近添加和规则列表
 - SAF 增量索引、磁盘缓存和提供程序变更监听
 - 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
 - 音频标签编辑器
 - Jetpack Glance 桌面小组件
 - Live2D 助手及模型切换
 - Intro、购买、Bug Report 和远程功能
-- 收藏、历史、智能列表、睡眠定时、均衡器和无缝播放
+- 睡眠定时、均衡器和无缝播放
 - 队列长按拖拽、批量选择和撤销
 
 这些能力应继续在新架构上实现，不建议把旧 Fragment、ButterKnife、SlidingUpPanel 或失效在线接口重新接回活动模块。
@@ -141,6 +167,9 @@ MainViewModel
 | 旧方案 | 新方案 |
 | --- | --- |
 | Java/XML/Fragment 主界面 | Jetpack Compose Material 3 |
+| Activity 内临时导航 | `MainUiState.destination` 统一路由 |
+| 旧 DynamicShortcutManager / LauncherActivity | 平台 ShortcutManager + MainActivity Intent action |
+| 旧数据库收藏/播放历史 | DataStore 稳定媒体 ID 集合与有序历史 |
 | ButterKnife | Compose 状态与 Kotlin 属性 |
 | SlidingUpPanel + MiniPlayerFragment | Compose MiniPlayer + 独立播放页面 |
 | 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC parser + Compose 同步列表 + 本地导入 |
@@ -158,7 +187,7 @@ MainViewModel
 
 现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名/服务凭据。
 
-用户导入歌词仅保存到应用内部存储，不上传网络。SAF 只保存系统授予的目录 URI 和只读权限；应用不申请写入权限，移除目录时主动释放持久 grant。
+用户导入歌词仅保存到应用内部存储，不上传网络。SAF 只保存系统授予的目录 URI 和只读权限；应用不申请写入权限，移除目录时主动释放持久 grant。收藏和最近播放仅保存媒体 ID，不复制音频或上传行为数据。
 
 ## 7. 验证门禁
 
@@ -171,31 +200,32 @@ CI 执行：
   :app:assembleDebug
 ```
 
-自动测试覆盖搜索、Android 新旧路径、SAF 音频识别、稳定文档 ID、可读路径编码、跨来源去重，以及 LRC 元数据、时间精度、多时间戳、非法时间、去重排序、偏移和活动行匹配。合并前仍建议人工验收：
+自动测试覆盖搜索、Android 新旧路径、SAF 音频识别、稳定文档 ID、可读路径编码、跨来源去重、收藏切换、最近播放去重/排序/上限/不可用条目，以及 LRC 元数据、时间精度、多时间戳、非法时间、去重排序、偏移和活动行匹配。合并前仍建议人工验收：
 
 1. Android 8、12、13、16/17 的媒体、通知、OpenDocumentTree 和系统文件选择器流程
 2. 内部存储、SD 卡、USB OTG、云盘及第三方文档提供程序的持久授权与重启恢复
-3. 10,000 首以上 MediaStore+SAF 混合库的扫描、聚合、搜索、滚动和队列性能
-4. 重叠授权目录、同名文件、未知 MIME、损坏音频和权限被系统撤销后的降级
-5. UTF-8、带 BOM、GB18030、大文件、损坏和无时间标签 LRC
-6. 歌词切歌竞态、活动行滚动、点击 Seek、正负 offset 与删除后重载
-7. 队列跳转、连续重排、删除当前项、清空及服务重建后一致性
-8. MediaStore 与 SAF 的真实封面、内嵌封面、无封面及大图片采样
-9. 后台播放、锁屏控制、蓝牙按键、耳机拔出和音频焦点
-10. 进程回收、设备重启、动态配色、折叠屏、TalkBack 和高对比度
+3. 10,000 首以上 MediaStore+SAF 混合库的扫描、聚合、搜索、收藏、历史、滚动和队列性能
+4. 收藏来源暂时失效后恢复、历史上限、重复播放、清空和跨重启一致性
+5. 不同 Launcher 上长按快捷入口，以及应用冷启动、后台和前台状态下的路由
+6. 重叠授权目录、同名文件、未知 MIME、损坏音频和权限被系统撤销后的降级
+7. UTF-8、带 BOM、GB18030、大文件、损坏和无时间标签 LRC
+8. 歌词切歌竞态、活动行滚动、点击 Seek、正负 offset 与删除后重载
+9. 队列跳转、连续重排、删除当前项、清空及服务重建后一致性
+10. 后台播放、锁屏控制、蓝牙按键、进程回收、折叠屏、TalkBack 和高对比度
 
 ## 8. 后续优先级
 
 ### P0：发布可用性
 
-- MediaSession、OpenDocumentTree、队列编辑、歌词导入和状态恢复的仪器化测试
+- MediaSession、OpenDocumentTree、快捷入口、队列编辑、歌词导入和状态恢复的仪器化测试
 - Baseline Profile、Macrobenchmark 与 10,000 首混合库性能基准
 - SAF 权限撤销、不可读 URI、文件移动和播放错误恢复降级
-- 超大队列、大歌词、封面缓存和内存压力测试
-- OEM 前台服务和通知兼容验证
+- 超大队列、大歌词、收藏/历史和封面缓存压力测试
+- OEM 前台服务、通知和 Launcher 快捷入口兼容验证
 
 ### P1：数据体验与旧功能迁移
 
+- 播放次数、最近添加、最常播放、未播放和规则智能列表
 - SAF 增量索引、磁盘缓存、目录面包屑和可选变更监听
 - 音频标签编辑独立数据层
 - 同目录同名歌词自动匹配、歌词编辑和双语歌词
@@ -205,6 +235,6 @@ CI 执行：
 ### P2：产品化
 
 - 队列长按拖拽、批量操作和撤销
-- 收藏、历史、智能列表、睡眠定时和均衡器入口
+- 睡眠定时、均衡器入口和无缝播放
 - 无障碍、键盘、遥控器、车机体验
 - 截图测试、性能回归和签名发布流水线
