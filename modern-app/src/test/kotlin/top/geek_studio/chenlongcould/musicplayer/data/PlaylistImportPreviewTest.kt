@@ -51,6 +51,7 @@ class PlaylistImportPreviewTest {
         preview = updatePlaylistImportSelection(preview, entryIndex = 1, mediaId = "3")
         preview = updatePlaylistImportSelection(preview, entryIndex = 2, mediaId = "4")
 
+        assertEquals(0, preview.attentionCount)
         val result = finalizePlaylistImport(preview)
 
         assertEquals("Review", result.preferredName)
