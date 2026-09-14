@@ -1,21 +1,40 @@
 name: Android CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+      - "modernize/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-
+    name: Lint, test and assemble
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v2
-      - name: set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
         with:
-          java-version: 1.8
-      - name: Decrypt large secret
-        run: ./.github/scripts/ds.sh
-        env:
-          LARGE_SECRET_PASSPHRASE: ${{ secrets.KEY_PASS }}
-      - name: Build with Gradle
-        run: ./gradlew build
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+
+      - name: Verify Compose application
+        run: ./gradlew --no-daemon :app:lintDebug :app:testDebugUnitTest :app:assembleDebug
