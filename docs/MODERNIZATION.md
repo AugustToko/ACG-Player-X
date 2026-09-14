@@ -41,9 +41,13 @@ MainActivity
 
 MainViewModel
   ├── MusicRepository
-  │     ├── MediaStore query
-  │     ├── folder/path normalization
-  │     └── ContentObserver + debounce refresh
+  │     ├── MediaStore query + ContentObserver
+  │     ├── DocumentTreeMusicScanner
+  │     ├── cross-source merge/deduplication
+  │     └── in-process SAF scan cache
+  ├── AuthorizedFolderRepository
+  │     ├── OpenDocumentTree persisted read grants
+  │     └── DataStore directory registry
   ├── LyricsRepository
   │     ├── pure Kotlin LRC parser
   │     ├── internal per-media cache
@@ -57,7 +61,20 @@ MainViewModel
 
 ### 状态管理
 
-`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、查询、精确集合筛选、主题、播放状态和当前歌词均以不可变状态驱动 Compose。曲目变化时取消上一首歌词任务并加载当前媒体 ID 对应缓存，异步结果写回前再次核对当前曲目，避免串歌。
+`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、MediaStore 权限、授权目录、扫描警告、查询、精确集合筛选、主题、播放状态和当前歌词均以不可变状态驱动 Compose。系统媒体权限与 SAF 目录访问互相独立，因此用户拒绝全盘媒体权限后仍可通过指定目录使用播放器。
+
+### 音乐来源链路
+
+- MediaStore 使用分版本查询：Android 10+ 读取 `RELATIVE_PATH`，旧系统从 `DATA` 派生父目录
+- `AuthorizedFolderRepository` 保存用户选择的树 URI，并取得/释放持久只读权限
+- `DocumentTreeMusicScanner` 使用 `DocumentsContract` 广度优先遍历目录
+- 单目录设置 20,000 项、32 层深度上限，并检测已访问目录 ID，防止异常提供程序循环
+- 音频判断同时参考 MIME 和扩展名；元数据通过 `MediaMetadataRetriever` 读取
+- 文档 URI 通过 SHA-256 生成稳定负数媒体 ID，与 MediaStore 正数 ID 分离
+- SAF 路径内部包含稳定来源标识，UI 和搜索只展示可读目录路径
+- MediaStore 与 SAF 合并时优先 MediaStore，并按 URI 与元数据指纹去重
+- SAF 扫描结果使用进程内缓存；MediaStore 变更不会重复扫描所有文档树，手动刷新会强制重扫
+- 权限失效、提供程序异常、深度或数量截断作为非阻断 warning 展示
 
 ### 播放与队列链路
 
@@ -66,7 +83,7 @@ MainViewModel
 - 当前曲目、完整队列、队列索引、进度、缓冲、随机和循环状态通过 StateFlow 回传 UI
 - Compose 队列支持点击跳转、上下调整、移除和确认清空
 - 所有队列修改直接作用于 Media3 Timeline，因此继续复用既有持久化协议
-- `PlaybackStateStore` 保存队列、索引、位置、随机和循环状态
+- `PlaybackStateStore` 保存队列、索引、位置、随机和循环状态，包括 SAF 文档内容 URI
 - 队列仅在 Timeline 变化时序列化；播放位置每 5 秒轻量保存
 - 服务恢复后重建队列并停留在原位置，但保持暂停，避免意外自动播放
 
@@ -81,24 +98,25 @@ MainViewModel
 - Compose 歌词列表随活动行滚动，高亮当前行；点击任意行按有效时间 Seek
 - 删除歌词同时清除内部文件和该歌曲用户校准量
 
-### 音乐库与封面链路
+### 封面链路
 
-- `MusicRepository` 使用 MediaStore 查询音频，不直接遍历共享存储
-- Android 10+ 使用 `RELATIVE_PATH`，旧系统从 `DATA` 派生父目录
-- MediaStore `ContentObserver` 监听增删改，并在 ViewModel 中进行 650 ms 去抖刷新
-- 优先读取专辑封面 URI，失败时回退歌曲内容 URI 的内嵌图片
-- Android 10+ 使用 `ContentResolver.loadThumbnail`，旧系统按目标尺寸采样解码
-- 使用受限 LRU 内存缓存；读取失败时使用稳定 Material 3 渐变占位
+- 优先读取专辑封面 URI
+- `loadThumbnail` 或图片流解码失败后，使用 `MediaMetadataRetriever.embeddedPicture`
+- 该回退同时支持 MediaStore 内容 URI 与 SAF 文档 URI
+- 图片按请求尺寸采样，使用受限 LRU 内存缓存
+- 读取失败时使用稳定 Material 3 渐变占位
 
 ## 4. UI 重写范围
 
 已完成：
 
 - Material 3 主题、动态配色、edge-to-edge 与响应式导航
-- 本地歌曲、专辑、艺术家和文件夹浏览
+- MediaStore 与 SAF 双来源歌曲、专辑、艺术家和文件夹浏览
 - 联合搜索、精确集合筛选和集合内搜索
+- 首次页支持“授予媒体权限”或“选择音乐目录”两种入口
+- 设置页支持添加、移除、重新扫描目录，并展示权限状态和扫描 warning
 - 权限、加载、空内容、错误状态和 Android 13+ 通知权限引导
-- 真实封面、缓存与错误占位
+- 真实封面、任意音频 URI 内嵌封面、缓存与错误占位
 - 迷你播放器和全屏播放页
 - 播放、暂停、切歌、Seek、随机和循环
 - 队列位置展示、可视化编辑与持久恢复
@@ -107,7 +125,7 @@ MainViewModel
 
 尚未达到完整产品能力：
 
-- SAF 未索引目录和可恢复 URI 权限
+- SAF 增量索引、磁盘缓存和提供程序变更监听
 - 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
 - 音频标签编辑器
 - Jetpack Glance 桌面小组件
@@ -126,19 +144,21 @@ MainViewModel
 | ButterKnife | Compose 状态与 Kotlin 属性 |
 | SlidingUpPanel + MiniPlayerFragment | Compose MiniPlayer + 独立播放页面 |
 | 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC parser + Compose 同步列表 + 本地导入 |
+| 全盘扫描 / legacy storage | MediaStore + OpenDocumentTree 持久目录授权 |
 | AppThemeHelper | Material 3 ColorScheme + DataStore |
 | 生命周期 extensions / ViewModelProviders | Lifecycle 2.11 + `viewModelScope` / Compose collect |
 | 自定义 MediaPlayer 服务控制 | Media3 ExoPlayer + MediaSessionService |
 | 临时内存播放队列 | Media3 Timeline + Compose 编辑 + 持久化恢复 |
-| Glide 3 封面链路 | ContentResolver 缩略图 + 采样解码 + LRU 缓存 |
+| Glide 3 封面链路 | ContentResolver 缩略图 + MediaMetadataRetriever + 采样 + LRU |
 | SharedPreferences 主题状态 | DataStore |
 | Fabric Crashlytics | 当前活动模块移除；需要时接入现代 Firebase Crashlytics |
 | jcenter / 旧 JitPack 依赖 | Google Maven + Maven Central |
-| legacy external storage | MediaStore + 分版本读取权限 |
 
 ## 6. 仓库与安全清理
 
-现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名/服务凭据。用户导入歌词仅保存到应用内部存储，不上传网络。
+现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名/服务凭据。
+
+用户导入歌词仅保存到应用内部存储，不上传网络。SAF 只保存系统授予的目录 URI 和只读权限；应用不申请写入权限，移除目录时主动释放持久 grant。
 
 ## 7. 验证门禁
 
@@ -151,32 +171,32 @@ CI 执行：
   :app:assembleDebug
 ```
 
-自动测试覆盖搜索、Android 新旧路径解析，以及 LRC 元数据、时间精度、多时间戳、非法时间、去重排序、偏移和活动行匹配。合并前仍建议人工验收：
+自动测试覆盖搜索、Android 新旧路径、SAF 音频识别、稳定文档 ID、可读路径编码、跨来源去重，以及 LRC 元数据、时间精度、多时间戳、非法时间、去重排序、偏移和活动行匹配。合并前仍建议人工验收：
 
-1. Android 8、12、13、16/17 的媒体、通知与系统文件选择器流程
-2. 10,000 首以上音乐库的扫描、聚合、搜索、滚动和队列持久化性能
-3.  UTF-8、带 BOM、GB18030、大文件、损坏和无时间标签 LRC
-4. 歌词切歌竞态、活动行滚动、点击 Seek、正负 offset 与删除后重载
-5. 队列跳转、连续重排、删除当前项、清空及服务重建后一致性
-6. 真实封面、内嵌封面、无封面、损坏封面及大图片采样
-7. 后台播放、锁屏控制、蓝牙按键、耳机拔出和音频焦点
-8. 进程回收、服务重建和设备重启后的队列与进度恢复
-9. 横屏、折叠屏和平板宽度下的歌词和队列布局
-10. 动态配色、亮色、深色、高对比度与 TalkBack
+1. Android 8、12、13、16/17 的媒体、通知、OpenDocumentTree 和系统文件选择器流程
+2. 内部存储、SD 卡、USB OTG、云盘及第三方文档提供程序的持久授权与重启恢复
+3. 10,000 首以上 MediaStore+SAF 混合库的扫描、聚合、搜索、滚动和队列性能
+4. 重叠授权目录、同名文件、未知 MIME、损坏音频和权限被系统撤销后的降级
+5. UTF-8、带 BOM、GB18030、大文件、损坏和无时间标签 LRC
+6. 歌词切歌竞态、活动行滚动、点击 Seek、正负 offset 与删除后重载
+7. 队列跳转、连续重排、删除当前项、清空及服务重建后一致性
+8. MediaStore 与 SAF 的真实封面、内嵌封面、无封面及大图片采样
+9. 后台播放、锁屏控制、蓝牙按键、耳机拔出和音频焦点
+10. 进程回收、设备重启、动态配色、折叠屏、TalkBack 和高对比度
 
 ## 8. 后续优先级
 
 ### P0：发布可用性
 
-- MediaSession、队列编辑、歌词导入和状态恢复的仪器化测试
-- Baseline Profile、Macrobenchmark 与 10,000 首性能基准
+- MediaSession、OpenDocumentTree、队列编辑、歌词导入和状态恢复的仪器化测试
+- Baseline Profile、Macrobenchmark 与 10,000 首混合库性能基准
+- SAF 权限撤销、不可读 URI、文件移动和播放错误恢复降级
 - 超大队列、大歌词、封面缓存和内存压力测试
-- 播放错误、不可读 URI 和文件移动后的恢复降级
 - OEM 前台服务和通知兼容验证
 
-### P1：数据入口与旧功能迁移
+### P1：数据体验与旧功能迁移
 
-- SAF 文件夹入口和可恢复 URI 权限
+- SAF 增量索引、磁盘缓存、目录面包屑和可选变更监听
 - 音频标签编辑独立数据层
 - 同目录同名歌词自动匹配、歌词编辑和双语歌词
 - Glance 桌面小组件
