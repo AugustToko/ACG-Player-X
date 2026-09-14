@@ -68,4 +68,15 @@ jobs:
           fi
 
       - name: Run instrumented tests
-        run: ./gradlew --no-daemon :app:pixel2Api35DebugAndroidTest
+        run: ./gradlew --no-daemon --info :app:pixel2Api35DebugAndroidTest
+
+      - name: Upload managed-device reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: managed-device-test-results-${{ github.run_id }}
+          path: |
+            modern-app/build/reports/androidTests/managedDevice/
+            modern-app/build/outputs/androidTest-results/managedDevice/
+          if-no-files-found: warn
+          retention-days: 7
