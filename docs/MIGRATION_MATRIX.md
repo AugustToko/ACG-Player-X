@@ -92,17 +92,19 @@
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
 | 单元测试 | 部分完成 | 路径、SAF、智能库、歌单、拖拽、M3U 预览/映射、LRC |
-| Android Lint | 完成 | CI 阻断执行 |
+| Android Lint | 完成 | Push/PR 阻断执行 |
 | Debug APK | 完成 | Push/PR 构建 |
-| 仪器化测试 | 未开始 | 权限、SAF、MediaSession、M3U、快捷入口、恢复 |
+| AndroidTest APK | 完成 | Push/PR 编译与打包 |
+| 仪器化测试 | 部分完成 | API 35 托管设备：导航、快捷入口、recreate、MediaSession、M3U 预览/文件往返、歌词文件往返 |
+| 托管设备诊断 | 完成 | 成功或失败均上传报告 artifact，保留 7 天 |
 | 截图测试 | 未开始 | 手机、平板、主题、导入预览、歌词、队列 |
 | 性能基准 | 未开始 | Baseline Profile、Macrobenchmark、大型数据集 |
 | 发布流水线 | 未开始 | 新凭据、GitHub Secrets、签名与产物 |
 
 ## 下一批顺序
 
-1. 发布级仪器化测试和进程回收验证。
-2. Baseline Profile、Macrobenchmark 与大型数据基准。
+1. Baseline Profile、Macrobenchmark 与大型数据基准。
+2. 真实 SAF Provider、系统选择器、权限撤销和强制进程回收仪器化测试。
 3. M3U 相对路径导出和旧 MediaStore Playlist 只读导入。
 4. 规则智能列表与播放完成度。
 5. SAF 增量索引、歌词增强、Glance、Live2D 和标签编辑。

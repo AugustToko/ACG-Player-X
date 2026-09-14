@@ -36,8 +36,13 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
 
-      - name: Verify Compose application
-        run: ./gradlew --no-daemon :app:lintDebug :app:testDebugUnitTest :app:assembleDebug
+      - name: Verify Compose application and test APK
+        run: >-
+          ./gradlew --no-daemon
+          :app:lintDebug
+          :app:testDebugUnitTest
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest
 
   instrumentation:
     name: API 35 managed-device tests

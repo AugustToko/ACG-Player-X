@@ -12,7 +12,7 @@
 
 ```text
 MainActivity
-  ├── cold/warm shortcut intent handling
+  ├── cold/warm shortcut action handling
   └── AcgPlayerApp
         ├── LibraryScreen
         ├── PlaylistsScreen
@@ -75,7 +75,7 @@ PlaybackService
 
 ## 6. M3U 导入与预览
 
-Alpha11 将导入链路拆分为：
+导入链路为：
 
 ```text
 OpenDocument
@@ -93,8 +93,6 @@ finalizePlaylistImport
 一次性创建 UserPlaylist
 ```
 
-### 自动解析
-
 支持 UTF-8、UTF-8 BOM 和 GB18030；单文件最大 4 MB，最多 20,000 个位置条目。标准字段包括 `#EXTM3U`、`#PLAYLIST` 和 `#EXTINF`，未知注释会被忽略。
 
 匹配按可靠性递减：
@@ -106,27 +104,7 @@ finalizePlaylistImport
 
 不同设备复用同一 MediaStore 数字 ID 或内容 URI 时，不会绕过可移植提示直接绑定。
 
-### 逐条预览
-
-每个原始条目保存：
-
-- 原始索引和位置
-- 标题、艺术家、时长、文件名和目录提示
-- 自动匹配结果
-- 自动候选媒体 ID（受限数量）
-- 匹配状态：自动、离线保留、歧义、未匹配或重复
-- 用户最终选择
-
-用户可：
-
-- 编辑导入后的歌单名称
-- 搜索原始导入条目
-- 仅查看尚未选择目标的条目
-- 排除自动匹配结果
-- 恢复自动匹配或离线 ACG ID
-- 从可靠候选中选择
-- 搜索完整当前音乐库并手工映射
-- 明确跳过无法可靠关联的条目
+每个原始条目保存索引、位置、元数据、自动结果、候选集合、状态和用户最终选择。用户可以搜索导入条目、仅看未处理项、排除或恢复自动结果、从候选中选择，或搜索完整音乐库进行手工映射。
 
 同一媒体 ID 最终只保留第一次出现；最终歌单按原始 M3U 索引排序。取消预览不会创建歌单，也不会修改已有歌单。
 
@@ -134,28 +112,66 @@ finalizePlaylistImport
 
 导出通过 `CreateDocument` 写入 UTF-8 M3U8。除标准 EXTINF 外，附带可忽略的 `#ACGPLAYER-MEDIA-ID`、文件名和目录注释。当前不可用项目使用 `acg-player://media/<id>` 保留顺序。
 
-## 8. 质量门禁
+## 8. Alpha12 测试架构
 
-CI 执行：
+### 静态与 JVM 门禁
+
+Push 和 Pull Request 都执行：
 
 ```bash
 ./gradlew --no-daemon \
   :app:lintDebug \
   :app:testDebugUnitTest \
-  :app:assembleDebug
+  :app:assembleDebug \
+  :app:assembleDebugAndroidTest
 ```
 
-自动测试覆盖路径、SAF、跨来源去重、智能列表、歌单顺序、拖拽算法、M3U 跨设备冲突、逐条候选、手工映射、排除和最终去重，以及 LRC 时间轴。
+这会阻断 Lint、单元测试、应用 APK 或测试 APK 的编译/打包回归。
 
-仍需实机覆盖 Android 8/12/13/16/17、不同 DocumentsProvider、进程回收、通知/前台服务、蓝牙、车机、10,000 首音乐库和大型歌单。
+### API 35 托管设备
 
-## 9. 后续优先级
+Pull Request、默认分支和手动运行还会启动：
+
+```text
+Pixel 2
+API 35
+AOSP ATD
+x86_64
+系统动画关闭
+```
+
+设备测试通过 `:app:pixel2Api35DebugAndroidTest` 执行。Linux runner 会显式开放 `/dev/kvm`，失败或成功报告均上传为 7 天 artifact。
+
+### 当前设备级覆盖
+
+- Compose 壳层在音乐库与设置页之间导航
+- 暖启动快捷入口进入收藏页
+- Activity recreate 后保留当前目的地
+- MediaController 连接 PlaybackService 的 MediaSession，并验证初始暂停状态
+- M3U 预览待处理筛选与手工映射回调
+- LyricsRepository 的 UTF-8 导入、内部存储读取、用户偏移和删除清理
+- LyricsRepository 的 GB18030 回退解码
+- PlaylistTransferRepository 的文件 URI 导入预览、UTF-8 M3U8 导出、离线项目与再导入
+
+快捷入口测试通过独立动作分发入口验证 ViewModel 路由，不替换 ActivityScenario 的原始启动 Intent，避免生命周期跟踪失效。
+
+详细测试命令和剩余边界见 `docs/TESTING.md`。
+
+## 9. 仍需实机覆盖
+
+- Android 8/12/13/16/17 的权限和前台服务差异
+- 真实 DocumentsProvider、系统文件选择器与持久 URI 授权撤销
+- 系统强制进程回收后的播放、导航和 DataStore 恢复
+- 通知、锁屏、蓝牙、车机和 OEM 后台限制
+- 10,000 首音乐库、数千首歌单、大队列和大歌词
+
+## 10. 后续优先级
 
 ### P0
 
-- MediaSession、SAF、M3U 预览、快捷入口、歌词导入和进程回收仪器化测试
 - Baseline Profile、Macrobenchmark、大型混合库/歌单/队列基准
-- SAF 权限撤销、文件移动和播放错误恢复
+- 真实 SAF Provider、权限撤销、文件移动和播放错误恢复测试
+- 强制进程回收、通知和前台服务仪器化测试
 
 ### P1
 
