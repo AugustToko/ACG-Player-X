@@ -87,6 +87,7 @@ fun SettingsScreen(
                     StatusItem("耳机与蓝牙控制", "由 MediaSession 接管")
                     StatusItem("音频焦点", "自动管理")
                     StatusItem("队列与进度恢复", "已启用")
+                    StatusItem("可视化播放队列", "已启用")
                     StatusItem(
                         "播放通知权限",
                         if (notificationPermissionRequired) "未授予" else "已就绪",
@@ -110,6 +111,8 @@ fun SettingsScreen(
                     StatusItem("真实专辑封面", "已迁移")
                     StatusItem("媒体库自动刷新", "已迁移")
                     StatusItem("播放状态恢复", "已迁移")
+                    StatusItem("同步 LRC 歌词", "已迁移")
+                    StatusItem("播放队列编辑", "已迁移")
                     StatusItem("Live2D / 标签编辑 / 小组件", "待兼容迁移")
                 }
             }

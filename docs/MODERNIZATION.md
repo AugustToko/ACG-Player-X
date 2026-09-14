@@ -10,9 +10,9 @@
 - 旧存储权限与 `requestLegacyExternalStorage`
 - 单个 `MainActivity` 承担导航、权限、Live2D、网络检查、弹窗和页面切换
 - 播放 UI 与 Fragment/第三方滑动面板强耦合
+- 旧歌词页依赖硬编码在线接口，LRC 解析器主体实际上未完成
 - 依赖版本散落且部分来自 JCenter/JitPack
 - 仓库跟踪签名文件、Firebase 配置和 AAB 构建产物
-- CI 依赖 JDK 8、旧 Actions 和签名解密脚本
 
 ## 2. 新构建基线
 
@@ -34,6 +34,9 @@ MainActivity
   └── AcgPlayerApp (Compose responsive shell)
         ├── LibraryScreen
         ├── NowPlayingScreen
+        │     ├── cover pane
+        │     ├── synchronized lyrics pane
+        │     └── editable queue pane
         └── SettingsScreen
 
 MainViewModel
@@ -41,112 +44,101 @@ MainViewModel
   │     ├── MediaStore query
   │     ├── folder/path normalization
   │     └── ContentObserver + debounce refresh
+  ├── LyricsRepository
+  │     ├── pure Kotlin LRC parser
+  │     ├── internal per-media cache
+  │     └── per-song user offset
   ├── SettingsRepository (DataStore)
   └── PlayerConnection (MediaController)
                            └── PlaybackService
                                  ├── MediaSession + ExoPlayer
                                  └── PlaybackStateStore
-
-Compose artwork
-  └── ContentResolver thumbnail/stream loader
-        ├── sampled decode
-        ├── memory LRU cache
-        └── generated placeholder
 ```
 
 ### 状态管理
 
-`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、查询、精确集合筛选、当前页面、主题和播放状态都以不可变状态驱动 Compose，取消旧版 Activity 对 Fragment 视图的直接控制。
+`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、查询、精确集合筛选、主题、播放状态和当前歌词均以不可变状态驱动 Compose。曲目变化时取消上一首歌词任务并加载当前媒体 ID 对应缓存，异步结果写回前再次核对当前曲目，避免串歌。
 
-### 播放链路
+### 播放与队列链路
 
 - `PlaybackService` 托管 ExoPlayer 和 MediaSession
 - `PlayerConnection` 使用异步 MediaController 连接服务
-- 当前曲目、队列索引、播放进度、缓冲、随机和循环状态通过 StateFlow 回传 UI
-- 系统锁屏、通知栏、耳机与蓝牙控制统一走 MediaSession
+- 当前曲目、完整队列、队列索引、进度、缓冲、随机和循环状态通过 StateFlow 回传 UI
+- Compose 队列支持点击跳转、上下调整、移除和确认清空
+- 所有队列修改直接作用于 Media3 Timeline，因此继续复用既有持久化协议
 - `PlaybackStateStore` 保存队列、索引、位置、随机和循环状态
-- 队列仅在时间线变化时序列化；播放位置每 5 秒轻量保存
+- 队列仅在 Timeline 变化时序列化；播放位置每 5 秒轻量保存
 - 服务恢复后重建队列并停留在原位置，但保持暂停，避免意外自动播放
 
-### 数据链路
+### 歌词链路
 
-- `MusicRepository` 使用 MediaStore 查询音频，不再直接遍历共享存储
+- 不重新接入旧版硬编码网络 API，也不依赖旧 `LrcView`
+- 纯 Kotlin 解析标准 LRC 时间标签、同一行多时间戳、元数据与 `[offset:]`
+- 活动行使用二分查找，避免每 500 ms 线性扫描整份歌词
+- 用户从系统文件选择器导入 LRC，读取后复制到应用内部目录，不依赖长期外部 URI 权限
+- UTF-8/BOM 解码失败时回退 GB18030，兼容常见中文历史歌词文件
+- 文件 offset 与每首歌曲独立用户 offset 叠加，范围限制为 ±30 秒
+- Compose 歌词列表随活动行滚动，高亮当前行；点击任意行按有效时间 Seek
+- 删除歌词同时清除内部文件和该歌曲用户校准量
+
+### 音乐库与封面链路
+
+- `MusicRepository` 使用 MediaStore 查询音频，不直接遍历共享存储
 - Android 10+ 使用 `RELATIVE_PATH`，旧系统从 `DATA` 派生父目录
-- 文件夹路径进入正式 `Song` 领域模型，不依赖 UI 临时计算
 - MediaStore `ContentObserver` 监听增删改，并在 ViewModel 中进行 650 ms 去抖刷新
-- `SettingsRepository` 使用 Preferences DataStore 存储主题模式
-- 搜索和路径解析逻辑保持纯 Kotlin，并有单元测试覆盖
-
-### 封面链路
-
-- 优先读取专辑封面 URI
-- 封面 URI失败时回退到歌曲内容 URI，尝试读取内嵌图片
-- Android 10+ 使用 `ContentResolver.loadThumbnail`
-- 旧系统使用按目标尺寸采样的 `BitmapFactory`
-- 使用受限 LRU 内存缓存，避免列表滚动反复解码
-- 读取失败时使用稳定的 Material 3 渐变占位
+- 优先读取专辑封面 URI，失败时回退歌曲内容 URI 的内嵌图片
+- Android 10+ 使用 `ContentResolver.loadThumbnail`，旧系统按目标尺寸采样解码
+- 使用受限 LRU 内存缓存；读取失败时使用稳定 Material 3 渐变占位
 
 ## 4. UI 重写范围
 
 已完成：
 
-- Material 3 主题与 Android 12+ 动态配色
-- edge-to-edge Activity
-- 手机底部导航与宽屏 Navigation Rail
-- 本地歌曲列表、专辑聚合、艺术家聚合、文件夹聚合
-- 标题、艺术家、专辑、文件夹名称及路径联合搜索
-- 专辑、艺术家、文件夹精确筛选和集合内搜索
-- 权限、加载、空内容和错误状态
-- Android 13+ 通知权限非强制引导
+- Material 3 主题、动态配色、edge-to-edge 与响应式导航
+- 本地歌曲、专辑、艺术家和文件夹浏览
+- 联合搜索、精确集合筛选和集合内搜索
+- 权限、加载、空内容、错误状态和 Android 13+ 通知权限引导
 - 真实封面、缓存与错误占位
-- 迷你播放器
-- 全屏正在播放页和队列位置展示
-- 播放、暂停、上一首、下一首、Seek、随机和循环
-- 播放队列与进度恢复
+- 迷你播放器和全屏播放页
+- 播放、暂停、切歌、Seek、随机和循环
+- 队列位置展示、可视化编辑与持久恢复
+- 本地同步 LRC 歌词、自动高亮、点击跳转、替换、删除和偏移调整
 - 主题设置及迁移状态页
 
-暂未达到旧版功能等价：
+尚未达到完整产品能力：
 
-- Live2D 助手及模型切换
-- LRC 歌词页、逐行同步和歌词编辑
-- 网易云等联网搜索/在线音乐
+- SAF 未索引目录和可恢复 URI 权限
+- 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
 - 音频标签编辑器
-- Android 桌面小组件
-- Intro、购买、Bug Report 和旧 Firebase 远程功能
-- 播放队列可视化编辑、收藏、历史和智能列表
-- 高级均衡器、睡眠定时、无缝播放等扩展能力
+- Jetpack Glance 桌面小组件
+- Live2D 助手及模型切换
+- Intro、购买、Bug Report 和远程功能
+- 收藏、历史、智能列表、睡眠定时、均衡器和无缝播放
+- 队列长按拖拽、批量选择和撤销
 
-这些能力应在新架构上逐项实现，不建议重新把旧 Fragment、ButterKnife 或 SlidingUpPanel 接回活动模块。
+这些能力应继续在新架构上实现，不建议把旧 Fragment、ButterKnife、SlidingUpPanel 或失效在线接口重新接回活动模块。
 
-## 5. 依赖替换
+## 5. 关键替换关系
 
 | 旧方案 | 新方案 |
 | --- | --- |
 | Java/XML/Fragment 主界面 | Jetpack Compose Material 3 |
 | ButterKnife | Compose 状态与 Kotlin 属性 |
 | SlidingUpPanel + MiniPlayerFragment | Compose MiniPlayer + 独立播放页面 |
+| 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC parser + Compose 同步列表 + 本地导入 |
 | AppThemeHelper | Material 3 ColorScheme + DataStore |
 | 生命周期 extensions / ViewModelProviders | Lifecycle 2.11 + `viewModelScope` / Compose collect |
 | 自定义 MediaPlayer 服务控制 | Media3 ExoPlayer + MediaSessionService |
-| 临时内存播放队列 | Media3 队列 + 持久化恢复层 |
+| 临时内存播放队列 | Media3 Timeline + Compose 编辑 + 持久化恢复 |
 | Glide 3 封面链路 | ContentResolver 缩略图 + 采样解码 + LRU 缓存 |
 | SharedPreferences 主题状态 | DataStore |
 | Fabric Crashlytics | 当前活动模块移除；需要时接入现代 Firebase Crashlytics |
 | jcenter / 旧 JitPack 依赖 | Google Maven + Maven Central |
-| Kotlin Android Extensions | Compose / 标准 Kotlin |
 | legacy external storage | MediaStore + 分版本读取权限 |
 
 ## 6. 仓库与安全清理
 
-现代化分支删除：
-
-- `demo.jks`
-- `.github/secrets/*.gpg`
-- 旧签名解密脚本
-- `app/google-services.json`
-- 已提交的 APK/AAB 输出与 metadata
-
-`.gitignore` 现在阻止签名材料、Firebase 配置、构建产物和 IDE 文件再次提交。删除只影响当前树；历史中的凭据不会自动消失，因此正式发布前仍需轮换相关密钥。若必须彻底移除历史文件，应单独安排 Git 历史重写，并通知所有协作者重新同步仓库。
+现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名/服务凭据。用户导入歌词仅保存到应用内部存储，不上传网络。
 
 ## 7. 验证门禁
 
@@ -159,40 +151,40 @@ CI 执行：
   :app:assembleDebug
 ```
 
-自动测试当前覆盖搜索字段和 Android 新旧路径解析。合并前仍建议人工验收：
+自动测试覆盖搜索、Android 新旧路径解析，以及 LRC 元数据、时间精度、多时间戳、非法时间、去重排序、偏移和活动行匹配。合并前仍建议人工验收：
 
-1. Android 8、12、13、16/17 的媒体与通知权限流程
+1. Android 8、12、13、16/17 的媒体、通知与系统文件选择器流程
 2. 10,000 首以上音乐库的扫描、聚合、搜索、滚动和队列持久化性能
-3. 中文、日文、英文元数据和未知元数据
-4. 真实封面、内嵌封面、无封面、损坏封面及大图片采样
-5. 新增、删除、移动或修改音频后的自动刷新
-6. 后台播放、锁屏控制、蓝牙按键与音频焦点
-7. 进程回收、服务重建和设备重启后的队列与进度恢复
-8. 横屏、折叠屏和平板宽度下的响应式布局
-9. 动态配色、亮色、深色以及高对比度
-10. 无音乐、权限拒绝、媒体库异常和损坏音频
+3.  UTF-8、带 BOM、GB18030、大文件、损坏和无时间标签 LRC
+4. 歌词切歌竞态、活动行滚动、点击 Seek、正负 offset 与删除后重载
+5. 队列跳转、连续重排、删除当前项、清空及服务重建后一致性
+6. 真实封面、内嵌封面、无封面、损坏封面及大图片采样
+7. 后台播放、锁屏控制、蓝牙按键、耳机拔出和音频焦点
+8. 进程回收、服务重建和设备重启后的队列与进度恢复
+9. 横屏、折叠屏和平板宽度下的歌词和队列布局
+10. 动态配色、亮色、深色、高对比度与 TalkBack
 
 ## 8. 后续优先级
 
 ### P0：发布可用性
 
-- 播放服务、MediaController 和状态恢复的仪器化测试
-- Baseline Profile、Macrobenchmark 与大库性能基准
-- 封面缓存命中率、内存压力和超大队列压力测试
-- 播放错误、不可读 URI 和文件被移动后的恢复降级
-- 前台服务与通知在各 OEM 系统上的兼容验证
+- MediaSession、队列编辑、歌词导入和状态恢复的仪器化测试
+- Baseline Profile、Macrobenchmark 与 10,000 首性能基准
+- 超大队列、大歌词、封面缓存和内存压力测试
+- 播放错误、不可读 URI 和文件移动后的恢复降级
+- OEM 前台服务和通知兼容验证
 
-### P1：旧功能迁移
+### P1：数据入口与旧功能迁移
 
-- Compose 歌词页、LRC 解析、逐行同步和偏移调整
-- SAF 文件夹入口，用于播放 MediaStore 未索引的用户授权目录
-- 音频标签编辑的独立数据层
+- SAF 文件夹入口和可恢复 URI 权限
+- 音频标签编辑独立数据层
+- 同目录同名歌词自动匹配、歌词编辑和双语歌词
 - Glance 桌面小组件
-- Live2D 以独立 AndroidView 适配层接入，避免污染主导航
+- Live2D 独立 AndroidView 适配层
 
 ### P2：产品化
 
-- 可视化播放队列编辑、收藏、历史与智能列表
-- 睡眠定时、均衡器入口和无缝播放
-- 无障碍、键盘、遥控器与车机体验
+- 队列长按拖拽、批量操作和撤销
+- 收藏、历史、智能列表、睡眠定时和均衡器入口
+- 无障碍、键盘、遥控器、车机体验
 - 截图测试、性能回归和签名发布流水线
