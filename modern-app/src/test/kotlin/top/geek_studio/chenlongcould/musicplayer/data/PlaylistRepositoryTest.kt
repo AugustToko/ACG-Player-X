@@ -36,6 +36,63 @@ class PlaylistRepositoryTest {
     }
 
     @Test
+    fun removeSongsIgnoresUnknownIdsAndPreservesRemainingOrder() {
+        val updated =
+            removePlaylistMediaIds(
+                current = listOf("1", "2", "3", "4"),
+                removals = listOf("2", "missing", "4"),
+            )
+
+        assertEquals(listOf("1", "3"), updated)
+    }
+
+    @Test
+    fun movingSongsToStartPreservesTheirStoredRelativeOrder() {
+        val updated =
+            movePlaylistMediaIds(
+                current = listOf("1", "2", "3", "4", "5"),
+                movingMediaIds = listOf("4", "2"),
+                destination = PlaylistMoveDestination.START,
+            )
+
+        assertEquals(listOf("2", "4", "1", "3", "5"), updated)
+    }
+
+    @Test
+    fun movingSongsToEndPreservesTheirStoredRelativeOrder() {
+        val updated =
+            movePlaylistMediaIds(
+                current = listOf("1", "2", "3", "4", "5"),
+                movingMediaIds = listOf("4", "2"),
+                destination = PlaylistMoveDestination.END,
+            )
+
+        assertEquals(listOf("1", "3", "5", "2", "4"), updated)
+    }
+
+    @Test
+    fun movingAlreadyPositionedSelectionReturnsEquivalentOrder() {
+        val current = listOf("1", "2", "3", "4")
+
+        assertEquals(
+            current,
+            movePlaylistMediaIds(
+                current = current,
+                movingMediaIds = listOf("1", "2"),
+                destination = PlaylistMoveDestination.START,
+            ),
+        )
+        assertEquals(
+            current,
+            movePlaylistMediaIds(
+                current = current,
+                movingMediaIds = listOf("3", "4"),
+                destination = PlaylistMoveDestination.END,
+            ),
+        )
+    }
+
+    @Test
     fun swappingSongsUsesStoredOrder() {
         val updated =
             swapPlaylistMediaIds(
