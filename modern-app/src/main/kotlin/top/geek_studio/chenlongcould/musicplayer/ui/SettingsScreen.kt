@@ -190,7 +190,8 @@ fun SettingsScreen(
                     StatusItem("同步 LRC 歌词", "已迁移")
                     StatusItem("播放队列编辑", "已迁移")
                     StatusItem("收藏与最近播放", "已迁移")
-                    StatusItem("桌面长按快捷入口", "已迁移")
+                    StatusItem("最近添加 / 常听 / 未播放", "已迁移")
+                    StatusItem("桌面长按快捷入口", "4 个")
                     StatusItem("Live2D / 标签编辑 / 小组件", "待兼容迁移")
                 }
             }
