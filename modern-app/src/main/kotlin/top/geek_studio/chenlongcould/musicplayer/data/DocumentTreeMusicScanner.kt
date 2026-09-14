@@ -85,6 +85,8 @@ class DocumentTreeMusicScanner(
                     cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
                 val mimeTypeIndex =
                     cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                val lastModifiedIndex =
+                    cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
                 if (documentIdIndex < 0 || displayNameIndex < 0 || mimeTypeIndex < 0) {
                     warnings += "${folder.displayName} 的文档提供程序缺少必要字段"
                     return@use
@@ -104,6 +106,12 @@ class DocumentTreeMusicScanner(
                             "未命名文件",
                         )
                     val mimeType = cursor.getString(mimeTypeIndex).orEmpty()
+                    val lastModifiedMs =
+                        if (lastModifiedIndex >= 0) {
+                            cursor.getLong(lastModifiedIndex).coerceAtLeast(0L)
+                        } else {
+                            0L
+                        }
 
                     if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
                         if (directory.depth >= MAX_DIRECTORY_DEPTH) {
@@ -158,6 +166,7 @@ class DocumentTreeMusicScanner(
                                     treeUriString = treeUri.toString(),
                                     displayPath = displayFolderPath,
                                 ),
+                            dateAddedMs = lastModifiedMs,
                         )
                 }
             }
@@ -246,6 +255,7 @@ class DocumentTreeMusicScanner(
                 DocumentsContract.Document.COLUMN_DOCUMENT_ID,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_MIME_TYPE,
+                DocumentsContract.Document.COLUMN_LAST_MODIFIED,
             )
     }
 }

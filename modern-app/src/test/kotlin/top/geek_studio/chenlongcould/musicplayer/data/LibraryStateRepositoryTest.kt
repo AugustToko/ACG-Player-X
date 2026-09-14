@@ -54,7 +54,79 @@ class LibraryStateRepositoryTest {
         assertEquals(listOf(3L, 1L), resolved.map(Song::id))
     }
 
-    private fun song(id: Long): Song =
+    @Test
+    fun playbackStatsIncrementAndKeepLatestTimestamp() {
+        val first = updatePlaybackStats(emptyMap(), "7", 1_000L)
+        val second = updatePlaybackStats(first, "7", 2_000L)
+        val staleTimestamp = updatePlaybackStats(second, "7", 1_500L)
+
+        assertEquals(3, staleTimestamp.getValue("7").playCount)
+        assertEquals(2_000L, staleTimestamp.getValue("7").lastPlayedAtMs)
+    }
+
+    @Test
+    fun playbackStatsRoundTripAndIgnoreInvalidRows() {
+        val stats =
+            mapOf(
+                "1" to PlaybackStats(playCount = 4, lastPlayedAtMs = 8_000L),
+                "-2" to PlaybackStats(playCount = 1, lastPlayedAtMs = 9_000L),
+            )
+        val encoded = encodePlaybackStats(stats) + "\ninvalid"
+
+        assertEquals(stats, decodePlaybackStats(encoded))
+    }
+
+    @Test
+    fun mostPlayedSongsSortByCountThenLastPlayedTime() {
+        val songs = listOf(song(1), song(2), song(3))
+        val stats =
+            mapOf(
+                "1" to PlaybackStats(2, 5_000L),
+                "2" to PlaybackStats(5, 1_000L),
+                "3" to PlaybackStats(5, 8_000L),
+            )
+
+        assertEquals(
+            listOf(3L, 2L, 1L),
+            resolveMostPlayedSongs(songs, stats).map(Song::id),
+        )
+    }
+
+    @Test
+    fun unplayedSongsExcludePlayedItemsAndPreferNewestSongs() {
+        val songs =
+            listOf(
+                song(1, dateAddedMs = 1_000L),
+                song(2, dateAddedMs = 3_000L),
+                song(3, dateAddedMs = 2_000L),
+            )
+        val stats = mapOf("2" to PlaybackStats(1, 4_000L))
+
+        assertEquals(
+            listOf(3L, 1L),
+            resolveUnplayedSongs(songs, stats).map(Song::id),
+        )
+    }
+
+    @Test
+    fun recentlyAddedSongsSortUnknownDatesLast() {
+        val songs =
+            listOf(
+                song(1, dateAddedMs = 0L),
+                song(2, dateAddedMs = 3_000L),
+                song(3, dateAddedMs = 2_000L),
+            )
+
+        assertEquals(
+            listOf(2L, 3L, 1L),
+            resolveRecentlyAddedSongs(songs).map(Song::id),
+        )
+    }
+
+    private fun song(
+        id: Long,
+        dateAddedMs: Long = 0L,
+    ): Song =
         Song(
             id = id,
             title = "Song $id",
@@ -65,5 +137,6 @@ class LibraryStateRepositoryTest {
             albumArtUri = null,
             folderName = "Music",
             folderPath = "Music/",
+            dateAddedMs = dateAddedMs,
         )
 }

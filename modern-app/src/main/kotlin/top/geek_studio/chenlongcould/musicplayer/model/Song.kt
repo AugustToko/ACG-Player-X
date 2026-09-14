@@ -20,6 +20,7 @@ data class Song(
     val albumArtUri: String?,
     val folderName: String,
     val folderPath: String,
+    val dateAddedMs: Long = 0L,
 )
 
 fun Song.toMediaItem(): MediaItem {

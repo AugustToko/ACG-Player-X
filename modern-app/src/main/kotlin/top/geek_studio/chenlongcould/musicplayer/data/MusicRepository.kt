@@ -142,6 +142,8 @@ class MusicRepository(
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.ALBUM_ID,
+                MediaStore.Audio.Media.DATE_ADDED,
+                MediaStore.Audio.Media.DATE_MODIFIED,
                 pathColumnName,
             )
 
@@ -161,6 +163,8 @@ class MusicRepository(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val dateAddedColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
+            val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED)
             val pathColumn = cursor.getColumnIndex(pathColumnName)
             val usesRelativePath = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
@@ -172,6 +176,10 @@ class MusicRepository(
                     val album = cursor.getString(albumColumn).orUnknown("未知专辑")
                     val duration = cursor.getLong(durationColumn).coerceAtLeast(0L)
                     val albumId = cursor.getLong(albumIdColumn)
+                    val dateAddedSeconds =
+                        if (dateAddedColumn >= 0) cursor.getLong(dateAddedColumn) else 0L
+                    val dateModifiedSeconds =
+                        if (dateModifiedColumn >= 0) cursor.getLong(dateModifiedColumn) else 0L
                     val folder =
                         resolveMusicFolder(
                             rawPath =
@@ -203,6 +211,11 @@ class MusicRepository(
                                     ?.toString(),
                             folderName = folder.name,
                             folderPath = folder.path,
+                            dateAddedMs =
+                                resolveMediaStoreDateMs(
+                                    dateAddedSeconds = dateAddedSeconds,
+                                    dateModifiedSeconds = dateModifiedSeconds,
+                                ),
                         ),
                     )
                 }
@@ -219,6 +232,16 @@ class MusicRepository(
         const val ALBUM_ART_BASE_URI = "content://media/external/audio/albumart"
     }
 }
+
+internal fun resolveMediaStoreDateMs(
+    dateAddedSeconds: Long,
+    dateModifiedSeconds: Long,
+): Long =
+    maxOf(dateAddedSeconds, dateModifiedSeconds)
+        .coerceAtLeast(0L)
+        .let { seconds ->
+            if (seconds == 0L || seconds > Long.MAX_VALUE / 1_000L) 0L else seconds * 1_000L
+        }
 
 internal fun mergeMusicSources(
     mediaStoreSongs: List<Song>,
