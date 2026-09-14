@@ -14,9 +14,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolder
 import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolderRepository
+import top.geek_studio.chenlongcould.musicplayer.data.LibraryStateRepository
 import top.geek_studio.chenlongcould.musicplayer.data.MusicRepository
 import top.geek_studio.chenlongcould.musicplayer.data.SettingsRepository
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
+import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentSongs
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsRepository
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
@@ -25,6 +27,8 @@ import top.geek_studio.chenlongcould.musicplayer.playback.PlayerConnection
 
 enum class LibrarySection {
     SONGS,
+    FAVORITES,
+    RECENT,
     ALBUMS,
     ARTISTS,
     FOLDERS,
@@ -47,6 +51,8 @@ data class MainUiState(
     val totalSongCount: Int = 0,
     val mediaStoreSongCount: Int = 0,
     val authorizedFolderSongCount: Int = 0,
+    val favoriteMediaIds: Set<String> = emptySet(),
+    val recentMediaIds: List<String> = emptyList(),
     val query: String = "",
     val section: LibrarySection = LibrarySection.SONGS,
     val activeFilter: CollectionFilter? = null,
@@ -74,6 +80,7 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
     private val musicRepository = MusicRepository(application)
     private val authorizedFolderRepository = AuthorizedFolderRepository(application)
+    private val libraryStateRepository = LibraryStateRepository(application)
     private val settingsRepository = SettingsRepository(application)
     private val lyricsRepository = LyricsRepository(application)
     private val playerConnection = PlayerConnection(application, viewModelScope)
@@ -89,11 +96,26 @@ class MainViewModel(
     private var loadJob: Job? = null
     private var lyricsJob: Job? = null
     private var folderJob: Job? = null
+    private var lastRecordedPlayingMediaId: String? = null
 
     init {
         viewModelScope.launch {
             settingsRepository.themeMode.collect { mode ->
                 _uiState.update { it.copy(themeMode = mode) }
+            }
+        }
+
+        viewModelScope.launch {
+            libraryStateRepository.favoriteMediaIds.collect { mediaIds ->
+                _uiState.update { it.copy(favoriteMediaIds = mediaIds) }
+                publishFilteredLibrary()
+            }
+        }
+
+        viewModelScope.launch {
+            libraryStateRepository.recentMediaIds.collect { mediaIds ->
+                _uiState.update { it.copy(recentMediaIds = mediaIds) }
+                publishFilteredLibrary()
             }
         }
 
@@ -119,10 +141,23 @@ class MainViewModel(
 
         viewModelScope.launch {
             playerConnection.state.collect { playback ->
-                val previousMediaId = _uiState.value.playback.mediaId
+                val previousPlayback = _uiState.value.playback
                 _uiState.update { it.copy(playback = playback) }
-                if (previousMediaId != playback.mediaId) {
+
+                if (previousPlayback.mediaId != playback.mediaId) {
                     loadLyrics(playback.mediaId)
+                }
+
+                val mediaId = playback.mediaId
+                if (
+                    playback.isPlaying &&
+                    mediaId != null &&
+                    mediaId != lastRecordedPlayingMediaId
+                ) {
+                    lastRecordedPlayingMediaId = mediaId
+                    libraryStateRepository.recordPlayed(mediaId)
+                } else if (mediaId == null) {
+                    lastRecordedPlayingMediaId = null
                 }
             }
         }
@@ -252,6 +287,18 @@ class MainViewModel(
     fun clearCollectionFilter() {
         _uiState.update { it.copy(activeFilter = null) }
         publishFilteredLibrary()
+    }
+
+    fun toggleFavorite(song: Song) {
+        viewModelScope.launch {
+            libraryStateRepository.toggleFavorite(song.id.toString())
+        }
+    }
+
+    fun clearRecentHistory() {
+        viewModelScope.launch {
+            libraryStateRepository.clearRecent()
+        }
     }
 
     fun play(song: Song) {
@@ -568,19 +615,31 @@ class MainViewModel(
 
     private fun publishFilteredLibrary() {
         val current = _uiState.value
-        val collectionSongs =
-            when (val filter = current.activeFilter) {
-                null -> library
+        val sectionSongs =
+            when (current.section) {
+                LibrarySection.FAVORITES ->
+                    library.filter { it.id.toString() in current.favoriteMediaIds }
+
+                LibrarySection.RECENT ->
+                    resolveRecentSongs(
+                        songs = library,
+                        recentMediaIds = current.recentMediaIds,
+                    )
+
                 else ->
-                    library.filter { song ->
-                        when (filter.type) {
-                            CollectionType.ALBUM -> song.album == filter.value
-                            CollectionType.ARTIST -> song.artist == filter.value
-                            CollectionType.FOLDER -> song.folderPath == filter.value
-                        }
+                    when (val filter = current.activeFilter) {
+                        null -> library
+                        else ->
+                            library.filter { song ->
+                                when (filter.type) {
+                                    CollectionType.ALBUM -> song.album == filter.value
+                                    CollectionType.ARTIST -> song.artist == filter.value
+                                    CollectionType.FOLDER -> song.folderPath == filter.value
+                                }
+                            }
                     }
             }
-        val visibleSongs = filterSongs(collectionSongs, current.query)
+        val visibleSongs = filterSongs(sectionSongs, current.query)
 
         _uiState.update {
             it.copy(
