@@ -23,10 +23,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,14 +33,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import top.geek_studio.chenlongcould.musicplayer.ui.components.MiniPlayer
 
-private enum class Destination(
-    val label: String,
-    val glyph: String,
-) {
-    LIBRARY("音乐库", "♫"),
-    NOW_PLAYING("播放", "▶"),
-    SETTINGS("设置", "⚙"),
-}
+private val AppDestination.label: String
+    get() =
+        when (this) {
+            AppDestination.LIBRARY -> "音乐库"
+            AppDestination.NOW_PLAYING -> "播放"
+            AppDestination.SETTINGS -> "设置"
+        }
+
+private val AppDestination.glyph: String
+    get() =
+        when (this) {
+            AppDestination.LIBRARY -> "♫"
+            AppDestination.NOW_PLAYING -> "▶"
+            AppDestination.SETTINGS -> "⚙"
+        }
 
 @Composable
 fun AcgPlayerApp(
@@ -104,9 +110,6 @@ fun AcgPlayerApp(
         viewModel.onAudioPermissionChanged(localPermissionGranted)
     }
 
-    var destination by rememberSaveable {
-        mutableStateOf(Destination.LIBRARY)
-    }
     val notificationPermissionRequired =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !notificationPermissionGranted
@@ -122,8 +125,8 @@ fun AcgPlayerApp(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 840.dp) {
             ExpandedLayout(
-                destination = destination,
-                onDestinationChange = { destination = it },
+                destination = state.destination,
+                onDestinationChange = viewModel::navigateTo,
                 state = state,
                 viewModel = viewModel,
                 notificationPermissionRequired = notificationPermissionRequired,
@@ -136,8 +139,8 @@ fun AcgPlayerApp(
             )
         } else {
             CompactLayout(
-                destination = destination,
-                onDestinationChange = { destination = it },
+                destination = state.destination,
+                onDestinationChange = viewModel::navigateTo,
                 state = state,
                 viewModel = viewModel,
                 notificationPermissionRequired = notificationPermissionRequired,
@@ -154,8 +157,8 @@ fun AcgPlayerApp(
 
 @Composable
 private fun CompactLayout(
-    destination: Destination,
-    onDestinationChange: (Destination) -> Unit,
+    destination: AppDestination,
+    onDestinationChange: (AppDestination) -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
     notificationPermissionRequired: Boolean,
@@ -167,16 +170,16 @@ private fun CompactLayout(
     Scaffold(
         bottomBar = {
             Column {
-                if (state.playback.mediaId != null && destination != Destination.NOW_PLAYING) {
+                if (state.playback.mediaId != null && destination != AppDestination.NOW_PLAYING) {
                     MiniPlayer(
                         playback = state.playback,
-                        onOpenPlayer = { onDestinationChange(Destination.NOW_PLAYING) },
+                        onOpenPlayer = { onDestinationChange(AppDestination.NOW_PLAYING) },
                         onPlayPause = viewModel::togglePlayPause,
                     )
                 }
 
                 NavigationBar {
-                    Destination.entries.forEach { item ->
+                    AppDestination.entries.forEach { item ->
                         NavigationBarItem(
                             selected = destination == item,
                             onClick = { onDestinationChange(item) },
@@ -204,8 +207,8 @@ private fun CompactLayout(
 
 @Composable
 private fun ExpandedLayout(
-    destination: Destination,
-    onDestinationChange: (Destination) -> Unit,
+    destination: AppDestination,
+    onDestinationChange: (AppDestination) -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
     notificationPermissionRequired: Boolean,
@@ -218,7 +221,7 @@ private fun ExpandedLayout(
         NavigationRail(
             modifier = Modifier.fillMaxHeight(),
         ) {
-            Destination.entries.forEach { item ->
+            AppDestination.entries.forEach { item ->
                 NavigationRailItem(
                     selected = destination == item,
                     onClick = { onDestinationChange(item) },
@@ -250,10 +253,10 @@ private fun ExpandedLayout(
                 )
             }
 
-            if (state.playback.mediaId != null && destination != Destination.NOW_PLAYING) {
+            if (state.playback.mediaId != null && destination != AppDestination.NOW_PLAYING) {
                 MiniPlayer(
                     playback = state.playback,
-                    onOpenPlayer = { onDestinationChange(Destination.NOW_PLAYING) },
+                    onOpenPlayer = { onDestinationChange(AppDestination.NOW_PLAYING) },
                     onPlayPause = viewModel::togglePlayPause,
                 )
             }
@@ -263,7 +266,7 @@ private fun ExpandedLayout(
 
 @Composable
 private fun DestinationContent(
-    destination: Destination,
+    destination: AppDestination,
     state: MainUiState,
     viewModel: MainViewModel,
     notificationPermissionRequired: Boolean,
@@ -274,7 +277,7 @@ private fun DestinationContent(
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
-        Destination.LIBRARY -> {
+        AppDestination.LIBRARY -> {
             LibraryScreen(
                 state = state,
                 notificationPermissionRequired = notificationPermissionRequired,
@@ -295,7 +298,7 @@ private fun DestinationContent(
             )
         }
 
-        Destination.NOW_PLAYING -> {
+        AppDestination.NOW_PLAYING -> {
             NowPlayingScreen(
                 playback = state.playback,
                 lyrics = state.lyrics,
@@ -317,7 +320,7 @@ private fun DestinationContent(
             )
         }
 
-        Destination.SETTINGS -> {
+        AppDestination.SETTINGS -> {
             SettingsScreen(
                 themeMode = state.themeMode,
                 notificationPermissionRequired = notificationPermissionRequired,
