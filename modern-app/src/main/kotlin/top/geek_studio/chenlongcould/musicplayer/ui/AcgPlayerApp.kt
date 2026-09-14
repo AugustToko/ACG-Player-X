@@ -286,6 +286,8 @@ private fun DestinationContent(
                 onSectionChange = viewModel::showSection,
                 onClearCollectionFilter = viewModel::clearCollectionFilter,
                 onPlaySong = viewModel::play,
+                onToggleFavorite = viewModel::toggleFavorite,
+                onClearRecentHistory = viewModel::clearRecentHistory,
                 onOpenAlbum = viewModel::openAlbum,
                 onOpenArtist = viewModel::openArtist,
                 onOpenFolder = viewModel::openFolder,
