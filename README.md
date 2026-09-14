@@ -1,8 +1,8 @@
 # ACG Player X
 
-ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已经迁移到 **Jetpack Compose + Material 3 + Media3**，旧版 Java/XML/Fragment 实现保留为迁移参考，但不再参与默认构建。
+ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用已经迁移到 **Jetpack Compose + Material 3 + Media3**；旧版 Java/XML/Fragment 源码仍保留为迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha06**。
+当前开发版本：**2.0.0-alpha07**。
 
 ## 当前能力
 
@@ -16,6 +16,18 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 - 跨标题、艺术家、专辑、文件夹名称及可读目录路径搜索
 - 精确进入某张专辑、某位艺术家或某个文件夹，并继续在集合内搜索
 - 监听 MediaStore 变化，新增、删除或修改音乐后自动去抖刷新
+
+### 自定义歌单
+
+- 使用独立 Preferences DataStore 保存歌单元数据和歌曲顺序
+- 新建、重命名和删除歌单
+- 混合添加 MediaStore 与 SAF 曲目
+- 搜索歌单内歌曲
+- 单曲添加、添加当前搜索结果、移出歌曲、上下调整和清空歌单
+- 按歌单顺序播放或随机播放
+- 统计可用歌曲、总时长和当前不可用项目
+- SAF 目录暂时离线或权限失效时，只隐藏当前不可用歌曲，不破坏歌单结构
+- 可显式清理当前不可用项目；不会删除设备上的音频文件
 
 ### 智能音乐库
 
@@ -45,8 +57,9 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 
 - Android 13+ 播放通知权限引导
 - Material 3 动态配色、亮色、深色与跟随系统主题
-- 手机底部导航与大屏 Navigation Rail 响应式布局
-- DataStore 设置、授权目录和本地音乐行为状态持久化
+- 手机 Bottom Navigation 与大屏 Navigation Rail 响应式布局
+- 独立歌单入口、歌单详情页和系统返回处理
+- DataStore 设置、授权目录、歌单和本地音乐行为状态持久化
 
 ## 技术基线
 
@@ -69,12 +82,12 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。活动应用模块已
 
 ```text
 modern-app/                       当前活动的 Compose 应用
-  src/main/kotlin/.../data/       MediaStore、SAF、智能库状态与 DataStore
+  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单与 DataStore
   src/main/kotlin/.../lyrics/     LRC 解析、内部缓存与歌词状态
   src/main/kotlin/.../model/      领域模型与 MediaItem 映射
   src/main/kotlin/.../playback/   Media3 服务、控制器、队列与状态恢复
   src/main/kotlin/.../shortcuts/  Android 动态快捷入口
-  src/main/kotlin/.../ui/         Compose 页面、封面和通用组件
+  src/main/kotlin/.../ui/         Compose 页面、歌单、封面和通用组件
 app/                              旧版应用源码，仅供迁移参考
 appthemehelper/                   旧版主题辅助源码，仅供迁移参考
 ```
@@ -92,7 +105,7 @@ Gradle 中逻辑模块仍为 `:app`，但通过 `settings.gradle.kts` 映射到 
   :app:assembleDebug
 ```
 
-GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、MediaStore 时间回退、SAF 音频识别、稳定文档 ID、目录路径编码、跨来源去重、收藏、最近播放、播放统计、智能列表排序，以及 LRC 时间轴和活动行匹配。
+GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试覆盖搜索、Android 新旧路径、MediaStore 时间回退、SAF 音频识别、稳定文档 ID、跨来源去重、收藏、播放统计、智能列表、歌单编解码/顺序/失效项，以及 LRC 时间轴和活动行匹配。
 
 ## 权限与本地数据
 
@@ -104,7 +117,15 @@ GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试
 
 系统媒体权限和 SAF 目录权限相互独立。用户可以不授予全盘媒体权限，只授权特定目录；应用会保存目录 URI，但不会上传路径或音频内容。移除目录时会释放对应持久权限。
 
-收藏、最近播放、播放次数和最后播放时间只保存在设备上的 DataStore 中。应用不请求写入共享存储，不启用明文网络，也不使用 `requestLegacyExternalStorage`。用户选择的 LRC 文件只在导入时读取，之后复制到应用内部 `files/lyrics` 目录。
+收藏、历史、播放统计和自定义歌单只保存在设备本地。歌单保存名称、时间戳和媒体 ID 顺序，不复制音乐文件。应用不请求写入共享存储、不启用明文网络，也不使用 `requestLegacyExternalStorage`。
+
+## 歌单语义
+
+MediaStore 使用系统正数 ID，SAF 文档使用由 URI 派生的稳定负数 ID，因此二者可以出现在同一歌单中。歌单按照保存的媒体 ID 顺序解析当前可用歌曲。
+
+当 SD 卡、USB、云盘或 SAF 目录暂时不可访问时，歌单保留原始项目，界面只显示当前可播放内容并报告不可用数量。恢复来源后，对应歌曲会重新出现。只有用户主动选择“清理失效项”时，才会移除这些媒体 ID。
+
+同名歌单采用忽略大小写的唯一性校验；名称会折叠多余空白并限制为 80 个字符。歌单名称中的换行、制表符和反斜杠使用转义格式持久化。
 
 ## 智能列表语义
 
@@ -114,22 +135,22 @@ GitHub Actions 会在推送和 Pull Request 时执行相同门禁。单元测试
 
 ## SAF 扫描语义
 
-每个授权目录最多检查 20,000 个目录项，最大递归深度为 32 层，避免异常文档提供程序造成无限递归或不可控扫描。SAF 扫描结果保存在进程内缓存；MediaStore 的普通变更不会重复遍历所有授权目录，用户可在设置页主动“重新扫描”。
+每个授权目录最多检查 20,000 个目录项，最大递归深度为 32 层，避免异常文档提供程序造成无限递归或不可控扫描。SAF 扫描结果保存在进程内缓存；MediaStore 的普通变更不会重复遍历所有授权目录，用户可在设置页主动重新扫描。
 
-当同一首歌同时存在于 MediaStore 和授权目录中时，应用优先保留 MediaStore 条目；重叠授权目录中的完全相同文档 URI 也会去重。失效授权、提供程序字段异常和扫描截断会显示在设置页，而不会阻塞其他可用音乐来源。
+当同一首歌同时存在于 MediaStore 和授权目录中时，应用优先保留 MediaStore 条目；重叠授权目录中的相同文档 URI 也会去重。失效授权、Provider 字段异常和扫描截断会显示为非阻断提示。
 
 ## 迁移状态
 
-本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词、可视化队列、收藏、最近播放和基础智能列表已经迁入 Compose 模块。
+本地播放器核心闭环、MediaStore 与 SAF 双来源音乐库、自定义歌单、真实及内嵌封面、媒体库自动刷新、播放状态恢复、同步 LRC 歌词、可视化队列、收藏、最近播放和基础智能列表已经迁入 Compose 模块。
 
-仍待迁移的重点包括规则智能列表、歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
+仍待迁移的重点包括 M3U 导入导出、规则智能列表、歌词编辑、联网音乐 Provider、音频标签编辑、Glance 小组件、Live2D、购买流程和发布级性能/仪器化测试。
 
 - 详细技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
 - 功能差距矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
 
 ## 安全说明
 
-现代化分支删除了仓库中已跟踪的签名文件、加密签名包、Firebase 配置和构建产物。由于这些文件曾出现在 Git 历史中，正式发布前仍应轮换旧签名/服务凭据，并通过 GitHub Secrets 或本地未跟踪文件注入。
+现代化分支删除了仓库当前树中已跟踪的签名文件、加密签名包、Firebase 配置和构建产物。由于这些文件曾出现在 Git 历史中，正式发布前仍应轮换旧签名/服务凭据，并通过 GitHub Secrets 或本地未跟踪文件注入。
 
 ## License
 

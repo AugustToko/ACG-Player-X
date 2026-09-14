@@ -1,162 +1,178 @@
 # ACG Player X 现代化说明
 
-## 1. 原项目审计结果
+## 1. 原项目审计
 
-原工程最后一次提交停留在 2020 年，活动构建链路包含 Kotlin 1.3.72、Android Gradle Plugin 4.0、Gradle 6.1.1、compile/target SDK 29、JDK 8、Groovy 构建脚本和 `jcenter()`。界面层主要由 Java Activity/Fragment、XML、ButterKnife、SlidingUpPanel、RealtimeBlurView 与自定义主题辅助库组成。
+原工程最后一次主要实现停留在 2020 年，活动构建链路包含 Kotlin 1.3、AGP 4.0、Gradle 6.1、SDK 29、JDK 8、Groovy 脚本和 JCenter。界面层由 Java Activity/Fragment、XML、ButterKnife、SlidingUpPanel、RealtimeBlurView 与自定义主题辅助库组成。
 
-主要风险包括：
+旧工程还存在以下结构性问题：
 
-- Fabric Crashlytics、Kotlin Android Extensions、`lifecycle-extensions` 等已淘汰组件
-- 旧存储权限与 `requestLegacyExternalStorage`
-- 单个 `MainActivity` 承担导航、权限、Live2D、网络检查、弹窗和页面切换
-- 播放 UI 与 Fragment/第三方滑动面板强耦合
-- 旧歌词页依赖硬编码在线接口，LRC 解析器主体实际上未完成
-- 旧快捷入口依赖独立 Launcher Activity 和图标生成器
-- 依赖版本散落且部分来自 JCenter/JitPack
-- 仓库跟踪签名文件、Firebase 配置和 AAB 构建产物
+- 单个 Activity 同时承担导航、权限、Live2D、网络检查和页面切换
+- 播放 UI 与 Fragment 和第三方滑动面板强耦合
+- 旧歌词页依赖硬编码在线接口，LRC 核心解析不完整
+- 歌单依赖 MediaStore Playlist、Loader 和多组 Dialog，难以覆盖 SAF 曲目
+- 快捷入口依赖独立 Launcher Activity 和图标生成器
+- legacy storage、Fabric、Kotlin Android Extensions、`lifecycle-extensions` 等淘汰组件
+- 依赖版本散落，仓库曾跟踪签名文件、Firebase 配置和发布产物
 
 ## 2. 新构建基线
 
 - Kotlin DSL 与 Version Catalog
 - AGP 9.4.0 / Gradle 9.6.0 / JDK 17
-- Kotlin 2.4.20 与 Compose Compiler Gradle plugin
+- Kotlin 2.4.20 与 Compose Compiler plugin
 - compileSdk / targetSdk 37，minSdk 23
 - Compose BOM 2026.08.00
-- 仅使用 Google Maven 与 Maven Central
+- Google Maven 与 Maven Central
 - 非传递、非 final R 类
 - Gradle build cache、configuration cache 与并行构建
 
-逻辑模块名继续保持 `:app`，实际目录改为 `modern-app/`。旧 `app/` 与 `appthemehelper/` 不再被 `settings.gradle.kts` include，因此不会污染新构建，但仍可用于逐项核对旧行为。
+逻辑模块仍为 `:app`，实际目录映射到 `modern-app/`。旧 `app/` 与 `appthemehelper/` 不参与默认构建，只用于核对历史行为。
 
-## 3. 新架构
+## 3. 当前架构
 
 ```text
 MainActivity
   ├── cold/warm shortcut intent handling
-  └── AcgPlayerApp (Compose responsive shell)
+  └── AcgPlayerApp
         ├── LibraryScreen
-        │     ├── songs / favorites / recent
-        │     ├── recently added / most played / unplayed
-        │     └── albums / artists / folders
+        ├── PlaylistsScreen
+        │     ├── playlist overview
+        │     ├── playlist detail
+        │     └── searchable song picker
         ├── NowPlayingScreen
-        │     ├── cover pane
-        │     ├── synchronized lyrics pane
-        │     └── editable queue pane
+        │     ├── cover
+        │     ├── synchronized lyrics
+        │     └── editable queue
         └── SettingsScreen
 
 MainViewModel
   ├── MusicRepository
-  │     ├── MediaStore query + ContentObserver
-  │     ├── DocumentTreeMusicScanner
-  │     ├── cross-source merge/deduplication
-  │     └── in-process SAF scan cache
   ├── AuthorizedFolderRepository
-  │     ├── OpenDocumentTree persisted read grants
-  │     └── DataStore directory registry
   ├── LibraryStateRepository
-  │     ├── favorites
-  │     ├── recent playback order
-  │     └── play count + last played timestamp
   ├── LyricsRepository
-  │     ├── pure Kotlin LRC parser
-  │     ├── internal per-media cache
-  │     └── per-song user offset
-  ├── SettingsRepository (DataStore)
-  └── PlayerConnection (MediaController)
-                           └── PlaybackService
-                                 ├── MediaSession + ExoPlayer
-                                 └── PlaybackStateStore
+  ├── SettingsRepository
+  └── PlayerConnection ── MediaController
+
+PlaylistViewModel
+  ├── PlaylistRepository
+  └── PlayerConnection ── same MediaSession
+
+PlaybackService
+  ├── ExoPlayer
+  ├── MediaSession
+  └── PlaybackStateStore
 ```
 
-### 状态管理与导航
+### 状态与导航
 
-`MainViewModel` 暴露单一 `StateFlow<MainUiState>`。音乐库、MediaStore 权限、授权目录、扫描警告、查询、集合筛选、智能列表、主题、播放状态和当前歌词均以不可变状态驱动 Compose。
+`MainViewModel` 暴露 `StateFlow<MainUiState>`，负责音乐库、权限、授权目录、智能列表、主题、播放状态和歌词。主目的地由 `MainUiState.destination` 驱动，桌面快捷入口在 `MainActivity.onCreate()` 和 `onNewIntent()` 中转交 ViewModel。
 
-顶层页面由 `MainUiState.destination` 统一驱动。`MainActivity` 在冷启动 `onCreate` 与热启动 `onNewIntent` 中将桌面快捷入口 action 转交 ViewModel，因此快捷入口不再依赖独立 Launcher Activity。
+歌单使用独立 `PlaylistViewModel`，避免把所有歌单编辑状态继续塞进主 ViewModel。当前歌单入口由 Compose shell 的 `rememberSaveable` 控制，并拥有独立返回栈；后续可统一迁移到类型安全导航和可恢复 route。
 
 ### 音乐来源链路
 
-- MediaStore 使用分版本查询：Android 10+ 读取 `RELATIVE_PATH`，旧系统从 `DATA` 派生父目录
+- MediaStore 分版本读取 `RELATIVE_PATH` 或 `DATA`
 - MediaStore 最近添加时间优先使用 `DATE_ADDED`，缺失时回退 `DATE_MODIFIED`
-- `AuthorizedFolderRepository` 保存用户选择的树 URI，并取得/释放持久只读权限
-- `DocumentTreeMusicScanner` 使用 `DocumentsContract` 广度优先遍历目录
-- SAF 最近添加排序使用 `COLUMN_LAST_MODIFIED`；Provider 未提供时记为未知时间
-- 单目录设置 20,000 项、32 层深度上限，并检测已访问目录 ID
-- 音频判断同时参考 MIME 和扩展名；元数据通过 `MediaMetadataRetriever` 读取
-- 文档 URI 通过 SHA-256 生成稳定负数媒体 ID，与 MediaStore 正数 ID 分离
-- MediaStore 与 SAF 合并时优先 MediaStore，并按 URI 与元数据指纹去重
-- SAF 扫描结果使用进程内缓存；MediaStore 变更不会重复扫描所有文档树
-- 权限失效、Provider 异常和扫描截断作为非阻断 warning 展示
+- SAF 使用 OpenDocumentTree 持久只读授权
+- `DocumentTreeMusicScanner` 使用 DocumentsContract BFS
+- 单目录限制 20,000 项、32 层，并检测已访问目录 ID
+- SAF 曲目通过完整 URI 的 SHA-256 生成稳定负数 ID
+- MediaStore 与 SAF 按 URI 和元数据指纹合并，冲突时优先 MediaStore
+- SAF 扫描使用进程内缓存；失效授权与 Provider 异常作为非阻断 warning
+
+### 自定义歌单链路
+
+```text
+PlaylistsScreen
+  ↓ events
+PlaylistViewModel
+  ↓ mutations / Flow
+PlaylistRepository
+  ↓
+Preferences DataStore (user_playlists)
+```
+
+`UserPlaylist` 保存：
+
+- UUID 歌单 ID
+- 规范化名称
+- 有序媒体 ID 列表
+- 创建与更新时间
+
+歌单不直接保存文件路径或复制音频。MediaStore 正数 ID 和 SAF 稳定负数 ID 可以混排。解析时根据当前完整音乐库恢复歌曲对象；无法解析的项目保留在 DataStore 中，因此可移动存储恢复后歌曲会重新出现。
+
+歌单 mutation 包括：
+
+- 创建、重命名、删除
+- 单曲和批量添加，保持已有顺序并去重
+- 移出、清空、相邻/任意项目交换
+- 显式清理当前不可用项目
+
+名称会折叠连续空白、限制为 80 个字符，并进行忽略大小写的同名校验。持久格式转义换行、制表符、回车和反斜杠；解码器跳过损坏行而不阻塞其他歌单。
+
+歌单播放仍通过同一个 `MediaSessionService`。`PlaylistViewModel` 只负责把解析后的有序歌曲转换为 Media3 队列，不创建第二个 ExoPlayer。
 
 ### 智能音乐库链路
 
-- 收藏、最近播放顺序、播放次数和最后播放时间通过 Preferences DataStore 持久化
-- 只有曲目真正进入播放状态时才记录，服务恢复后的暂停队列不会污染统计
-- 同一播放会话内暂停/继续同一媒体 ID 不重复计数
-- 最近播放按 ID 去重并移动到首位，最多保留 100 首
-- 最常播放按次数降序、最后播放时间降序、标题稳定排序
-- 未播放列表由当前可用库与播放统计实时求差集
-- 最近添加、最常播放和未播放均复用搜索、收藏和当前结果队列逻辑
-- 当前来源不可用时只影响展示，不破坏持久收藏、历史和统计
+- 收藏、最近播放、播放次数和最后播放时间使用 Preferences DataStore
+- 只有曲目真正进入播放状态时才记录
+- 暂停继续同一媒体 ID 不重复计数
+- 最近播放去重并移动到首位，最多 100 首
+- 最常播放按次数、最后播放时间和标题稳定排序
+- 未播放由当前可用库与播放统计求差集
+- 当前来源不可用只影响展示，不破坏持久记录
 
 ### 播放与队列链路
 
-- `PlaybackService` 托管 ExoPlayer 和 MediaSession
-- `PlayerConnection` 使用异步 MediaController 连接服务
-- 当前曲目、完整队列、队列索引、进度、缓冲、随机和循环状态通过 StateFlow 回传 UI
-- Compose 队列支持点击跳转、上下调整、移除和确认清空
-- 所有队列修改直接作用于 Media3 Timeline，并复用既有持久化协议
-- `PlaybackStateStore` 保存队列、索引、位置、随机和循环状态，包括 SAF 文档内容 URI
-- 服务恢复后重建队列并停留在原位置，但保持暂停
+- PlaybackService 托管 ExoPlayer 和 MediaSession
+- PlayerConnection 异步连接 MediaController
+- 当前曲目、完整队列、索引、进度、缓冲、随机和循环通过 StateFlow 回传
+- Compose 队列支持跳转、上下调整、移除和清空
+- PlaybackStateStore 保存队列、索引、位置和模式
+- 服务恢复后重建上下文并保持暂停
 
 ### 歌词链路
 
-- 不重新接入旧版硬编码网络 API，也不依赖旧 `LrcView`
-- 纯 Kotlin 解析标准 LRC 时间标签、同一行多时间戳、元数据与 `[offset:]`
-- 活动行使用二分查找，避免每 500 ms 线性扫描整份歌词
-- 用户从系统文件选择器导入 LRC，读取后复制到应用内部目录
+- 纯 Kotlin LRC parser，不复用旧硬编码网络接口
+- 支持多时间戳、元数据、`[offset:]`、排序和去重
+- 二分查找当前歌词行
+- OpenDocument 导入后复制到应用内部存储
 - UTF-8/BOM 解码失败时回退 GB18030
-- 文件 offset 与每首歌曲独立用户 offset 叠加，范围限制为 ±30 秒
-- Compose 歌词列表随活动行滚动并支持点击 Seek
+- 文件 offset 与每曲用户 offset 叠加，限制为 ±30 秒
 
 ### 封面链路
 
 - 优先读取专辑封面 URI
-- `loadThumbnail` 或图片流解码失败后，使用 `MediaMetadataRetriever.embeddedPicture`
-- 回退同时支持 MediaStore 内容 URI 与 SAF 文档 URI
-- 图片按请求尺寸采样，使用受限 LRU 内存缓存
-- 读取失败时使用稳定 Material 3 渐变占位
+- 缩略图/图片流失败后使用 `MediaMetadataRetriever.embeddedPicture`
+- 支持 MediaStore 和 SAF URI
+- 按请求尺寸采样并使用受限 LRU 缓存
+- 失败时回退稳定 Material 3 占位
 
 ## 4. UI 重写范围
 
 已完成：
 
-- Material 3 主题、动态配色、edge-to-edge 与响应式导航
-- MediaStore 与 SAF 双来源歌曲、专辑、艺术家和文件夹浏览
-- 联合搜索、精确集合筛选和集合内搜索
+- Material 3、动态配色、edge-to-edge 和响应式导航
+- MediaStore + SAF 歌曲、专辑、艺术家和文件夹浏览
 - 收藏、最近播放、最近添加、最常播放与未播放
-- 四个 Android 动态桌面快捷入口
-- 首次页支持“授予媒体权限”或“选择音乐目录”两种入口
-- 设置页支持添加、移除、重新扫描目录，并展示权限状态和扫描 warning
-- 权限、加载、空内容、错误状态和 Android 13+ 通知权限引导
-- 真实封面、任意音频 URI 内嵌封面、缓存与错误占位
-- 迷你播放器和全屏播放页
-- 播放、暂停、切歌、Seek、随机和循环
-- 队列位置展示、可视化编辑与持久恢复
-- 本地同步 LRC 歌词、自动高亮、点击跳转、替换、删除和偏移调整
+- 自定义歌单概览、详情、搜索和歌曲选择器
+- 歌单创建、重命名、删除、添加、移除、排序、清空和失效项清理
+- 歌单顺序播放与随机播放
+- 四个 Android 动态快捷入口
+- 真实/内嵌封面、迷你播放器和全屏播放页
+- Media3 队列编辑与恢复
+- 本地同步 LRC 歌词、点击跳转和偏移调整
+- 权限、空内容、错误、加载和 Provider warning 状态
 
 尚未达到完整产品能力：
 
-- 发布级仪器化测试与性能基准
+- 发布级仪器化测试和性能基准
+- M3U/M3U8 歌单导入导出、拖拽、多选和撤销
 - SAF 增量索引、磁盘缓存和 Provider 变更监听
 - 规则智能列表与播放完成度统计
 - 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
-- 音频标签编辑器
-- Jetpack Glance 桌面小组件
-- Live2D 助手及模型切换
-- Intro、购买、Bug Report 和远程功能
+- 音频标签编辑、Glance 小组件和 Live2D
+- Intro、购买、Bug Report 与远程功能
 - 睡眠定时、均衡器和无缝播放
-- 队列长按拖拽、批量选择和撤销
 
 ## 5. 关键替换关系
 
@@ -165,23 +181,22 @@ MainViewModel
 | Java/XML/Fragment 主界面 | Jetpack Compose Material 3 |
 | ButterKnife | Compose 状态与 Kotlin 属性 |
 | SlidingUpPanel + MiniPlayerFragment | Compose MiniPlayer + 独立播放页面 |
-| 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC parser + Compose 同步列表 + 本地导入 |
-| 全盘扫描 / legacy storage | MediaStore + OpenDocumentTree 持久目录授权 |
-| 旧 Shortcut Launcher Activity | ViewModel 路由 + MainActivity 冷/热 Intent 处理 |
+| 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC + Compose 同步列表 + 本地导入 |
+| 全盘扫描 / legacy storage | MediaStore + OpenDocumentTree |
+| MediaStore Playlist + Loader/Dialog | App-private PlaylistRepository + Compose 歌单 UI |
+| 旧 Shortcut Launcher Activity | ViewModel route + MainActivity 冷/热 Intent |
 | 临时收藏/历史 | DataStore 收藏、最近播放与 PlaybackStats |
 | AppThemeHelper | Material 3 ColorScheme + DataStore |
-| 生命周期 extensions / ViewModelProviders | Lifecycle 2.11 + `viewModelScope` / Compose collect |
 | 自定义 MediaPlayer 服务控制 | Media3 ExoPlayer + MediaSessionService |
-| 临时内存播放队列 | Media3 Timeline + Compose 编辑 + 持久化恢复 |
-| Glide 3 封面链路 | ContentResolver 缩略图 + MediaMetadataRetriever + 采样 + LRU |
-| Fabric Crashlytics | 当前活动模块移除；需要时接入现代 Firebase Crashlytics |
-| jcenter / 旧 JitPack 依赖 | Google Maven + Maven Central |
+| 临时队列 | Media3 Timeline + Compose 编辑 + 持久恢复 |
+| Glide 3 封面链路 | ContentResolver + MediaMetadataRetriever + 采样 + LRU |
+| Fabric / JCenter / Kotlin Android Extensions | 移除或使用现代官方组件 |
 
-## 6. 仓库与安全清理
+## 6. 本地数据与安全
 
-现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名/服务凭据。
+现代化分支删除了当前树中的签名材料、加密签名包、Firebase 配置和构建产物，并通过 `.gitignore` 阻止再次提交。删除当前树不会抹除历史；正式发布前仍需轮换旧签名和服务凭据。
 
-用户导入歌词仅保存到应用内部存储，不上传网络。SAF 只保存系统授予的目录 URI 和只读权限。收藏、历史和播放统计只保存媒体 ID、次数与本机时间戳。
+用户导入歌词仅保存到应用内部存储。SAF 只保存系统授予的目录 URI 和只读权限。收藏、历史、播放统计和歌单仅保存本地媒体标识及必要元数据，不上传行为数据，也不复制音频。
 
 ## 7. 验证门禁
 
@@ -194,42 +209,45 @@ CI 执行：
   :app:assembleDebug
 ```
 
-自动测试覆盖搜索、Android 新旧路径、MediaStore 时间回退、SAF 音频识别、稳定文档 ID、可读路径编码、跨来源去重、收藏、最近播放、播放统计、智能列表排序，以及 LRC 解析与活动行匹配。
+自动测试覆盖：
+
+- 搜索、路径解析、MediaStore 时间回退
+- SAF 音频识别、稳定 ID、路径编码和跨来源去重
+- 收藏、最近播放、播放统计和智能列表排序
+- 歌单名称规范化、转义编解码、去重、顺序交换和失效项解析
+- LRC 时间线、偏移和活动行匹配
 
 合并前仍建议人工验收：
 
-1. Android 8、12、13、16/17 的媒体、通知、OpenDocumentTree 和系统文件选择器流程
-2. 四个桌面快捷入口的冷启动、热启动和 OEM Launcher 行为
-3. 内部存储、SD 卡、USB OTG、云盘及第三方文档提供程序的授权恢复
-4. 10,000 首以上混合库的扫描、聚合、搜索、智能列表和队列性能
-5. 播放统计在暂停继续、切歌、单曲循环、服务恢复和进程回收时的语义
-6. 最近添加时间缺失、错误 Provider 时间和时区变化
-7. 队列连续重排、删除当前项、清空及服务重建后一致性
-8. 后台播放、锁屏控制、蓝牙按键、耳机拔出和音频焦点
-9. 横屏、折叠屏、TalkBack、高对比度和动态配色
+1. Android 8、12、13、16/17 的媒体、通知和 SAF 权限流程
+2. SD 卡、USB、云盘和第三方 Provider 暂时离线后的歌单恢复
+3. 重名、特殊字符名称、损坏 DataStore 行和大型歌单
+4. 歌单批量添加、连续排序、清空、失效项清理和随机播放
+5. MediaSession、锁屏、蓝牙、音频焦点和服务重建
+6. 10,000 首混合库、数千首歌单、超大队列和封面内存压力
+7. 手机、平板、横屏、折叠屏、TalkBack 和高对比度
 
 ## 8. 后续优先级
 
 ### P0：发布可用性
 
-- MediaSession、OpenDocumentTree、快捷入口、队列编辑、歌词导入和状态恢复的仪器化测试
-- Baseline Profile、Macrobenchmark 与 10,000 首混合库性能基准
-- SAF 权限撤销、不可读 URI、文件移动和播放错误恢复降级
-- 超大队列、大歌词、封面缓存和内存压力测试
-- OEM 前台服务、通知和 Launcher 兼容验证
+- MediaSession、OpenDocumentTree、歌单、快捷入口、歌词导入和进程回收仪器化测试
+- Baseline Profile、Macrobenchmark、混合大库和大型歌单基准
+- SAF 权限撤销、文件移动和播放错误恢复
+- OEM 前台服务、通知与 Launcher 验证
 
-### P1：数据体验与旧功能迁移
+### P1：歌单与数据体验
 
-- 规则智能列表和播放完成度统计
-- SAF 增量索引、磁盘缓存、目录面包屑和可选变更监听
+- 长按拖拽、批量选择、Snackbar 撤销
+- M3U/M3U8 导入导出与历史 MediaStore Playlist 只读导入
+- 类型安全、可恢复的统一导航与歌单深链
+- 规则智能列表、播放完成度和时间窗口统计
+- SAF 增量索引、磁盘缓存与目录面包屑
+
+### P2：旧特色与产品化
+
+- 同目录歌词自动匹配、歌词编辑和双语歌词
 - 音频标签编辑独立数据层
-- 同目录同名歌词自动匹配、歌词编辑和双语歌词
-- Glance 桌面小组件
-- Live2D 独立 AndroidView 适配层
-
-### P2：产品化
-
-- 队列长按拖拽、批量操作和撤销
-- 睡眠定时、均衡器和无缝播放
-- 无障碍、键盘、遥控器、车机体验
-- 截图测试、性能回归和签名发布流水线
+- Jetpack Glance 桌面小组件
+- Live2D 独立 AndroidView 适配
+- 睡眠定时、均衡器、无缝播放和发布流水线
