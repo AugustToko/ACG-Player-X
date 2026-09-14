@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,6 +63,8 @@ fun LibraryScreen(
     onSectionChange: (LibrarySection) -> Unit,
     onClearCollectionFilter: () -> Unit,
     onPlaySong: (Song) -> Unit,
+    onToggleFavorite: (Song) -> Unit,
+    onClearRecentHistory: () -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     onOpenFolder: (String, String) -> Unit,
@@ -147,6 +148,7 @@ fun LibraryScreen(
 
                 state.songs.isEmpty() -> {
                     EmptyLibraryState(
+                        section = state.section,
                         hasQuery = state.query.isNotBlank() || state.activeFilter != null,
                         onAddAuthorizedFolder = onAddAuthorizedFolder,
                     )
@@ -156,6 +158,8 @@ fun LibraryScreen(
                     LibraryContent(
                         state = state,
                         onPlaySong = onPlaySong,
+                        onToggleFavorite = onToggleFavorite,
+                        onClearRecentHistory = onClearRecentHistory,
                         onOpenAlbum = onOpenAlbum,
                         onOpenArtist = onOpenArtist,
                         onOpenFolder = onOpenFolder,
@@ -167,13 +171,22 @@ fun LibraryScreen(
 }
 
 private fun librarySummary(state: MainUiState): String =
-    when {
-        state.totalSongCount == 0 -> "本地音乐库"
-        state.songs.size != state.totalSongCount ->
-            "显示 ${state.songs.size} / ${state.totalSongCount} 首"
-        state.authorizedFolderSongCount > 0 ->
-            "系统 ${state.mediaStoreSongCount} · 授权目录 ${state.authorizedFolderSongCount} · 共 ${state.totalSongCount} 首"
-        else -> "${state.totalSongCount} 首本地音乐"
+    when (state.section) {
+        LibrarySection.FAVORITES ->
+            "收藏 ${state.songs.size} 首 · 总库 ${state.totalSongCount} 首"
+
+        LibrarySection.RECENT ->
+            "最近播放 ${state.songs.size} 首 · 最多保留 100 首"
+
+        else ->
+            when {
+                state.totalSongCount == 0 -> "本地音乐库"
+                state.songs.size != state.totalSongCount ->
+                    "显示 ${state.songs.size} / ${state.totalSongCount} 首"
+                state.authorizedFolderSongCount > 0 ->
+                    "系统 ${state.mediaStoreSongCount} · 授权目录 ${state.authorizedFolderSongCount} · 共 ${state.totalSongCount} 首"
+                else -> "${state.totalSongCount} 首本地音乐"
+            }
     }
 
 @Composable
@@ -237,6 +250,8 @@ private fun LibrarySectionSelector(
                     Text(
                         when (section) {
                             LibrarySection.SONGS -> "歌曲"
+                            LibrarySection.FAVORITES -> "收藏"
+                            LibrarySection.RECENT -> "最近"
                             LibrarySection.ALBUMS -> "专辑"
                             LibrarySection.ARTISTS -> "艺术家"
                             LibrarySection.FOLDERS -> "文件夹"
@@ -252,30 +267,39 @@ private fun LibrarySectionSelector(
 private fun LibraryContent(
     state: MainUiState,
     onPlaySong: (Song) -> Unit,
+    onToggleFavorite: (Song) -> Unit,
+    onClearRecentHistory: () -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     onOpenFolder: (String, String) -> Unit,
 ) {
     when (state.section) {
-        LibrarySection.SONGS -> {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
-            ) {
-                items(
-                    items = state.songs,
-                    key = { it.id },
-                ) { song ->
-                    SongRow(
-                        song = song,
-                        isPlaying = state.playback.mediaId == song.id.toString(),
-                        onClick = { onPlaySong(song) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 84.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-                    )
-                }
+        LibrarySection.SONGS,
+        LibrarySection.FAVORITES,
+        -> {
+            SongList(
+                songs = state.songs,
+                currentMediaId = state.playback.mediaId,
+                favoriteMediaIds = state.favoriteMediaIds,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+            )
+        }
+
+        LibrarySection.RECENT -> {
+            Column(Modifier.fillMaxSize()) {
+                RecentHistoryHeader(
+                    visibleCount = state.songs.size,
+                    onClear = onClearRecentHistory,
+                )
+                SongList(
+                    songs = state.songs,
+                    currentMediaId = state.playback.mediaId,
+                    favoriteMediaIds = state.favoriteMediaIds,
+                    onPlaySong = onPlaySong,
+                    onToggleFavorite = onToggleFavorite,
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
 
@@ -354,10 +378,45 @@ private fun LibraryContent(
 }
 
 @Composable
+private fun SongList(
+    songs: List<Song>,
+    currentMediaId: String?,
+    favoriteMediaIds: Set<String>,
+    onPlaySong: (Song) -> Unit,
+    onToggleFavorite: (Song) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+        items(
+            items = songs,
+            key = { it.id },
+        ) { song ->
+            val mediaId = song.id.toString()
+            SongRow(
+                song = song,
+                isPlaying = currentMediaId == mediaId,
+                isFavorite = mediaId in favoriteMediaIds,
+                onClick = { onPlaySong(song) },
+                onToggleFavorite = { onToggleFavorite(song) },
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 84.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
+        }
+    }
+}
+
+@Composable
 private fun SongRow(
     song: Song,
     isPlaying: Boolean,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
 ) {
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
@@ -408,14 +467,73 @@ private fun SongRow(
             )
         },
         trailingContent = {
-            if (isPlaying) {
-                AssistChip(
-                    onClick = onClick,
-                    label = { Text("播放中") },
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                if (isPlaying) {
+                    Text(
+                        text = "播放中",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                TextButton(
+                    onClick = onToggleFavorite,
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                ) {
+                    Text(
+                        text = if (isFavorite) "★" else "☆",
+                        style = MaterialTheme.typography.titleLarge,
+                        color =
+                            if (isFavorite) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                    )
+                }
             }
         },
     )
+}
+
+@Composable
+private fun RecentHistoryHeader(
+    visibleCount: Int,
+    onClear: () -> Unit,
+) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "最近播放",
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "$visibleCount 首可用歌曲，按最近播放排序",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onClear) {
+                Text("清空")
+            }
+        }
+    }
 }
 
 private data class CollectionSummary(
@@ -700,9 +818,25 @@ private fun ErrorState(
 
 @Composable
 private fun EmptyLibraryState(
+    section: LibrarySection,
     hasQuery: Boolean,
     onAddAuthorizedFolder: () -> Unit,
 ) {
+    val title =
+        when {
+            hasQuery -> "没有匹配的歌曲"
+            section == LibrarySection.FAVORITES -> "还没有收藏歌曲"
+            section == LibrarySection.RECENT -> "还没有播放记录"
+            else -> "音乐库为空"
+        }
+    val message =
+        when {
+            hasQuery -> "清除搜索或集合筛选后再试。"
+            section == LibrarySection.FAVORITES -> "点击歌曲右侧的星标即可加入收藏。"
+            section == LibrarySection.RECENT -> "开始播放歌曲后，这里会按最近顺序记录。"
+            else -> "可以刷新系统媒体库，或授权另一个音乐目录。"
+        }
+
     Column(
         modifier =
             Modifier
@@ -712,22 +846,17 @@ private fun EmptyLibraryState(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = if (hasQuery) "没有匹配的歌曲" else "音乐库为空",
+            text = title,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text =
-                if (hasQuery) {
-                    "清除搜索或集合筛选后再试。"
-                } else {
-                    "可以刷新系统媒体库，或授权另一个音乐目录。"
-                },
+            text = message,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        if (!hasQuery) {
+        if (!hasQuery && section !in setOf(LibrarySection.FAVORITES, LibrarySection.RECENT)) {
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onAddAuthorizedFolder) {
                 Text("添加授权目录")
