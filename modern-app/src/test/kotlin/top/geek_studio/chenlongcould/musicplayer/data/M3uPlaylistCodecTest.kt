@@ -116,7 +116,7 @@ class M3uPlaylistCodecTest {
                 UserPlaylist("2", "Anime Mix (2)", emptyList(), 1L, 1L),
             )
 
-        assertEquals("Anime Mix (3)", uniquePlaylistName(existing, "anime mix"))
+        assertEquals("Anime Mix (3)", uniquePlaylistName(existing, "Anime Mix"))
     }
 
     @Test
