@@ -2,9 +2,9 @@
 
 ## 1. 原项目审计
 
-原工程最后一次主要实现停留在 2020 年，活动构建链路包含 Kotlin 1.3、AGP 4.0、Gradle 6.1、SDK 29、JDK 8、Groovy 脚本和 JCenter。界面层由 Java Activity/Fragment、XML、ButterKnife、SlidingUpPanel、RealtimeBlurView 与自定义主题辅助库组成。
+原工程的主要实现停留在 2020 年，活动构建链路包含 Kotlin 1.3、AGP 4.0、Gradle 6.1、SDK 29、JDK 8、Groovy 脚本和 JCenter。界面层由 Java Activity/Fragment、XML、ButterKnife、SlidingUpPanel、RealtimeBlurView 与自定义主题辅助库组成。
 
-旧工程还存在以下结构性问题：
+主要结构性问题包括：
 
 - 单个 Activity 同时承担导航、权限、Live2D、网络检查和页面切换
 - 播放 UI 与 Fragment 和第三方滑动面板强耦合
@@ -36,9 +36,9 @@ MainActivity
         ├── LibraryScreen
         ├── PlaylistsScreen
         │     ├── M3U/M3U8 transfer bar
-        │     ├── playlist overview
-        │     ├── playlist detail
-        │     └── searchable song picker
+        │     ├── playlist overview / detail
+        │     ├── searchable song picker
+        │     └── PlaylistBatchEditorOverlay
         ├── NowPlayingScreen
         │     ├── cover
         │     ├── synchronized lyrics
@@ -57,6 +57,7 @@ PlaylistViewModel
   ├── PlaylistRepository
   ├── PlaylistTransferRepository
   │     └── M3uPlaylistCodec
+  ├── single-step undo snapshot
   └── PlayerConnection ── same MediaSession
 
 PlaybackService
@@ -69,7 +70,7 @@ PlaybackService
 
 `MainViewModel` 暴露 `StateFlow<MainUiState>`，负责音乐库、权限、授权目录、智能列表、主题、播放状态和歌词。主目的地由 `MainUiState.destination` 驱动，桌面快捷入口在 `MainActivity.onCreate()` 和 `onNewIntent()` 中转交 ViewModel。
 
-歌单使用独立 `PlaylistViewModel`，避免把所有歌单编辑和文件传输状态塞进主 ViewModel。当前歌单入口由 Compose shell 的 `rememberSaveable` 控制，并拥有独立返回栈；后续可统一迁移到类型安全导航和可恢复 route。
+歌单使用独立 `PlaylistViewModel`，避免把歌单编辑、撤销和文件传输状态塞进主 ViewModel。当前歌单入口由 Compose shell 的 `rememberSaveable` 控制，并拥有独立返回栈；后续可统一迁移到类型安全导航和可恢复 route。
 
 ### 音乐来源链路
 
@@ -85,10 +86,11 @@ PlaybackService
 ### 自定义歌单链路
 
 ```text
-PlaylistsScreen / PlaylistTransferBar
+PlaylistsScreen / PlaylistBatchEditorOverlay / PlaylistTransferBar
   ↓ events
 PlaylistViewModel
   ├── PlaylistRepository ── Preferences DataStore
+  ├── one-step undo snapshot
   └── PlaylistTransferRepository ── OpenDocument/CreateDocument
                                       ↓
                                 M3uPlaylistCodec
@@ -96,7 +98,21 @@ PlaylistViewModel
 
 `UserPlaylist` 保存 UUID、规范化名称、有序媒体 ID 列表以及创建/更新时间。歌单不直接保存文件路径或复制音频。MediaStore 正数 ID 和 SAF 稳定负数 ID 可以混排。解析时根据当前完整音乐库恢复歌曲对象；无法解析的项目保留在 DataStore 中，因此可移动存储恢复后歌曲会重新出现。
 
-歌单 mutation 包括创建、重命名、删除、单曲/批量添加、移出、清空、顺序交换和显式清理失效项目。名称会折叠连续空白、限制为 80 个字符，并进行忽略大小写的同名校验。持久格式转义换行、制表符、回车和反斜杠；解码器跳过损坏行而不阻塞其他歌单。
+歌单 mutation 包括：
+
+- 创建、重命名和删除
+- 单曲与批量添加
+- 单曲或批量移出
+- 单曲上下交换
+- 批量置顶或置底
+- 清空歌单
+- 显式清理当前不可用项目
+
+批量操作基于歌单的持久顺序执行。即使用户按不同顺序勾选歌曲，批量置顶或置底仍会保持这些歌曲在原歌单中的相对顺序，避免批处理意外打乱编排。
+
+除创建、重命名和删除整个歌单外，破坏性媒体 ID 修改都会保存一次进程内快照，并通过 Material 3 Snackbar 提供单步撤销。开始新的歌单修改、离开对应歌单或 Snackbar 超时后，旧快照会释放。撤销只恢复媒体 ID 顺序，不修改音频文件。
+
+名称会折叠连续空白、限制为 80 个字符，并进行忽略大小写的同名校验。持久格式转义换行、制表符、回车和反斜杠；解码器跳过损坏行而不阻塞其他歌单。
 
 歌单播放仍通过同一个 `MediaSessionService`。`PlaylistViewModel` 只负责把解析后的有序歌曲转换为 Media3 队列，不创建第二个 ExoPlayer。
 
@@ -106,14 +122,14 @@ PlaylistViewModel
 
 匹配按可靠性递减：
 
-1. 当前设备存在的 `#ACGPLAYER-MEDIA-ID`
-2. 精确内容 URI
+1. 经过可移植文件名和元数据提示校验的 `#ACGPLAYER-MEDIA-ID`
+2. 经过同样提示校验的精确内容 URI
 3. 显示文件名与目录提示
 4. 标题、艺术家和允许 3 秒误差的时长
 
-多个候选无法唯一收敛时标记为歧义并跳过，不静默选错。重复媒体 ID按首次出现顺序去重。导入名称冲突时使用递增后缀。
+多个候选无法唯一收敛时标记为歧义并跳过，不静默选错。重复媒体 ID 按首次出现顺序去重。导入名称冲突时使用递增后缀。
 
-导出通过 `CreateDocument` 写入 UTF-8 M3U8。除标准 EXTINF 外，还写入可被第三方播放器安全忽略的 `#ACGPLAYER-MEDIA-ID`、文件名和目录注释。当前不可用项目使用 `acg-player://media/<id>` 占位，重新导入本应用时可恢复其顺序；其他播放器可忽略这些不可解析位置。
+导出通过 `CreateDocument` 写入 UTF-8 M3U8。除标准 EXTINF 外，还写入可被第三方播放器安全忽略的 `#ACGPLAYER-MEDIA-ID`、文件名和目录注释。当前不可用项目使用 `acg-player://media/<id>` 占位，重新导入本应用时可恢复顺序。
 
 ### 智能音乐库链路
 
@@ -125,31 +141,16 @@ PlaylistViewModel
 - 未播放由当前可用库与播放统计求差集
 - 当前来源不可用只影响展示，不破坏持久记录
 
-### 播放与队列链路
+### 播放、歌词和封面
 
 - PlaybackService 托管 ExoPlayer 和 MediaSession
 - PlayerConnection 异步连接 MediaController
 - 当前曲目、完整队列、索引、进度、缓冲、随机和循环通过 StateFlow 回传
 - Compose 队列支持跳转、上下调整、移除和清空
-- PlaybackStateStore 保存队列、索引、位置和模式
-- 服务恢复后重建上下文并保持暂停
-
-### 歌词链路
-
-- 纯 Kotlin LRC parser，不复用旧硬编码网络接口
-- 支持多时间戳、元数据、`[offset:]`、排序和去重
-- 二分查找当前歌词行
-- OpenDocument 导入后复制到应用内部存储
-- UTF-8/BOM 解码失败时回退 GB18030
-- 文件 offset 与每曲用户 offset 叠加，限制为 ±30 秒
-
-### 封面链路
-
-- 优先读取专辑封面 URI
-- 缩略图/图片流失败后使用 `MediaMetadataRetriever.embeddedPicture`
-- 支持 MediaStore 和 SAF URI
-- 按请求尺寸采样并使用受限 LRU 缓存
-- 失败时回退稳定 Material 3 占位
+- PlaybackStateStore 保存队列、索引、位置和模式，服务恢复后保持暂停
+- 纯 Kotlin LRC parser 支持多时间戳、元数据、offset、排序和去重
+- OpenDocument 导入歌词后复制到应用内部存储，支持 UTF-8/BOM 与 GB18030
+- 封面优先读取专辑 URI，失败后使用音频内嵌图片，按请求尺寸采样并进入受限 LRU
 
 ## 4. UI 重写范围
 
@@ -159,7 +160,8 @@ PlaylistViewModel
 - MediaStore + SAF 歌曲、专辑、艺术家和文件夹浏览
 - 收藏、最近播放、最近添加、最常播放与未播放
 - 自定义歌单概览、详情、搜索和歌曲选择器
-- 歌单创建、重命名、删除、添加、移除、排序、清空和失效项清理
+- 歌单创建、重命名、删除、添加、移出、排序、清空和失效项清理
+- 可搜索批量选择、批量置顶/置底、批量移出和 Snackbar 撤销
 - 歌单顺序播放、随机播放和 M3U/M3U8 导入导出
 - 四个 Android 动态快捷入口
 - 真实/内嵌封面、迷你播放器和全屏播放页
@@ -170,7 +172,7 @@ PlaylistViewModel
 尚未达到完整产品能力：
 
 - 发布级仪器化测试和性能基准
-- 歌单拖拽、多选、撤销、导入预览/手工映射及历史 MediaStore Playlist 导入
+- 歌单长按拖拽、任意目标位置移动、导入预览/手工映射及历史 MediaStore Playlist 导入
 - SAF 增量索引、磁盘缓存和 Provider 变更监听
 - 规则智能列表与播放完成度统计
 - 歌词文本编辑、双语/翻译、逐字歌词和联网 Provider
@@ -187,8 +189,9 @@ PlaylistViewModel
 | SlidingUpPanel + MiniPlayerFragment | Compose MiniPlayer + 独立播放页面 |
 | 旧 LrcView + 硬编码在线搜索 | 纯 Kotlin LRC + Compose 同步列表 + 本地导入 |
 | 全盘扫描 / legacy storage | MediaStore + OpenDocumentTree |
-| MediaStore Playlist + Loader/Dialog | App-private PlaylistRepository + Compose 歌单 UI |
+| MediaStore Playlist + Loader/Dialog | App-private PlaylistRepository + Compose 歌单/批量编辑 UI |
 | 无可移植歌单协议 | M3U/M3U8 codec + SAF 单文件导入导出 + 分层重匹配 |
+| 立即破坏式歌单编辑 | ViewModel 快照 + Material 3 Snackbar 单步撤销 |
 | 旧 Shortcut Launcher Activity | ViewModel route + MainActivity 冷/热 Intent |
 | 临时收藏/历史 | DataStore 收藏、最近播放与 PlaybackStats |
 | AppThemeHelper | Material 3 ColorScheme + DataStore |
@@ -221,16 +224,16 @@ CI 执行：
 - 搜索、路径解析、MediaStore 时间回退
 - SAF 音频识别、稳定 ID、路径编码和跨来源去重
 - 收藏、最近播放、播放统计和智能列表排序
-- 歌单名称规范化、转义编解码、去重、顺序交换和失效项解析
-- M3U 标准字段、跨设备 ID 回退、文件名/元数据匹配、歧义保护、离线 ID 和安全文件名
+- 歌单名称规范化、转义编解码、去重、单曲交换、批量移除和批量顺序变换
+- M3U 标准字段、跨设备 ID/URI 冲突、文件名/元数据匹配、歧义保护和离线 ID
 - LRC 时间线、偏移和活动行匹配
 
 合并前仍建议人工验收：
 
 1. Android 8、12、13、16/17 的媒体、通知和 SAF 权限流程
-2. 不同系统文件选择器与第三方 Provider 的 M3U 导入和 CreateDocument 覆盖行为
-3. VLC、foobar2000、AIMP 等生成的绝对路径、相对路径和 URI 歌单样本
-4. SD 卡、USB、云盘暂时离线后的歌单与离线 M3U ID 恢复
+2. 不同文件选择器与 Provider 的 M3U 导入和 CreateDocument 行为
+3. SD 卡、USB、云盘暂时离线后的歌单与离线 M3U ID 恢复
+4. 大型歌单的搜索、全选当前结果、批量置顶/置底、批量移出和撤销
 5. 重名、特殊字符、损坏行、重复条目、歧义文件名和超限文件
 6. MediaSession、锁屏、蓝牙、音频焦点和服务重建
 7. 10,000 首混合库、数千首歌单、超大队列和封面内存压力
@@ -247,7 +250,7 @@ CI 执行：
 
 ### P1：歌单与数据体验
 
-- 长按拖拽、批量选择、Snackbar 撤销
+- 长按拖拽和任意目标位置移动
 - M3U 导入预览、歧义手工映射、可选相对路径导出
 - 历史 MediaStore Playlist 只读导入
 - 类型安全、可恢复的统一导航与歌单深链
