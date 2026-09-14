@@ -18,6 +18,7 @@ class BaselineProfileGenerator {
         baselineProfileRule.collect(
             packageName = TARGET_PACKAGE,
             includeInStartupProfile = true,
+            filterPredicate = ::isApplicationProfileRule,
         ) {
             launchFromHome()
         }
@@ -27,6 +28,7 @@ class BaselineProfileGenerator {
         baselineProfileRule.collect(
             packageName = TARGET_PACKAGE,
             includeInStartupProfile = false,
+            filterPredicate = ::isApplicationProfileRule,
         ) {
             launchFromHome()
             openDestination("设置")
@@ -36,4 +38,11 @@ class BaselineProfileGenerator {
             openDestination("歌单")
             openDestination("音乐库")
         }
+
+    private fun isApplicationProfileRule(rule: String): Boolean =
+        rule.contains(APPLICATION_RULE_PREFIX)
+
+    private companion object {
+        val APPLICATION_RULE_PREFIX = "L${TARGET_PACKAGE.replace('.', '/')}/"
+    }
 }
