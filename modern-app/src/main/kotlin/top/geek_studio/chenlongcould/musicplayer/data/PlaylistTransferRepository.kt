@@ -13,18 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 
-data class PlaylistImportResult(
-    val preferredName: String,
-    val mediaIds: List<String>,
-    val totalEntryCount: Int,
-    val matchedCount: Int,
-    val preservedUnavailableCount: Int,
-    val unmatchedCount: Int,
-    val ambiguousCount: Int,
-    val duplicateCount: Int,
-    val truncated: Boolean,
-)
-
 data class PlaylistExportResult(
     val exportedCount: Int,
     val unavailableCount: Int,
@@ -36,10 +24,10 @@ class PlaylistTransferRepository(
     private val appContext = context.applicationContext
     private val resolver = appContext.contentResolver
 
-    suspend fun importPlaylist(
+    suspend fun prepareImport(
         uri: Uri,
         librarySongs: List<Song>,
-    ): PlaylistImportResult = withContext(Dispatchers.IO) {
+    ): PlaylistImportPreview = withContext(Dispatchers.IO) {
         val bytes =
             resolver.openInputStream(uri)?.use(::readLimited)
                 ?: throw IllegalArgumentException("无法读取所选歌单文件")
@@ -51,20 +39,14 @@ class PlaylistTransferRepository(
                 ?: "导入歌单"
         val parsed = parseM3uPlaylist(decodeText(bytes), fallbackName)
         require(parsed.entries.isNotEmpty()) { "M3U/M3U8 文件中没有可导入的歌曲条目" }
-        val resolved = resolveM3uPlaylist(parsed, librarySongs)
-
-        PlaylistImportResult(
-            preferredName = parsed.name?.takeIf(String::isNotBlank) ?: fallbackName,
-            mediaIds = resolved.mediaIds,
-            totalEntryCount = parsed.entries.size,
-            matchedCount = resolved.matchedCount,
-            preservedUnavailableCount = resolved.preservedUnavailableCount,
-            unmatchedCount = resolved.unmatchedCount,
-            ambiguousCount = resolved.ambiguousCount,
-            duplicateCount = resolved.duplicateCount,
-            truncated = parsed.truncated,
-        )
+        buildPlaylistImportPreview(parsed, fallbackName, librarySongs)
     }
+
+    suspend fun importPlaylist(
+        uri: Uri,
+        librarySongs: List<Song>,
+    ): PlaylistImportResult =
+        finalizePlaylistImport(prepareImport(uri, librarySongs))
 
     suspend fun exportPlaylist(
         uri: Uri,

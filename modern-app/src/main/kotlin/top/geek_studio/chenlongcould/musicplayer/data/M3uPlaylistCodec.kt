@@ -31,6 +31,27 @@ data class M3uResolution(
     val duplicateCount: Int,
 )
 
+enum class PlaylistImportEntryStatus {
+    MATCHED,
+    PRESERVED_UNAVAILABLE,
+    AMBIGUOUS,
+    UNMATCHED,
+    DUPLICATE,
+}
+
+internal data class M3uEntryResolution(
+    val index: Int,
+    val entry: M3uEntry,
+    val status: PlaylistImportEntryStatus,
+    val automaticMediaId: String? = null,
+    val candidateMediaIds: List<String> = emptyList(),
+    val candidateCount: Int = candidateMediaIds.size,
+)
+
+internal data class M3uDetailedResolution(
+    val entries: List<M3uEntryResolution>,
+)
+
 internal fun parseM3uPlaylist(
     content: String,
     fallbackName: String? = null,
@@ -162,68 +183,126 @@ internal fun resolveM3uPlaylist(
     parsed: ParsedM3uPlaylist,
     songs: List<Song>,
 ): M3uResolution {
+    val detailed = resolveM3uPlaylistDetailed(parsed, songs)
+    return M3uResolution(
+        mediaIds =
+            detailed.entries.mapNotNull { resolution ->
+                resolution.automaticMediaId.takeIf {
+                    resolution.status == PlaylistImportEntryStatus.MATCHED ||
+                        resolution.status == PlaylistImportEntryStatus.PRESERVED_UNAVAILABLE
+                }
+            },
+        matchedCount = detailed.entries.count { it.status == PlaylistImportEntryStatus.MATCHED },
+        preservedUnavailableCount =
+            detailed.entries.count {
+                it.status == PlaylistImportEntryStatus.PRESERVED_UNAVAILABLE
+            },
+        unmatchedCount = detailed.entries.count { it.status == PlaylistImportEntryStatus.UNMATCHED },
+        ambiguousCount = detailed.entries.count { it.status == PlaylistImportEntryStatus.AMBIGUOUS },
+        duplicateCount = detailed.entries.count { it.status == PlaylistImportEntryStatus.DUPLICATE },
+    )
+}
+
+internal fun resolveM3uPlaylistDetailed(
+    parsed: ParsedM3uPlaylist,
+    songs: List<Song>,
+): M3uDetailedResolution {
     val songsById = songs.associateBy { it.id.toString() }
     val songsByUri = songs.groupBy { normalizeUri(it.contentUri) }
     val songsByFileName =
         songs
             .filter { it.displayName.isNotBlank() }
             .groupBy { normalizeFileName(it.displayName) }
-    val mediaIds = mutableListOf<String>()
     val seenMediaIds = hashSetOf<String>()
-    var matchedCount = 0
-    var preservedUnavailableCount = 0
-    var unmatchedCount = 0
-    var ambiguousCount = 0
-    var duplicateCount = 0
 
-    parsed.entries.forEach { entry ->
-        val explicitMediaId = normalizeMediaId(entry.explicitMediaId)
-        val explicitSong =
-            explicitMediaId
-                ?.let(songsById::get)
-                ?.takeIf { song -> explicitSongMatchesEntry(song, entry) }
-        val outcome =
-            explicitSong?.let { MatchOutcome(it, ambiguous = false) }
-                ?: matchByUri(entry, songsByUri)
-                ?: matchByFileName(entry, songsByFileName)
-                ?: matchByMetadata(entry, songs)
+    val resolutions =
+        parsed.entries.mapIndexed { index, entry ->
+            val explicitMediaId = normalizeMediaId(entry.explicitMediaId)
+            val explicitSong =
+                explicitMediaId
+                    ?.let(songsById::get)
+                    ?.takeIf { song -> explicitSongMatchesEntry(song, entry) }
+            val outcome =
+                explicitSong?.let { MatchOutcome(song = it, candidates = listOf(it)) }
+                    ?: matchByUri(entry, songsByUri)
+                    ?: matchByFileName(entry, songsByFileName)
+                    ?: matchByMetadata(entry, songs)
 
-        val resolvedId = outcome?.song?.id?.toString()
-        when {
-            resolvedId != null -> {
-                if (seenMediaIds.add(resolvedId)) {
-                    mediaIds += resolvedId
-                    matchedCount += 1
-                } else {
-                    duplicateCount += 1
+            val candidateMediaIds =
+                outcome
+                    ?.candidates
+                    .orEmpty()
+                    .asSequence()
+                    .map { it.id.toString() }
+                    .distinct()
+                    .take(MAX_IMPORT_CANDIDATES)
+                    .toList()
+            val candidateCount = outcome?.candidates?.distinctBy(Song::id)?.size ?: 0
+            val resolvedId = outcome?.song?.id?.toString()
+
+            when {
+                resolvedId != null && seenMediaIds.add(resolvedId) -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.MATCHED,
+                        automaticMediaId = resolvedId,
+                        candidateMediaIds = candidateMediaIds.ifEmpty { listOf(resolvedId) },
+                        candidateCount = candidateCount.coerceAtLeast(1),
+                    )
+                }
+
+                resolvedId != null -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.DUPLICATE,
+                        automaticMediaId = resolvedId,
+                        candidateMediaIds = candidateMediaIds.ifEmpty { listOf(resolvedId) },
+                        candidateCount = candidateCount.coerceAtLeast(1),
+                    )
+                }
+
+                outcome?.ambiguous == true -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.AMBIGUOUS,
+                        candidateMediaIds = candidateMediaIds,
+                        candidateCount = candidateCount,
+                    )
+                }
+
+                explicitMediaId != null && isAcgMediaLocation(entry.location) &&
+                    seenMediaIds.add(explicitMediaId) -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.PRESERVED_UNAVAILABLE,
+                        automaticMediaId = explicitMediaId,
+                    )
+                }
+
+                explicitMediaId != null && isAcgMediaLocation(entry.location) -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.DUPLICATE,
+                        automaticMediaId = explicitMediaId,
+                    )
+                }
+
+                else -> {
+                    M3uEntryResolution(
+                        index = index,
+                        entry = entry,
+                        status = PlaylistImportEntryStatus.UNMATCHED,
+                    )
                 }
             }
-
-            outcome?.ambiguous == true -> {
-                ambiguousCount += 1
-            }
-
-            explicitMediaId != null && isAcgMediaLocation(entry.location) -> {
-                if (seenMediaIds.add(explicitMediaId)) {
-                    mediaIds += explicitMediaId
-                    preservedUnavailableCount += 1
-                } else {
-                    duplicateCount += 1
-                }
-            }
-
-            else -> unmatchedCount += 1
         }
-    }
 
-    return M3uResolution(
-        mediaIds = mediaIds,
-        matchedCount = matchedCount,
-        preservedUnavailableCount = preservedUnavailableCount,
-        unmatchedCount = unmatchedCount,
-        ambiguousCount = ambiguousCount,
-        duplicateCount = duplicateCount,
-    )
+    return M3uDetailedResolution(entries = resolutions)
 }
 
 fun m3uExportFileName(name: String): String {
@@ -335,8 +414,8 @@ private fun matchByMetadata(
         }
     return when (candidates.size) {
         0 -> null
-        1 -> MatchOutcome(candidates.single(), ambiguous = false)
-        else -> MatchOutcome(song = null, ambiguous = true)
+        1 -> MatchOutcome(song = candidates.single(), candidates = candidates)
+        else -> MatchOutcome(song = null, candidates = candidates)
     }
 }
 
@@ -345,7 +424,9 @@ private fun chooseCandidate(
     entry: M3uEntry,
 ): MatchOutcome? {
     if (candidates.isEmpty()) return null
-    if (candidates.size == 1) return MatchOutcome(candidates.single(), ambiguous = false)
+    if (candidates.size == 1) {
+        return MatchOutcome(song = candidates.single(), candidates = candidates)
+    }
 
     var narrowed = candidates
     val folderHint =
@@ -379,8 +460,8 @@ private fun chooseCandidate(
 
     return when (narrowed.size) {
         0 -> null
-        1 -> MatchOutcome(narrowed.single(), ambiguous = false)
-        else -> MatchOutcome(song = null, ambiguous = true)
+        1 -> MatchOutcome(song = narrowed.single(), candidates = narrowed)
+        else -> MatchOutcome(song = null, candidates = narrowed)
     }
 }
 
@@ -483,10 +564,14 @@ private data class ExtInf(
 
 private data class MatchOutcome(
     val song: Song?,
-    val ambiguous: Boolean,
-)
+    val candidates: List<Song>,
+) {
+    val ambiguous: Boolean
+        get() = song == null && candidates.size > 1
+}
 
 private const val MAX_M3U_ENTRIES = 20_000
+private const val MAX_IMPORT_CANDIDATES = 100
 private const val DURATION_TOLERANCE_SECONDS = 3L
 private const val MAX_EXPORT_FILE_STEM_LENGTH = 72
 private const val PLAYLIST_PREFIX = "#PLAYLIST:"
