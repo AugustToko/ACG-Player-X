@@ -1,5 +1,6 @@
 package top.geek_studio.chenlongcould.musicplayer.ui
 
+import top.geek_studio.chenlongcould.musicplayer.data.displayMusicFolderPath
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 
 fun filterSongs(
@@ -14,6 +15,7 @@ fun filterSongs(
             song.artist.contains(normalized, ignoreCase = true) ||
             song.album.contains(normalized, ignoreCase = true) ||
             song.folderName.contains(normalized, ignoreCase = true) ||
-            song.folderPath.contains(normalized, ignoreCase = true)
+            displayMusicFolderPath(song.folderPath)
+                .contains(normalized, ignoreCase = true)
     }
 }

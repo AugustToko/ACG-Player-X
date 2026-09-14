@@ -42,8 +42,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import top.geek_studio.chenlongcould.musicplayer.data.displayMusicFolderPath
+import top.geek_studio.chenlongcould.musicplayer.data.isAuthorizedFolderPath
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkImage
 import top.geek_studio.chenlongcould.musicplayer.ui.components.formatDuration
@@ -55,6 +58,7 @@ fun LibraryScreen(
     notificationPermissionRequired: Boolean,
     onRequestPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
     onRefresh: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSectionChange: (LibrarySection) -> Unit,
@@ -77,12 +81,7 @@ fun LibraryScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text =
-                            if (state.songs.size == state.totalSongCount) {
-                                "${state.totalSongCount} 首本地音乐"
-                            } else {
-                                "显示 ${state.songs.size} / ${state.totalSongCount} 首"
-                            },
+                        text = librarySummary(state),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -91,7 +90,7 @@ fun LibraryScreen(
             actions = {
                 TextButton(
                     onClick = onRefresh,
-                    enabled = state.hasAudioPermission && !state.isLoading,
+                    enabled = state.hasLibraryAccess && !state.isLoading,
                 ) {
                     Text("刷新")
                 }
@@ -111,6 +110,9 @@ fun LibraryScreen(
         if (notificationPermissionRequired) {
             NotificationPermissionCard(onRequest = onRequestNotificationPermission)
         }
+        if (!state.hasAudioPermission && state.hasAuthorizedFolderAccess) {
+            MediaPermissionCard(onRequest = onRequestPermission)
+        }
 
         state.activeFilter?.let { filter ->
             ActiveCollectionFilterCard(
@@ -122,15 +124,18 @@ fun LibraryScreen(
         Box(Modifier.weight(1f)) {
             when {
                 !state.permissionChecked -> {
-                    LoadingState(message = "正在检查媒体权限…")
+                    LoadingState(message = "正在检查音乐来源…")
                 }
 
-                !state.hasAudioPermission -> {
-                    PermissionState(onRequestPermission = onRequestPermission)
+                !state.hasLibraryAccess -> {
+                    PermissionState(
+                        onRequestPermission = onRequestPermission,
+                        onAddAuthorizedFolder = onAddAuthorizedFolder,
+                    )
                 }
 
                 state.isLoading -> {
-                    LoadingState(message = "正在读取本地音乐库…")
+                    LoadingState(message = "正在读取音乐库…")
                 }
 
                 state.errorMessage != null -> {
@@ -141,7 +146,10 @@ fun LibraryScreen(
                 }
 
                 state.songs.isEmpty() -> {
-                    EmptyLibraryState(hasQuery = state.query.isNotBlank() || state.activeFilter != null)
+                    EmptyLibraryState(
+                        hasQuery = state.query.isNotBlank() || state.activeFilter != null,
+                        onAddAuthorizedFolder = onAddAuthorizedFolder,
+                    )
                 }
 
                 else -> {
@@ -157,6 +165,16 @@ fun LibraryScreen(
         }
     }
 }
+
+private fun librarySummary(state: MainUiState): String =
+    when {
+        state.totalSongCount == 0 -> "本地音乐库"
+        state.songs.size != state.totalSongCount ->
+            "显示 ${state.songs.size} / ${state.totalSongCount} 首"
+        state.authorizedFolderSongCount > 0 ->
+            "系统 ${state.mediaStoreSongCount} · 授权目录 ${state.authorizedFolderSongCount} · 共 ${state.totalSongCount} 首"
+        else -> "${state.totalSongCount} 首本地音乐"
+    }
 
 @Composable
 private fun LibrarySearchField(
@@ -313,10 +331,13 @@ private fun LibraryContent(
                     state.songs
                         .groupBy(Song::folderPath)
                         .map { (path, songs) ->
+                            val sourceLabel =
+                                if (isAuthorizedFolderPath(path)) "授权目录" else "系统目录"
                             songs.toCollectionSummary(
                                 key = "folder:$path",
                                 name = songs.firstOrNull()?.folderName.orEmpty(),
-                                subtitle = "${songs.size} 首 • $path",
+                                subtitle =
+                                    "${songs.size} 首 • $sourceLabel • ${displayMusicFolderPath(path)}",
                                 value = path,
                             )
                         }
@@ -379,7 +400,9 @@ private fun SongRow(
         },
         supportingContent = {
             Text(
-                text = "${song.artist} • ${song.album} • ${song.folderName}",
+                text =
+                    "${song.artist} • ${song.album} • ${song.folderName}" +
+                        if (isAuthorizedFolderPath(song.folderPath)) " • SAF" else "",
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -479,6 +502,31 @@ private fun CollectionList(
 
 @Composable
 private fun NotificationPermissionCard(onRequest: () -> Unit) {
+    PermissionHintCard(
+        title = "允许播放通知",
+        message = "用于后台播放时显示系统媒体控件。",
+        action = "授权",
+        onAction = onRequest,
+    )
+}
+
+@Composable
+private fun MediaPermissionCard(onRequest: () -> Unit) {
+    PermissionHintCard(
+        title = "当前仅显示授权目录",
+        message = "授予音乐权限后，还会合并系统 MediaStore 中的歌曲。",
+        action = "授予权限",
+        onAction = onRequest,
+    )
+}
+
+@Composable
+private fun PermissionHintCard(
+    title: String,
+    message: String,
+    action: String,
+    onAction: () -> Unit,
+) {
     Surface(
         modifier =
             Modifier
@@ -496,17 +544,17 @@ private fun NotificationPermissionCard(onRequest: () -> Unit) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "允许播放通知",
+                    text = title,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = "用于后台播放时显示系统媒体控件。",
+                    text = message,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
             }
-            TextButton(onClick = onRequest) {
-                Text("授权")
+            TextButton(onClick = onAction) {
+                Text(action)
             }
         }
     }
@@ -572,7 +620,10 @@ private fun LoadingState(message: String) {
 }
 
 @Composable
-private fun PermissionState(onRequestPermission: () -> Unit) {
+private fun PermissionState(
+    onRequestPermission: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
@@ -594,18 +645,24 @@ private fun PermissionState(onRequestPermission: () -> Unit) {
         }
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "允许访问设备上的音乐",
+            text = "选择音乐访问方式",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "ACG Player X 只读取音频媒体索引，用于展示和播放本地歌曲。",
+            text = "可以授予系统音乐权限，也可以只授权一个或多个目录。",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(20.dp))
-        TextButton(onClick = onRequestPermission) {
-            Text("授予音乐权限")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = onRequestPermission) {
+                Text("授予音乐权限")
+            }
+            TextButton(onClick = onAddAuthorizedFolder) {
+                Text("选择音乐目录")
+            }
         }
     }
 }
@@ -632,6 +689,7 @@ private fun ErrorState(
         Text(
             text = message,
             color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(16.dp))
         TextButton(onClick = onRetry) {
@@ -641,7 +699,10 @@ private fun ErrorState(
 }
 
 @Composable
-private fun EmptyLibraryState(hasQuery: Boolean) {
+private fun EmptyLibraryState(
+    hasQuery: Boolean,
+    onAddAuthorizedFolder: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
@@ -651,7 +712,7 @@ private fun EmptyLibraryState(hasQuery: Boolean) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = if (hasQuery) "没有匹配的歌曲" else "本地音乐库为空",
+            text = if (hasQuery) "没有匹配的歌曲" else "音乐库为空",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
@@ -661,9 +722,16 @@ private fun EmptyLibraryState(hasQuery: Boolean) {
                 if (hasQuery) {
                     "清除搜索或集合筛选后再试。"
                 } else {
-                    "向设备添加音乐后点击刷新。"
+                    "可以刷新系统媒体库，或授权另一个音乐目录。"
                 },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
+        if (!hasQuery) {
+            Spacer(Modifier.height(16.dp))
+            TextButton(onClick = onAddAuthorizedFolder) {
+                Text("添加授权目录")
+            }
+        }
     }
 }

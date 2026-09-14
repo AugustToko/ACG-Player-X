@@ -93,6 +93,12 @@ fun AcgPlayerApp(
         ) { uri ->
             uri?.let(viewModel::importLyrics)
         }
+    val musicFolderLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree(),
+        ) { uri ->
+            uri?.let(viewModel::addAuthorizedFolder)
+        }
 
     LaunchedEffect(audioPermission) {
         viewModel.onAudioPermissionChanged(localPermissionGranted)
@@ -104,6 +110,14 @@ fun AcgPlayerApp(
     val notificationPermissionRequired =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !notificationPermissionGranted
+    val onImportLyrics = {
+        lyricsFileLauncher.launch(
+            arrayOf("text/*", "application/octet-stream", "application/x-lrc"),
+        )
+    }
+    val onAddAuthorizedFolder = {
+        musicFolderLauncher.launch(null)
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 840.dp) {
@@ -117,11 +131,8 @@ fun AcgPlayerApp(
                 onRequestNotificationPermission = {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 },
-                onImportLyrics = {
-                    lyricsFileLauncher.launch(
-                        arrayOf("text/*", "application/octet-stream", "application/x-lrc"),
-                    )
-                },
+                onImportLyrics = onImportLyrics,
+                onAddAuthorizedFolder = onAddAuthorizedFolder,
             )
         } else {
             CompactLayout(
@@ -134,11 +145,8 @@ fun AcgPlayerApp(
                 onRequestNotificationPermission = {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 },
-                onImportLyrics = {
-                    lyricsFileLauncher.launch(
-                        arrayOf("text/*", "application/octet-stream", "application/x-lrc"),
-                    )
-                },
+                onImportLyrics = onImportLyrics,
+                onAddAuthorizedFolder = onAddAuthorizedFolder,
             )
         }
     }
@@ -154,6 +162,7 @@ private fun CompactLayout(
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -187,6 +196,7 @@ private fun CompactLayout(
             onRequestAudioPermission = onRequestAudioPermission,
             onRequestNotificationPermission = onRequestNotificationPermission,
             onImportLyrics = onImportLyrics,
+            onAddAuthorizedFolder = onAddAuthorizedFolder,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -202,6 +212,7 @@ private fun ExpandedLayout(
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(
@@ -235,6 +246,7 @@ private fun ExpandedLayout(
                     onRequestAudioPermission = onRequestAudioPermission,
                     onRequestNotificationPermission = onRequestNotificationPermission,
                     onImportLyrics = onImportLyrics,
+                    onAddAuthorizedFolder = onAddAuthorizedFolder,
                 )
             }
 
@@ -258,6 +270,7 @@ private fun DestinationContent(
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
@@ -267,6 +280,7 @@ private fun DestinationContent(
                 notificationPermissionRequired = notificationPermissionRequired,
                 onRequestPermission = onRequestAudioPermission,
                 onRequestNotificationPermission = onRequestNotificationPermission,
+                onAddAuthorizedFolder = onAddAuthorizedFolder,
                 onRefresh = viewModel::refreshLibrary,
                 onQueryChange = viewModel::updateQuery,
                 onSectionChange = viewModel::showSection,
@@ -305,8 +319,17 @@ private fun DestinationContent(
             SettingsScreen(
                 themeMode = state.themeMode,
                 notificationPermissionRequired = notificationPermissionRequired,
+                authorizedFolders = state.authorizedFolders,
+                libraryWarnings = state.libraryWarnings,
+                authorizedFolderError = state.authorizedFolderError,
+                isManagingAuthorizedFolders = state.isManagingAuthorizedFolders,
+                mediaStoreSongCount = state.mediaStoreSongCount,
+                authorizedFolderSongCount = state.authorizedFolderSongCount,
                 onThemeModeChange = viewModel::setThemeMode,
                 onRequestNotificationPermission = onRequestNotificationPermission,
+                onAddAuthorizedFolder = onAddAuthorizedFolder,
+                onRemoveAuthorizedFolder = viewModel::removeAuthorizedFolder,
+                onRefreshLibrary = viewModel::refreshLibrary,
                 modifier = modifier,
             )
         }

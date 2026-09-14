@@ -17,10 +17,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import top.geek_studio.chenlongcould.musicplayer.BuildConfig
+import top.geek_studio.chenlongcould.musicplayer.data.AuthorizedFolder
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,8 +31,17 @@ import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
 fun SettingsScreen(
     themeMode: ThemeMode,
     notificationPermissionRequired: Boolean,
+    authorizedFolders: List<AuthorizedFolder>,
+    libraryWarnings: List<String>,
+    authorizedFolderError: String?,
+    isManagingAuthorizedFolders: Boolean,
+    mediaStoreSongCount: Int,
+    authorizedFolderSongCount: Int,
     onThemeModeChange: (ThemeMode) -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
+    onRemoveAuthorizedFolder: (String) -> Unit,
+    onRefreshLibrary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -79,6 +91,65 @@ fun SettingsScreen(
 
             item {
                 SettingsCard(
+                    title = "音乐来源",
+                    subtitle = "SAF 授权目录不需要全盘存储权限，可读取 MediaStore 未索引的音乐。",
+                ) {
+                    StatusItem("系统媒体库", "$mediaStoreSongCount 首")
+                    StatusItem("授权目录", "${authorizedFolders.size} 个 · $authorizedFolderSongCount 首")
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TextButton(
+                            onClick = onAddAuthorizedFolder,
+                            enabled = !isManagingAuthorizedFolders,
+                        ) {
+                            Text("添加目录")
+                        }
+                        TextButton(
+                            onClick = onRefreshLibrary,
+                            enabled = !isManagingAuthorizedFolders,
+                        ) {
+                            Text("重新扫描")
+                        }
+                    }
+
+                    if (authorizedFolders.isEmpty()) {
+                        Text(
+                            text = "尚未添加授权目录。",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        authorizedFolders.forEach { folder ->
+                            AuthorizedFolderRow(
+                                folder = folder,
+                                enabled = !isManagingAuthorizedFolders,
+                                onRemove = { onRemoveAuthorizedFolder(folder.uriString) },
+                            )
+                        }
+                    }
+
+                    authorizedFolderError?.let { message ->
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    libraryWarnings.forEach { warning ->
+                        Text(
+                            text = "注意：$warning",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(
                     title = "播放核心",
                     subtitle = "Media3 ExoPlayer + MediaSessionService",
                 ) {
@@ -107,8 +178,9 @@ fun SettingsScreen(
                 ) {
                     StatusItem("本地音乐库", "Compose")
                     StatusItem("歌曲 / 专辑 / 艺术家", "已迁移")
-                    StatusItem("文件夹浏览", "已迁移")
-                    StatusItem("真实专辑封面", "已迁移")
+                    StatusItem("MediaStore 文件夹浏览", "已迁移")
+                    StatusItem("SAF 授权目录", "已迁移")
+                    StatusItem("真实与内嵌封面", "已迁移")
                     StatusItem("媒体库自动刷新", "已迁移")
                     StatusItem("播放状态恢复", "已迁移")
                     StatusItem("同步 LRC 歌词", "已迁移")
@@ -128,6 +200,51 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuthorizedFolderRow(
+    folder: AuthorizedFolder,
+    enabled: Boolean,
+    onRemove: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = folder.displayName,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = if (folder.isAvailable) "持久读取权限有效" else "授权已失效，需要重新添加",
+                    style = MaterialTheme.typography.bodySmall,
+                    color =
+                        if (folder.isAvailable) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                )
+            }
+            TextButton(
+                onClick = onRemove,
+                enabled = enabled,
+            ) {
+                Text("移除")
             }
         }
     }
