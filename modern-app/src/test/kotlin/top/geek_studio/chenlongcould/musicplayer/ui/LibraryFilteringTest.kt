@@ -7,9 +7,9 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song
 class LibraryFilteringTest {
     private val songs =
         listOf(
-            song(1, "Brave Shine", "Aimer", "DAWN"),
-            song(2, "青鸟", "生物股长", "My Song Your Song"),
-            song(3, "Again", "YUI", "HOLIDAYS IN THE SUN"),
+            song(1, "Brave Shine", "Aimer", "DAWN", "Anime"),
+            song(2, "青鸟", "生物股长", "My Song Your Song", "Naruto"),
+            song(3, "Again", "YUI", "HOLIDAYS IN THE SUN", "Fullmetal Alchemist"),
         )
 
     @Test
@@ -18,10 +18,11 @@ class LibraryFilteringTest {
     }
 
     @Test
-    fun queryMatchesTitleArtistAndAlbumIgnoringCase() {
+    fun queryMatchesMetadataAndFolderIgnoringCase() {
         assertEquals(listOf(songs[0]), filterSongs(songs, "aimer"))
         assertEquals(listOf(songs[1]), filterSongs(songs, "青鸟"))
         assertEquals(listOf(songs[2]), filterSongs(songs, "holidays"))
+        assertEquals(listOf(songs[2]), filterSongs(songs, "fullmetal"))
     }
 
     private fun song(
@@ -29,6 +30,7 @@ class LibraryFilteringTest {
         title: String,
         artist: String,
         album: String,
+        folder: String,
     ) = Song(
         id = id,
         title = title,
@@ -37,5 +39,7 @@ class LibraryFilteringTest {
         durationMs = 180_000L,
         contentUri = "content://test/$id",
         albumArtUri = null,
+        folderName = folder,
+        folderPath = "Music/$folder",
     )
 }

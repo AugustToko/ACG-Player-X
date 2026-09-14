@@ -2,8 +2,11 @@ package top.geek_studio.chenlongcould.musicplayer.data
 
 import android.content.ContentUris
 import android.content.Context
+import android.database.ContentObserver
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,14 +15,21 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song
 class MusicRepository(
     private val context: Context,
 ) {
-    suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
-        val collection =
+    private val collection: Uri
+        get() =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
             } else {
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             }
 
+    suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
+        val pathColumnName =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Audio.Media.RELATIVE_PATH
+            } else {
+                MediaStore.Audio.Media.DATA
+            }
         val projection =
             arrayOf(
                 MediaStore.Audio.Media._ID,
@@ -28,6 +38,7 @@ class MusicRepository(
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.ALBUM_ID,
+                pathColumnName,
             )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
@@ -46,6 +57,8 @@ class MusicRepository(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val pathColumn = cursor.getColumnIndex(pathColumnName)
+            val usesRelativePath = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
             buildList {
                 while (cursor.moveToNext()) {
@@ -55,6 +68,16 @@ class MusicRepository(
                     val album = cursor.getString(albumColumn).orUnknown("未知专辑")
                     val duration = cursor.getLong(durationColumn).coerceAtLeast(0L)
                     val albumId = cursor.getLong(albumIdColumn)
+                    val folder =
+                        resolveMusicFolder(
+                            rawPath =
+                                if (pathColumn >= 0) {
+                                    cursor.getString(pathColumn)
+                                } else {
+                                    null
+                                },
+                            isRelativePath = usesRelativePath,
+                        )
 
                     add(
                         Song(
@@ -74,11 +97,35 @@ class MusicRepository(
                                         )
                                     }
                                     ?.toString(),
+                            folderName = folder.name,
+                            folderPath = folder.path,
                         ),
                     )
                 }
             }
         } ?: emptyList()
+    }
+
+    fun observeChanges(onChanged: () -> Unit): AutoCloseable {
+        val resolver = context.contentResolver
+        val observer =
+            object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    onChanged()
+                }
+
+                override fun onChange(
+                    selfChange: Boolean,
+                    uri: Uri?,
+                ) {
+                    onChanged()
+                }
+            }
+
+        resolver.registerContentObserver(collection, true, observer)
+        return AutoCloseable {
+            runCatching { resolver.unregisterContentObserver(observer) }
+        }
     }
 
     private fun String?.orUnknown(fallback: String): String =
