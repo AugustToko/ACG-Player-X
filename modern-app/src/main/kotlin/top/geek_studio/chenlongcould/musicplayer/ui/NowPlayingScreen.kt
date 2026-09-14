@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import top.geek_studio.chenlongcould.musicplayer.playback.PlaybackUiState
-import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkPlaceholder
+import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkImage
 import top.geek_studio.chenlongcould.musicplayer.ui.components.PlaybackControls
 import top.geek_studio.chenlongcould.musicplayer.ui.components.formatDuration
 
@@ -83,7 +83,9 @@ fun NowPlayingScreen(
                     .padding(horizontal = 28.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ArtworkPlaceholder(
+            ArtworkImage(
+                artworkUri = playback.artworkUri,
+                fallbackUri = playback.mediaUri,
                 seed = playback.mediaId.toLongOrNull() ?: 0L,
                 modifier =
                     Modifier
@@ -92,6 +94,8 @@ fun NowPlayingScreen(
                         .aspectRatio(1f),
                 cornerRadius = 36.dp,
                 glyphSize = 88,
+                requestSize = 512.dp,
+                contentDescription = playback.album,
             )
 
             Spacer(Modifier.height(28.dp))
@@ -155,6 +159,15 @@ fun NowPlayingScreen(
                     StatusLine(
                         label = "媒体会话",
                         value = if (playback.isConnected) "已连接" else "正在连接",
+                    )
+                    StatusLine(
+                        label = "播放队列",
+                        value =
+                            if (playback.queueSize > 0) {
+                                "${playback.currentIndex + 1} / ${playback.queueSize}"
+                            } else {
+                                "空"
+                            },
                     )
                     StatusLine(
                         label = "缓冲",

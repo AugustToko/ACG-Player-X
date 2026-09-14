@@ -15,6 +15,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -26,7 +27,9 @@ import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
 @Composable
 fun SettingsScreen(
     themeMode: ThemeMode,
+    notificationPermissionRequired: Boolean,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onRequestNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -83,6 +86,15 @@ fun SettingsScreen(
                     StatusItem("系统媒体控件", "已启用")
                     StatusItem("耳机与蓝牙控制", "由 MediaSession 接管")
                     StatusItem("音频焦点", "自动管理")
+                    StatusItem(
+                        "播放通知权限",
+                        if (notificationPermissionRequired) "未授予" else "已就绪",
+                    )
+                    if (notificationPermissionRequired) {
+                        TextButton(onClick = onRequestNotificationPermission) {
+                            Text("授予通知权限")
+                        }
+                    }
                 }
             }
 
@@ -92,9 +104,10 @@ fun SettingsScreen(
                     subtitle = "新 UI 已脱离旧 Fragment 与 XML 页面栈。",
                 ) {
                     StatusItem("本地音乐库", "Compose")
-                    StatusItem("迷你播放器", "Compose")
-                    StatusItem("全屏播放页", "Compose")
-                    StatusItem("响应式导航", "Compose")
+                    StatusItem("歌曲 / 专辑 / 艺术家", "已迁移")
+                    StatusItem("文件夹浏览", "已迁移")
+                    StatusItem("真实专辑封面", "已迁移")
+                    StatusItem("媒体库自动刷新", "已迁移")
                     StatusItem("Live2D / 标签编辑 / 小组件", "待兼容迁移")
                 }
             }

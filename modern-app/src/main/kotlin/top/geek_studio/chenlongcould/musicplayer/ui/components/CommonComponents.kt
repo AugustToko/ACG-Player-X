@@ -44,7 +44,7 @@ fun ArtworkPlaceholder(
             MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.secondaryContainer,
         )
-    val pair = palettes[(kotlin.math.abs(seed) % palettes.size).toInt()]
+    val pair = palettes[Math.floorMod(seed, palettes.size.toLong()).toInt()]
 
     Box(
         modifier =
@@ -84,11 +84,15 @@ fun MiniPlayer(
                     .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ArtworkPlaceholder(
+            ArtworkImage(
+                artworkUri = playback.artworkUri,
+                fallbackUri = playback.mediaUri,
                 seed = playback.mediaId?.toLongOrNull() ?: 0L,
                 modifier = Modifier.size(52.dp),
                 cornerRadius = 14.dp,
                 glyphSize = 24,
+                requestSize = 96.dp,
+                contentDescription = playback.title,
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {

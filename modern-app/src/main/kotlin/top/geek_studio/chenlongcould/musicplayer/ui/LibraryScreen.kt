@@ -1,8 +1,10 @@
 package top.geek_studio.chenlongcould.musicplayer.ui
 
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,20 +45,24 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import top.geek_studio.chenlongcould.musicplayer.model.Song
-import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkPlaceholder
+import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkImage
 import top.geek_studio.chenlongcould.musicplayer.ui.components.formatDuration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     state: MainUiState,
+    notificationPermissionRequired: Boolean,
     onRequestPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit,
     onRefresh: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSectionChange: (LibrarySection) -> Unit,
+    onClearCollectionFilter: () -> Unit,
     onPlaySong: (Song) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
+    onOpenFolder: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -71,7 +77,12 @@ fun LibraryScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "${state.totalSongCount} 首本地音乐",
+                        text =
+                            if (state.songs.size == state.totalSongCount) {
+                                "${state.totalSongCount} 首本地音乐"
+                            } else {
+                                "显示 ${state.songs.size} / ${state.totalSongCount} 首"
+                            },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -97,37 +108,51 @@ fun LibraryScreen(
             onSelected = onSectionChange,
         )
 
-        when {
-            !state.permissionChecked -> {
-                LoadingState(message = "正在检查媒体权限…")
-            }
+        if (notificationPermissionRequired) {
+            NotificationPermissionCard(onRequest = onRequestNotificationPermission)
+        }
 
-            !state.hasAudioPermission -> {
-                PermissionState(onRequestPermission = onRequestPermission)
-            }
+        state.activeFilter?.let { filter ->
+            ActiveCollectionFilterCard(
+                filter = filter,
+                onClear = onClearCollectionFilter,
+            )
+        }
 
-            state.isLoading -> {
-                LoadingState(message = "正在读取本地音乐库…")
-            }
+        Box(Modifier.weight(1f)) {
+            when {
+                !state.permissionChecked -> {
+                    LoadingState(message = "正在检查媒体权限…")
+                }
 
-            state.errorMessage != null -> {
-                ErrorState(
-                    message = state.errorMessage,
-                    onRetry = onRefresh,
-                )
-            }
+                !state.hasAudioPermission -> {
+                    PermissionState(onRequestPermission = onRequestPermission)
+                }
 
-            state.songs.isEmpty() -> {
-                EmptyLibraryState(hasQuery = state.query.isNotBlank())
-            }
+                state.isLoading -> {
+                    LoadingState(message = "正在读取本地音乐库…")
+                }
 
-            else -> {
-                LibraryContent(
-                    state = state,
-                    onPlaySong = onPlaySong,
-                    onOpenAlbum = onOpenAlbum,
-                    onOpenArtist = onOpenArtist,
-                )
+                state.errorMessage != null -> {
+                    ErrorState(
+                        message = state.errorMessage,
+                        onRetry = onRefresh,
+                    )
+                }
+
+                state.songs.isEmpty() -> {
+                    EmptyLibraryState(hasQuery = state.query.isNotBlank() || state.activeFilter != null)
+                }
+
+                else -> {
+                    LibraryContent(
+                        state = state,
+                        onPlaySong = onPlaySong,
+                        onOpenAlbum = onOpenAlbum,
+                        onOpenArtist = onOpenArtist,
+                        onOpenFolder = onOpenFolder,
+                    )
+                }
             }
         }
     }
@@ -148,7 +173,7 @@ private fun LibrarySearchField(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
         placeholder = {
-            Text("搜索歌曲、艺术家或专辑")
+            Text("搜索歌曲、艺术家、专辑或文件夹")
         },
         leadingIcon = {
             Text(
@@ -196,6 +221,7 @@ private fun LibrarySectionSelector(
                             LibrarySection.SONGS -> "歌曲"
                             LibrarySection.ALBUMS -> "专辑"
                             LibrarySection.ARTISTS -> "艺术家"
+                            LibrarySection.FOLDERS -> "文件夹"
                         },
                     )
                 },
@@ -210,6 +236,7 @@ private fun LibraryContent(
     onPlaySong: (Song) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
+    onOpenFolder: (String, String) -> Unit,
 ) {
     when (state.section) {
         LibrarySection.SONGS -> {
@@ -240,10 +267,11 @@ private fun LibraryContent(
                     state.songs
                         .groupBy(Song::album)
                         .map { (name, songs) ->
-                            CollectionSummary(
+                            songs.toCollectionSummary(
+                                key = "album:$name",
                                 name = name,
                                 subtitle = "${songs.size} 首 • ${songs.firstOrNull()?.artist.orEmpty()}",
-                                seed = songs.firstOrNull()?.id ?: 0L,
+                                value = name,
                             )
                         }
                         .sortedBy { it.name.lowercase() }
@@ -252,7 +280,7 @@ private fun LibraryContent(
 
             CollectionList(
                 collections = albums,
-                onClick = { onOpenAlbum(it.name) },
+                onClick = { onOpenAlbum(it.value) },
             )
         }
 
@@ -262,10 +290,11 @@ private fun LibraryContent(
                     state.songs
                         .groupBy(Song::artist)
                         .map { (name, songs) ->
-                            CollectionSummary(
+                            songs.toCollectionSummary(
+                                key = "artist:$name",
                                 name = name,
                                 subtitle = "${songs.size} 首 • ${songs.map(Song::album).distinct().size} 张专辑",
-                                seed = songs.firstOrNull()?.id ?: 0L,
+                                value = name,
                             )
                         }
                         .sortedBy { it.name.lowercase() }
@@ -274,7 +303,30 @@ private fun LibraryContent(
 
             CollectionList(
                 collections = artists,
-                onClick = { onOpenArtist(it.name) },
+                onClick = { onOpenArtist(it.value) },
+            )
+        }
+
+        LibrarySection.FOLDERS -> {
+            val folders by remember(state.songs) {
+                derivedStateOf {
+                    state.songs
+                        .groupBy(Song::folderPath)
+                        .map { (path, songs) ->
+                            songs.toCollectionSummary(
+                                key = "folder:$path",
+                                name = songs.firstOrNull()?.folderName.orEmpty(),
+                                subtitle = "${songs.size} 首 • $path",
+                                value = path,
+                            )
+                        }
+                        .sortedBy { it.name.lowercase() }
+                }
+            }
+
+            CollectionList(
+                collections = folders,
+                onClick = { onOpenFolder(it.value, it.name) },
             )
         }
     }
@@ -289,11 +341,15 @@ private fun SongRow(
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
-            ArtworkPlaceholder(
+            ArtworkImage(
+                artworkUri = song.albumArtUri?.let(Uri::parse),
+                fallbackUri = Uri.parse(song.contentUri),
                 seed = song.id,
                 modifier = Modifier.size(54.dp),
                 cornerRadius = 15.dp,
                 glyphSize = 24,
+                requestSize = 112.dp,
+                contentDescription = song.album,
             )
         },
         headlineContent = {
@@ -323,7 +379,7 @@ private fun SongRow(
         },
         supportingContent = {
             Text(
-                text = "${song.artist} • ${song.album}",
+                text = "${song.artist} • ${song.album} • ${song.folderName}",
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -340,10 +396,32 @@ private fun SongRow(
 }
 
 private data class CollectionSummary(
+    val key: String,
     val name: String,
     val subtitle: String,
+    val value: String,
     val seed: Long,
+    val artworkUri: String?,
+    val contentUri: String?,
 )
+
+private fun List<Song>.toCollectionSummary(
+    key: String,
+    name: String,
+    subtitle: String,
+    value: String,
+): CollectionSummary {
+    val representative = firstOrNull()
+    return CollectionSummary(
+        key = key,
+        name = name,
+        subtitle = subtitle,
+        value = value,
+        seed = representative?.id ?: 0L,
+        artworkUri = representative?.albumArtUri,
+        contentUri = representative?.contentUri,
+    )
+}
 
 @Composable
 private fun CollectionList(
@@ -356,16 +434,20 @@ private fun CollectionList(
     ) {
         items(
             items = collections,
-            key = { it.name },
+            key = { it.key },
         ) { collection ->
             ListItem(
                 modifier = Modifier.clickable { onClick(collection) },
                 leadingContent = {
-                    ArtworkPlaceholder(
+                    ArtworkImage(
+                        artworkUri = collection.artworkUri?.let(Uri::parse),
+                        fallbackUri = collection.contentUri?.let(Uri::parse),
                         seed = collection.seed,
                         modifier = Modifier.size(64.dp),
                         cornerRadius = 18.dp,
                         glyphSize = 28,
+                        requestSize = 128.dp,
+                        contentDescription = collection.name,
                     )
                 },
                 headlineContent = {
@@ -391,6 +473,81 @@ private fun CollectionList(
                 modifier = Modifier.padding(start = 94.dp),
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
             )
+        }
+    }
+}
+
+@Composable
+private fun NotificationPermissionCard(onRequest: () -> Unit) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "允许播放通知",
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "用于后台播放时显示系统媒体控件。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            TextButton(onClick = onRequest) {
+                Text("授权")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveCollectionFilterCard(
+    filter: CollectionFilter,
+    onClear: () -> Unit,
+) {
+    val typeLabel =
+        when (filter.type) {
+            CollectionType.ALBUM -> "专辑"
+            CollectionType.ARTIST -> "艺术家"
+            CollectionType.FOLDER -> "文件夹"
+        }
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "$typeLabel：${filter.label}",
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            TextButton(onClick = onClear) {
+                Text("显示全部")
+            }
         }
     }
 }
@@ -502,7 +659,7 @@ private fun EmptyLibraryState(hasQuery: Boolean) {
         Text(
             text =
                 if (hasQuery) {
-                    "换一个关键词试试。"
+                    "清除搜索或集合筛选后再试。"
                 } else {
                     "向设备添加音乐后点击刷新。"
                 },

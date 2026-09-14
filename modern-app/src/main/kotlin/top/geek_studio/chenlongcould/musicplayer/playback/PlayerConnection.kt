@@ -16,12 +16,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import top.geek_studio.chenlongcould.musicplayer.model.MEDIA_EXTRA_CONTENT_URI
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.model.toMediaItem
 
 data class PlaybackUiState(
     val isConnected: Boolean = false,
     val mediaId: String? = null,
+    val mediaUri: Uri? = null,
     val title: String = "",
     val artist: String = "",
     val album: String = "",
@@ -32,6 +34,8 @@ data class PlaybackUiState(
     val bufferedPositionMs: Long = 0L,
     val shuffleEnabled: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val currentIndex: Int = C.INDEX_UNSET,
+    val queueSize: Int = 0,
     val hasNext: Boolean = false,
     val hasPrevious: Boolean = false,
 )
@@ -184,12 +188,18 @@ class PlayerConnection(
     }
 
     private fun syncFrom(player: Player) {
+        val currentItem = player.currentMediaItem
         val metadata = player.mediaMetadata
+        val mediaUri =
+            metadata.extras
+                ?.getString(MEDIA_EXTRA_CONTENT_URI)
+                ?.let(Uri::parse)
 
         _state.value =
             PlaybackUiState(
                 isConnected = true,
-                mediaId = player.currentMediaItem?.mediaId,
+                mediaId = currentItem?.mediaId,
+                mediaUri = mediaUri,
                 title = metadata.title?.toString().orEmpty(),
                 artist = metadata.artist?.toString().orEmpty(),
                 album = metadata.albumTitle?.toString().orEmpty(),
@@ -200,6 +210,8 @@ class PlayerConnection(
                 bufferedPositionMs = normalizedTime(player.bufferedPosition),
                 shuffleEnabled = player.shuffleModeEnabled,
                 repeatMode = player.repeatMode,
+                currentIndex = player.currentMediaItemIndex,
+                queueSize = player.mediaItemCount,
                 hasNext = player.hasNextMediaItem(),
                 hasPrevious = player.hasPreviousMediaItem(),
             )

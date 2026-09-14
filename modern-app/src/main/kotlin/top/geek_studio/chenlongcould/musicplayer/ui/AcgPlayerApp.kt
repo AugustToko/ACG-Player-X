@@ -64,13 +64,28 @@ fun AcgPlayerApp(
                 PackageManager.PERMISSION_GRANTED,
         )
     }
+    var notificationPermissionGranted by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
 
-    val permissionLauncher =
+    val audioPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission(),
         ) { granted ->
             localPermissionGranted = granted
             viewModel.onAudioPermissionChanged(granted)
+        }
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            notificationPermissionGranted = granted
         }
 
     LaunchedEffect(audioPermission) {
@@ -80,6 +95,9 @@ fun AcgPlayerApp(
     var destination by rememberSaveable {
         mutableStateOf(Destination.LIBRARY)
     }
+    val notificationPermissionRequired =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !notificationPermissionGranted
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 840.dp) {
@@ -88,7 +106,11 @@ fun AcgPlayerApp(
                 onDestinationChange = { destination = it },
                 state = state,
                 viewModel = viewModel,
-                onRequestPermission = { permissionLauncher.launch(audioPermission) },
+                notificationPermissionRequired = notificationPermissionRequired,
+                onRequestAudioPermission = { audioPermissionLauncher.launch(audioPermission) },
+                onRequestNotificationPermission = {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                },
             )
         } else {
             CompactLayout(
@@ -96,7 +118,11 @@ fun AcgPlayerApp(
                 onDestinationChange = { destination = it },
                 state = state,
                 viewModel = viewModel,
-                onRequestPermission = { permissionLauncher.launch(audioPermission) },
+                notificationPermissionRequired = notificationPermissionRequired,
+                onRequestAudioPermission = { audioPermissionLauncher.launch(audioPermission) },
+                onRequestNotificationPermission = {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                },
             )
         }
     }
@@ -108,7 +134,9 @@ private fun CompactLayout(
     onDestinationChange: (Destination) -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
-    onRequestPermission: () -> Unit,
+    notificationPermissionRequired: Boolean,
+    onRequestAudioPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -138,7 +166,9 @@ private fun CompactLayout(
             destination = destination,
             state = state,
             viewModel = viewModel,
-            onRequestPermission = onRequestPermission,
+            notificationPermissionRequired = notificationPermissionRequired,
+            onRequestAudioPermission = onRequestAudioPermission,
+            onRequestNotificationPermission = onRequestNotificationPermission,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -150,7 +180,9 @@ private fun ExpandedLayout(
     onDestinationChange: (Destination) -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
-    onRequestPermission: () -> Unit,
+    notificationPermissionRequired: Boolean,
+    onRequestAudioPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(
@@ -180,7 +212,9 @@ private fun ExpandedLayout(
                     destination = destination,
                     state = state,
                     viewModel = viewModel,
-                    onRequestPermission = onRequestPermission,
+                    notificationPermissionRequired = notificationPermissionRequired,
+                    onRequestAudioPermission = onRequestAudioPermission,
+                    onRequestNotificationPermission = onRequestNotificationPermission,
                 )
             }
 
@@ -200,20 +234,26 @@ private fun DestinationContent(
     destination: Destination,
     state: MainUiState,
     viewModel: MainViewModel,
-    onRequestPermission: () -> Unit,
+    notificationPermissionRequired: Boolean,
+    onRequestAudioPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
         Destination.LIBRARY -> {
             LibraryScreen(
                 state = state,
-                onRequestPermission = onRequestPermission,
+                notificationPermissionRequired = notificationPermissionRequired,
+                onRequestPermission = onRequestAudioPermission,
+                onRequestNotificationPermission = onRequestNotificationPermission,
                 onRefresh = viewModel::refreshLibrary,
                 onQueryChange = viewModel::updateQuery,
                 onSectionChange = viewModel::showSection,
+                onClearCollectionFilter = viewModel::clearCollectionFilter,
                 onPlaySong = viewModel::play,
                 onOpenAlbum = viewModel::openAlbum,
                 onOpenArtist = viewModel::openArtist,
+                onOpenFolder = viewModel::openFolder,
                 modifier = modifier,
             )
         }
@@ -234,7 +274,9 @@ private fun DestinationContent(
         Destination.SETTINGS -> {
             SettingsScreen(
                 themeMode = state.themeMode,
+                notificationPermissionRequired = notificationPermissionRequired,
                 onThemeModeChange = viewModel::setThemeMode,
+                onRequestNotificationPermission = onRequestNotificationPermission,
                 modifier = modifier,
             )
         }
