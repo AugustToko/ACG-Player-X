@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.ui
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import java.util.concurrent.CancellationException
@@ -14,6 +15,8 @@ import kotlinx.coroutines.launch
 import top.geek_studio.chenlongcould.musicplayer.data.MusicRepository
 import top.geek_studio.chenlongcould.musicplayer.data.SettingsRepository
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
+import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsRepository
+import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.playback.PlaybackUiState
 import top.geek_studio.chenlongcould.musicplayer.playback.PlayerConnection
@@ -49,6 +52,7 @@ data class MainUiState(
     val errorMessage: String? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val playback: PlaybackUiState = PlaybackUiState(),
+    val lyrics: LyricsUiState = LyricsUiState(),
 )
 
 class MainViewModel(
@@ -56,6 +60,7 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
     private val musicRepository = MusicRepository(application)
     private val settingsRepository = SettingsRepository(application)
+    private val lyricsRepository = LyricsRepository(application)
     private val playerConnection = PlayerConnection(application, viewModelScope)
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -66,6 +71,7 @@ class MainViewModel(
     private var libraryObserver: AutoCloseable? = null
     private var observerRefreshJob: Job? = null
     private var loadJob: Job? = null
+    private var lyricsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -76,7 +82,11 @@ class MainViewModel(
 
         viewModelScope.launch {
             playerConnection.state.collect { playback ->
+                val previousMediaId = _uiState.value.playback.mediaId
                 _uiState.update { it.copy(playback = playback) }
+                if (previousMediaId != playback.mediaId) {
+                    loadLyrics(playback.mediaId)
+                }
             }
         }
     }
@@ -166,6 +176,118 @@ class MainViewModel(
 
     fun cycleRepeatMode() = playerConnection.cycleRepeatMode()
 
+    fun jumpToQueueItem(index: Int) = playerConnection.jumpToQueueItem(index)
+
+    fun moveQueueItem(
+        fromIndex: Int,
+        toIndex: Int,
+    ) = playerConnection.moveQueueItem(fromIndex, toIndex)
+
+    fun removeQueueItem(index: Int) = playerConnection.removeQueueItem(index)
+
+    fun clearQueue() = playerConnection.clearQueue()
+
+    fun importLyrics(uri: Uri) {
+        val mediaId = _uiState.value.playback.mediaId ?: return
+        lyricsJob?.cancel()
+        lyricsJob =
+            viewModelScope.launch {
+                _uiState.update { state ->
+                    if (state.playback.mediaId == mediaId) {
+                        state.copy(
+                            lyrics = state.lyrics.copy(
+                                mediaId = mediaId,
+                                isLoading = true,
+                                errorMessage = null,
+                            ),
+                        )
+                    } else {
+                        state
+                    }
+                }
+
+                try {
+                    val parsed = lyricsRepository.import(mediaId, uri)
+                    val userOffsetMs = lyricsRepository.getUserOffsetMs(mediaId)
+                    _uiState.update { state ->
+                        if (state.playback.mediaId == mediaId) {
+                            state.copy(
+                                lyrics =
+                                    LyricsUiState(
+                                        mediaId = mediaId,
+                                        lines = parsed.lines,
+                                        fileOffsetMs = parsed.fileOffsetMs,
+                                        userOffsetMs = userOffsetMs,
+                                    ),
+                            )
+                        } else {
+                            state
+                        }
+                    }
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (throwable: Throwable) {
+                    _uiState.update { state ->
+                        if (state.playback.mediaId == mediaId) {
+                            state.copy(
+                                lyrics =
+                                    state.lyrics.copy(
+                                        isLoading = false,
+                                        errorMessage = throwable.localizedMessage ?: "歌词导入失败",
+                                    ),
+                            )
+                        } else {
+                            state
+                        }
+                    }
+                }
+            }
+    }
+
+    fun adjustLyricsOffset(deltaMs: Long) {
+        val current = _uiState.value.lyrics
+        val mediaId = current.mediaId ?: return
+        val newOffset =
+            (current.userOffsetMs + deltaMs)
+                .coerceIn(-MAX_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)
+        lyricsRepository.setUserOffsetMs(mediaId, newOffset)
+        _uiState.update { state ->
+            if (state.lyrics.mediaId == mediaId) {
+                state.copy(lyrics = state.lyrics.copy(userOffsetMs = newOffset))
+            } else {
+                state
+            }
+        }
+    }
+
+    fun resetLyricsOffset() {
+        val mediaId = _uiState.value.lyrics.mediaId ?: return
+        lyricsRepository.setUserOffsetMs(mediaId, 0L)
+        _uiState.update { state ->
+            if (state.lyrics.mediaId == mediaId) {
+                state.copy(lyrics = state.lyrics.copy(userOffsetMs = 0L))
+            } else {
+                state
+            }
+        }
+    }
+
+    fun deleteLyrics() {
+        val mediaId = _uiState.value.lyrics.mediaId ?: return
+        lyricsJob?.cancel()
+        lyricsJob =
+            viewModelScope.launch {
+                lyricsRepository.delete(mediaId)
+                _uiState.update { state ->
+                    if (state.playback.mediaId == mediaId) {
+                        state.copy(lyrics = LyricsUiState(mediaId = mediaId))
+                    } else {
+                        state
+                    }
+                }
+            }
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             settingsRepository.setThemeMode(mode)
@@ -179,6 +301,7 @@ class MainViewModel(
     override fun onCleared() {
         observerRefreshJob?.cancel()
         loadJob?.cancel()
+        lyricsJob?.cancel()
         stopLibraryObserver()
         playerConnection.close()
         super.onCleared()
@@ -222,6 +345,64 @@ class MainViewModel(
                             isLoading = false,
                             errorMessage = throwable.localizedMessage ?: "无法读取本地音乐库",
                         )
+                    }
+                }
+            }
+    }
+
+    private fun loadLyrics(mediaId: String?) {
+        lyricsJob?.cancel()
+        if (mediaId == null) {
+            _uiState.update { it.copy(lyrics = LyricsUiState()) }
+            return
+        }
+
+        val userOffsetMs = lyricsRepository.getUserOffsetMs(mediaId)
+        _uiState.update {
+            it.copy(
+                lyrics =
+                    LyricsUiState(
+                        mediaId = mediaId,
+                        userOffsetMs = userOffsetMs,
+                        isLoading = true,
+                    ),
+            )
+        }
+        lyricsJob =
+            viewModelScope.launch {
+                try {
+                    val parsed = lyricsRepository.load(mediaId)
+                    _uiState.update { state ->
+                        if (state.playback.mediaId == mediaId) {
+                            state.copy(
+                                lyrics =
+                                    LyricsUiState(
+                                        mediaId = mediaId,
+                                        lines = parsed?.lines.orEmpty(),
+                                        fileOffsetMs = parsed?.fileOffsetMs ?: 0L,
+                                        userOffsetMs = userOffsetMs,
+                                    ),
+                            )
+                        } else {
+                            state
+                        }
+                    }
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (throwable: Throwable) {
+                    _uiState.update { state ->
+                        if (state.playback.mediaId == mediaId) {
+                            state.copy(
+                                lyrics =
+                                    LyricsUiState(
+                                        mediaId = mediaId,
+                                        userOffsetMs = userOffsetMs,
+                                        errorMessage = throwable.localizedMessage ?: "歌词读取失败",
+                                    ),
+                            )
+                        } else {
+                            state
+                        }
                     }
                 }
             }
@@ -274,5 +455,6 @@ class MainViewModel(
 
     private companion object {
         const val MEDIASTORE_REFRESH_DEBOUNCE_MS = 650L
+        const val MAX_LYRICS_OFFSET_MS = 30_000L
     }
 }

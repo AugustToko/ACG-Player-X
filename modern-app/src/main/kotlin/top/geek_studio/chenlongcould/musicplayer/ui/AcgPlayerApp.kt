@@ -87,6 +87,12 @@ fun AcgPlayerApp(
         ) { granted ->
             notificationPermissionGranted = granted
         }
+    val lyricsFileLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri?.let(viewModel::importLyrics)
+        }
 
     LaunchedEffect(audioPermission) {
         viewModel.onAudioPermissionChanged(localPermissionGranted)
@@ -111,6 +117,11 @@ fun AcgPlayerApp(
                 onRequestNotificationPermission = {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 },
+                onImportLyrics = {
+                    lyricsFileLauncher.launch(
+                        arrayOf("text/*", "application/octet-stream", "application/x-lrc"),
+                    )
+                },
             )
         } else {
             CompactLayout(
@@ -122,6 +133,11 @@ fun AcgPlayerApp(
                 onRequestAudioPermission = { audioPermissionLauncher.launch(audioPermission) },
                 onRequestNotificationPermission = {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                },
+                onImportLyrics = {
+                    lyricsFileLauncher.launch(
+                        arrayOf("text/*", "application/octet-stream", "application/x-lrc"),
+                    )
                 },
             )
         }
@@ -137,6 +153,7 @@ private fun CompactLayout(
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onImportLyrics: () -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -169,6 +186,7 @@ private fun CompactLayout(
             notificationPermissionRequired = notificationPermissionRequired,
             onRequestAudioPermission = onRequestAudioPermission,
             onRequestNotificationPermission = onRequestNotificationPermission,
+            onImportLyrics = onImportLyrics,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -183,6 +201,7 @@ private fun ExpandedLayout(
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onImportLyrics: () -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(
@@ -215,6 +234,7 @@ private fun ExpandedLayout(
                     notificationPermissionRequired = notificationPermissionRequired,
                     onRequestAudioPermission = onRequestAudioPermission,
                     onRequestNotificationPermission = onRequestNotificationPermission,
+                    onImportLyrics = onImportLyrics,
                 )
             }
 
@@ -237,6 +257,7 @@ private fun DestinationContent(
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onImportLyrics: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
@@ -261,12 +282,21 @@ private fun DestinationContent(
         Destination.NOW_PLAYING -> {
             NowPlayingScreen(
                 playback = state.playback,
+                lyrics = state.lyrics,
                 onSeek = viewModel::seekTo,
                 onPrevious = viewModel::skipPrevious,
                 onPlayPause = viewModel::togglePlayPause,
                 onNext = viewModel::skipNext,
                 onShuffle = viewModel::toggleShuffle,
                 onRepeat = viewModel::cycleRepeatMode,
+                onImportLyrics = onImportLyrics,
+                onAdjustLyricsOffset = viewModel::adjustLyricsOffset,
+                onResetLyricsOffset = viewModel::resetLyricsOffset,
+                onDeleteLyrics = viewModel::deleteLyrics,
+                onJumpToQueueItem = viewModel::jumpToQueueItem,
+                onMoveQueueItem = viewModel::moveQueueItem,
+                onRemoveQueueItem = viewModel::removeQueueItem,
+                onClearQueue = viewModel::clearQueue,
                 modifier = modifier,
             )
         }

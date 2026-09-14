@@ -20,6 +20,15 @@ import top.geek_studio.chenlongcould.musicplayer.model.MEDIA_EXTRA_CONTENT_URI
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.model.toMediaItem
 
+data class QueueItemUi(
+    val mediaId: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val artworkUri: Uri?,
+    val mediaUri: Uri?,
+)
+
 data class PlaybackUiState(
     val isConnected: Boolean = false,
     val mediaId: String? = null,
@@ -36,6 +45,7 @@ data class PlaybackUiState(
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
     val currentIndex: Int = C.INDEX_UNSET,
     val queueSize: Int = 0,
+    val queue: List<QueueItemUi> = emptyList(),
     val hasNext: Boolean = false,
     val hasPrevious: Boolean = false,
 )
@@ -168,6 +178,42 @@ class PlayerConnection(
         }
     }
 
+    fun jumpToQueueItem(index: Int) {
+        withController { player ->
+            if (index in 0 until player.mediaItemCount) {
+                player.seekToDefaultPosition(index)
+                player.play()
+            }
+        }
+    }
+
+    fun moveQueueItem(
+        fromIndex: Int,
+        toIndex: Int,
+    ) {
+        withController { player ->
+            if (
+                fromIndex in 0 until player.mediaItemCount &&
+                toIndex in 0 until player.mediaItemCount &&
+                fromIndex != toIndex
+            ) {
+                player.moveMediaItem(fromIndex, toIndex)
+            }
+        }
+    }
+
+    fun removeQueueItem(index: Int) {
+        withController { player ->
+            if (index in 0 until player.mediaItemCount) {
+                player.removeMediaItem(index)
+            }
+        }
+    }
+
+    fun clearQueue() {
+        withController(MediaController::clearMediaItems)
+    }
+
     override fun close() {
         closed = true
         progressJob.cancel()
@@ -190,10 +236,39 @@ class PlayerConnection(
     private fun syncFrom(player: Player) {
         val currentItem = player.currentMediaItem
         val metadata = player.mediaMetadata
+        val queueItems =
+            buildList {
+                for (index in 0 until player.mediaItemCount) {
+                    val item = player.getMediaItemAt(index)
+                    val itemMetadata = item.mediaMetadata
+                    val contentUri =
+                        itemMetadata.extras
+                            ?.getString(MEDIA_EXTRA_CONTENT_URI)
+                            ?.takeIf(String::isNotBlank)
+                            ?.let(Uri::parse)
+
+                    add(
+                        QueueItemUi(
+                            mediaId = item.mediaId,
+                            title = itemMetadata.title?.toString().orEmpty(),
+                            artist = itemMetadata.artist?.toString().orEmpty(),
+                            album = itemMetadata.albumTitle?.toString().orEmpty(),
+                            artworkUri = itemMetadata.artworkUri,
+                            mediaUri = contentUri,
+                        ),
+                    )
+                }
+            }
+        val currentIndex =
+            player.currentMediaItemIndex
+                .takeIf { it in queueItems.indices }
+                ?: C.INDEX_UNSET
         val mediaUri =
             metadata.extras
                 ?.getString(MEDIA_EXTRA_CONTENT_URI)
+                ?.takeIf(String::isNotBlank)
                 ?.let(Uri::parse)
+                ?: queueItems.getOrNull(currentIndex)?.mediaUri
 
         _state.value =
             PlaybackUiState(
@@ -210,8 +285,9 @@ class PlayerConnection(
                 bufferedPositionMs = normalizedTime(player.bufferedPosition),
                 shuffleEnabled = player.shuffleModeEnabled,
                 repeatMode = player.repeatMode,
-                currentIndex = player.currentMediaItemIndex,
-                queueSize = player.mediaItemCount,
+                currentIndex = currentIndex,
+                queueSize = queueItems.size,
+                queue = queueItems,
                 hasNext = player.hasNextMediaItem(),
                 hasPrevious = player.hasPreviousMediaItem(),
             )
