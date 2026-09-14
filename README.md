@@ -1,59 +1,71 @@
 # ACG Player X
 
-ACG Player X 2.0 是一次面向现代 Android 的重写。当前活动应用已迁移到 **Jetpack Compose + Material 3 + Media3**；旧版 Java/XML/Fragment 源码仍保留为功能核对参考，但不参与默认构建。
+ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活动应用已迁移到 **Jetpack Compose + Material 3 + AndroidX Media3**；旧版 Java/XML/Fragment 源码仍保留为迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha10**。
+当前开发版本：**2.0.0-alpha11**。
 
-## 当前能力
+## 已实现能力
 
-### 音乐来源与浏览
+### 本地音乐来源
 
-- 使用 MediaStore 读取系统音乐库，并监听媒体变化后去抖刷新
+- 使用 MediaStore 读取系统音乐库，并兼容 Android 新旧存储模型
 - 使用 Storage Access Framework 持久授权一个或多个只读音乐目录
-- 未授予完整媒体权限时，仍可只使用用户授权目录
-- 递归扫描 MediaStore 未索引音频，并与系统媒体库合并、去重
-- 按歌曲、收藏、最近播放、最近添加、最常播放、未播放、专辑、艺术家和文件夹浏览
-- 搜索标题、艺术家、专辑、文件夹名称和可读路径
-- 真实专辑封面、内嵌封面回退、采样解码和受限 LRU 缓存
+- 未授予完整媒体权限时，可仅使用用户选择的 SAF 目录
+- 递归扫描 MediaStore 未索引音频，并合并、去重 MediaStore 与 SAF 曲目
+- 监听 MediaStore 变化并去抖刷新；SAF 支持主动重新扫描
+- 歌曲、专辑、艺术家、文件夹、收藏、最近播放、最近添加、最常播放和未播放视图
+- 标题、艺术家、专辑、文件名与目录联合搜索
+
+### 播放核心
+
+- Media3 ExoPlayer + MediaSessionService 后台播放
+- 系统媒体控件、锁屏、耳机、蓝牙和音频焦点
+- 播放、暂停、Seek、上一首、下一首、随机与循环
+- 队列可视化编辑：跳转、上下调整、移除和确认清空
+- 持久化队列、当前曲目、位置、随机和循环状态
+- 服务重建后恢复播放上下文，但保持暂停
+- 真实专辑封面、音频内嵌封面回退、尺寸采样与受限 LRU 缓存
+
+### 歌词
+
+- 本地 LRC 导入和应用内部存储
+- UTF-8、UTF-8 BOM 与 GB18030 解码
+- 多时间戳、元数据、文件 offset、排序和去重
+- 逐行同步、自动滚动、点击歌词 Seek
+- 每首歌曲独立的 ±30 秒用户偏移校准
 
 ### 自定义歌单
 
-- Preferences DataStore 保存歌单名称、时间戳和有序媒体 ID
-- 同一歌单可混合 MediaStore 曲目与 SAF 曲目
-- 创建、重命名、删除、搜索、添加、移出、清空和播放歌单
-- 单曲上移/下移，批量置顶、置底和移出
-- 可搜索批量选择器，支持全选或取消当前搜索结果
-- **长按拖动柄移动到任意目标位置**，支持列表边缘自动滚动
-- 拖拽编辑使用本地草稿，用户点击保存时才进行一次 DataStore 原子写入
-- 拖拽列表包含当前不可用项目，避免离线 SD 卡、USB 或云盘歌曲丢失相对位置
-- 单曲、批量、清空、失效项清理和拖拽排序均提供 Snackbar 单步撤销
-- M3U/M3U8 导入与 UTF-8 M3U8 导出
-- 跨设备导入按经过校验的媒体 ID、内容 URI、文件名/目录和元数据分层重匹配
+- Preferences DataStore 保存 UUID、名称、有序媒体 ID 和时间戳
+- 同一歌单可混合 MediaStore 与 SAF 曲目
+- 新建、重命名、删除、搜索、添加、移出和清空
+- 单曲上下调整、批量选择、批量置顶/置底/移出
+- 长按拖拽到任意目标位置，支持长列表边缘自动滚动
+- 暂不可用的 SD 卡、USB、云盘和 SAF 项目仍保留原始顺序
+- 破坏性顺序修改提供 Material 3 Snackbar 单步撤销
+- 按保存顺序播放或随机播放
 
-### 智能音乐库
+### M3U / M3U8
 
-- 收藏、最近播放、播放次数和最后播放时间本地持久化
-- 最近添加、最常播放和未播放智能分区
-- 智能分区支持搜索、收藏和按当前结果创建播放队列
-- Android 7.1+ 动态快捷入口：收藏、最近播放、最近添加和最常播放
-
-### 播放、队列与歌词
-
-- Media3 ExoPlayer 后台播放和 MediaSession 系统控制
-- 锁屏、通知栏、耳机和蓝牙媒体控制
-- 播放、暂停、切歌、Seek、随机和循环
-- 可视化播放队列：跳转、上下调整、移除和确认清空
-- 队列、当前位置、随机和循环状态持久恢复；服务重建后保持暂停
-- 本地 LRC 导入、纯 Kotlin 解析、逐行同步、点击跳转和每曲偏移校准
-- UTF-8、UTF-8 BOM 与 GB18030 文本读取
+- 通过系统 `OpenDocument` 导入，通过 `CreateDocument` 导出 UTF-8 M3U8
+- 支持标准 `#EXTM3U`、`#PLAYLIST` 与 `#EXTINF`
+- 导出附带可被第三方播放器忽略的 `#ACGPLAYER-*` 注释
+- 当前不可用项目使用 `acg-player://media/<id>` 保留顺序
+- 按媒体 ID、内容 URI、文件名/目录、标题/艺术家/时长分层匹配
+- 对跨设备重复 MediaStore ID 与 `content://` URI 进行可移植元数据校验
+- 文件限制 4 MB，最多解析 20,000 个位置条目
+- **导入前预览全部条目，不再选中文件后立即创建歌单**
+- 自动匹配、离线保留、歧义、未匹配和重复条目分别标记
+- 可排除自动结果、恢复自动结果、搜索完整音乐库并手工映射
+- 最终创建保持原 M3U 条目顺序，并再次去重媒体 ID
 
 ### Compose 体验
 
-- Material 3 动态配色、亮色、深色和跟随系统主题
-- 手机 Bottom Navigation 与大屏 Navigation Rail
-- 独立歌单入口、批量编辑器、拖拽排序器和 M3U 传输栏
+- Material 3 动态配色、亮色、深色与跟随系统
+- 手机 Bottom Navigation 与宽屏 Navigation Rail
+- 权限、加载、错误、空内容、Provider warning 和导入结果状态
 - Android 13+ 播放通知权限引导
-- 权限、加载、空内容、错误、Provider warning 和撤销状态
+- Android 7.1+ 收藏、最近播放、最近添加和最常播放动态快捷入口
 
 ## 技术基线
 
@@ -70,23 +82,23 @@ ACG Player X 2.0 是一次面向现代 Android 的重写。当前活动应用已
 | AndroidX DataStore | 1.2.1 |
 | Java | 17 |
 
-依赖版本集中在 `gradle/libs.versions.toml`，不再散落于模块脚本。
+依赖版本集中在 `gradle/libs.versions.toml`。
 
 ## 项目结构
 
 ```text
-modern-app/                       当前活动的 Compose 应用
-  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U 与 DataStore
+modern-app/
+  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U 和 DataStore
   src/main/kotlin/.../lyrics/     LRC 解析、内部存储与歌词状态
   src/main/kotlin/.../model/      领域模型与 MediaItem 映射
   src/main/kotlin/.../playback/   Media3 服务、控制器、队列与状态恢复
   src/main/kotlin/.../shortcuts/  Android 动态快捷入口
-  src/main/kotlin/.../ui/         Compose 页面、批量编辑与拖拽排序
+  src/main/kotlin/.../ui/         Compose 页面、歌单编辑与导入预览
 app/                              旧版应用源码，仅供迁移参考
 appthemehelper/                   旧版主题辅助源码，仅供迁移参考
 ```
 
-Gradle 中逻辑模块仍为 `:app`，实际目录通过 `settings.gradle.kts` 映射到 `modern-app/`。
+Gradle 中逻辑模块仍为 `:app`，实际目录映射到 `modern-app/`。
 
 ## 构建与验证
 
@@ -99,54 +111,35 @@ Gradle 中逻辑模块仍为 `:app`，实际目录通过 `settings.gradle.kts` �
   :app:assembleDebug
 ```
 
-GitHub Actions 在 Push 和 Pull Request 上执行相同门禁。单元测试覆盖搜索、路径解析、SAF 稳定 ID、跨来源去重、智能列表、歌单编解码、批量顺序变换、拖拽目标索引与边界、M3U 重匹配，以及 LRC 时间轴。
-
-## 歌单排序与撤销语义
-
-批量置顶或置底始终保持所选歌曲在原歌单中的相对顺序。拖拽编辑器则展示完整媒体 ID 顺序，包括当前不可播放的离线项目。
-
-拖拽期间仅修改 Compose 本地草稿；越过列表边缘时会自动滚动。用户点击“保存顺序”后，ViewModel 会验证新旧媒体 ID 集合完全一致，再通过一次 DataStore 更新提交最终顺序。取消对话框不会产生持久化写入。
-
-以下操作会保存一份进程内顺序快照并提供 Snackbar 单步撤销：
-
-- 单曲或批量移出
-- 单曲上下交换
-- 批量置顶或置底
-- 长按拖拽排序
-- 清空歌单
-- 清理当前不可用项目
-
-撤销只恢复歌单媒体 ID 顺序，不修改设备上的音频文件。开始下一次歌单修改、关闭对应歌单或 Snackbar 结束后，旧快照会释放。
+GitHub Actions 在 Push 与 Pull Request 中执行同一门禁。单元测试覆盖路径归一化、SAF、跨来源去重、智能列表、歌单顺序、拖拽算法、M3U 匹配/预览/手工映射以及 LRC 时间轴。
 
 ## 权限与本地数据
 
-- Android 13+ 系统媒体库：`READ_MEDIA_AUDIO`
-- Android 12L 及以下：`READ_EXTERNAL_STORAGE`
+- Android 13+ 系统音乐库：`READ_MEDIA_AUDIO`
+- Android 12L 及以下系统音乐库：`READ_EXTERNAL_STORAGE`
 - 用户指定目录：`OpenDocumentTree` + 持久只读 URI 权限
-- M3U/M3U8：`OpenDocument` 与 `CreateDocument`
+- M3U/M3U8 与歌词：系统单文件选择器
 - Android 13+ 播放通知：`POST_NOTIFICATIONS`
 - 后台播放：`FOREGROUND_SERVICE` 与 `FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
-应用不请求共享存储写权限、不启用明文网络，也不使用 `requestLegacyExternalStorage`。歌词、收藏、历史、播放统计和歌单均保存在本机；音频文件不会因歌单编辑而被复制、移动或删除。
+应用不申请共享存储写权限，不启用明文网络，也不使用 `requestLegacyExternalStorage`。收藏、历史、播放统计、歌词索引和歌单保存在设备本地；应用不会上传音频或行为数据。
 
-## M3U 语义
+## 当前剩余重点
 
-M3U8 导出写入标准 `#EXTM3U`、`#PLAYLIST` 和 `#EXTINF`，并附带其他播放器可忽略的 `#ACGPLAYER-*` 注释。当前不可用项目使用 `acg-player://media/<id>` 占位，使其重新导入本应用时仍能恢复顺序。
+- MediaSession、SAF、M3U 预览、快捷入口、歌词导入和进程回收仪器化测试
+- Baseline Profile、Macrobenchmark、10,000 首混合库和大型歌单基准
+- M3U 相对路径导出、旧 MediaStore Playlist 只读导入
+- 规则智能列表和播放完成度统计
+- SAF 增量索引、磁盘缓存和 Provider 变更监听
+- 歌词编辑/双语/逐字、音频标签编辑、Glance 小组件与 Live2D 隔离适配
+- 睡眠定时、均衡器、无缝播放和正式发布流水线
 
-导入支持 UTF-8、UTF-8 BOM 和 GB18030 回退。匹配顺序为：经过可移植提示校验的媒体 ID、经过校验的内容 URI、文件名与目录、标题/艺术家/时长。多候选条目不会静默猜测。单文件限制 4 MB，最多解析 20,000 条位置记录。
-
-## 迁移状态
-
-Compose 播放器核心、MediaStore + SAF 音乐库、歌单、批量编辑、任意位置拖拽排序、M3U/M3U8、封面、状态恢复、同步歌词、收藏、历史和基础智能列表均已进入活动模块。
-
-仍待推进的重点：发布级仪器化测试、Baseline Profile 与 Macrobenchmark、M3U 导入预览和歧义手工映射、历史 MediaStore Playlist 导入、规则智能列表、歌词编辑、音频标签编辑、Glance 小组件与 Live2D 隔离适配。
-
-- 详细技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
-- 功能差距矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
+- 技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
+- 迁移矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
 
 ## 安全说明
 
-现代化分支删除了当前树中的旧签名材料、Firebase 配置和构建产物，但这些文件仍可能存在于 Git 历史。正式发布前应轮换旧签名和服务凭据；彻底清理需单独重写历史。
+现代化分支已删除当前树中的旧签名材料、Firebase 配置和发布产物，但 Git 历史中的旧凭据不会自动消失。正式发布前仍需轮换签名与服务凭据。
 
 ## License
 
