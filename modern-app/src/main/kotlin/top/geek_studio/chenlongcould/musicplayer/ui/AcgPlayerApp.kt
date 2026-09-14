@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import top.geek_studio.chenlongcould.musicplayer.data.UserPlaylist
+import top.geek_studio.chenlongcould.musicplayer.data.m3uExportFileName
 import top.geek_studio.chenlongcould.musicplayer.ui.components.MiniPlayer
 
 private val AppDestination.label: String
@@ -61,6 +64,7 @@ fun AcgPlayerApp(
     val context = LocalContext.current
     val playlistViewModel: PlaylistViewModel = viewModel()
     val playlistState by playlistViewModel.uiState.collectAsStateWithLifecycle()
+    val latestLibrarySongs by rememberUpdatedState(state.songs)
     val audioPermission =
         remember {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -86,6 +90,7 @@ fun AcgPlayerApp(
         )
     }
     var playlistsVisible by rememberSaveable { mutableStateOf(false) }
+    var pendingExportPlaylistId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val audioPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -111,6 +116,28 @@ fun AcgPlayerApp(
             contract = ActivityResultContracts.OpenDocumentTree(),
         ) { uri ->
             uri?.let(viewModel::addAuthorizedFolder)
+        }
+    val playlistImportLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri?.let { selected ->
+                playlistViewModel.importPlaylist(selected, latestLibrarySongs)
+            }
+        }
+    val playlistExportLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/vnd.apple.mpegurl"),
+        ) { uri ->
+            val playlistId = pendingExportPlaylistId
+            pendingExportPlaylistId = null
+            if (uri != null && playlistId != null) {
+                playlistViewModel.exportPlaylist(
+                    playlistId = playlistId,
+                    uri = uri,
+                    librarySongs = latestLibrarySongs,
+                )
+            }
         }
 
     LaunchedEffect(audioPermission) {
@@ -138,6 +165,22 @@ fun AcgPlayerApp(
     }
     val onAddAuthorizedFolder = {
         musicFolderLauncher.launch(null)
+    }
+    val onImportPlaylist = {
+        playlistImportLauncher.launch(
+            arrayOf(
+                "application/vnd.apple.mpegurl",
+                "audio/x-mpegurl",
+                "audio/mpegurl",
+                "application/x-mpegurl",
+                "text/plain",
+                "application/octet-stream",
+            ),
+        )
+    }
+    val onExportPlaylist: (UserPlaylist) -> Unit = { playlist ->
+        pendingExportPlaylistId = playlist.id
+        playlistExportLauncher.launch(m3uExportFileName(playlist.name))
     }
     val onOpenPlaylists = {
         viewModel.showSection(LibrarySection.SONGS)
@@ -168,6 +211,8 @@ fun AcgPlayerApp(
                 },
                 onImportLyrics = onImportLyrics,
                 onAddAuthorizedFolder = onAddAuthorizedFolder,
+                onImportPlaylist = onImportPlaylist,
+                onExportPlaylist = onExportPlaylist,
             )
         } else {
             CompactLayout(
@@ -187,6 +232,8 @@ fun AcgPlayerApp(
                 },
                 onImportLyrics = onImportLyrics,
                 onAddAuthorizedFolder = onAddAuthorizedFolder,
+                onImportPlaylist = onImportPlaylist,
+                onExportPlaylist = onExportPlaylist,
             )
         }
     }
@@ -208,6 +255,8 @@ private fun CompactLayout(
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
     onAddAuthorizedFolder: () -> Unit,
+    onImportPlaylist: () -> Unit,
+    onExportPlaylist: (UserPlaylist) -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -260,6 +309,8 @@ private fun CompactLayout(
             onRequestNotificationPermission = onRequestNotificationPermission,
             onImportLyrics = onImportLyrics,
             onAddAuthorizedFolder = onAddAuthorizedFolder,
+            onImportPlaylist = onImportPlaylist,
+            onExportPlaylist = onExportPlaylist,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -281,6 +332,8 @@ private fun ExpandedLayout(
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
     onAddAuthorizedFolder: () -> Unit,
+    onImportPlaylist: () -> Unit,
+    onExportPlaylist: (UserPlaylist) -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(
@@ -327,6 +380,8 @@ private fun ExpandedLayout(
                     onRequestNotificationPermission = onRequestNotificationPermission,
                     onImportLyrics = onImportLyrics,
                     onAddAuthorizedFolder = onAddAuthorizedFolder,
+                    onImportPlaylist = onImportPlaylist,
+                    onExportPlaylist = onExportPlaylist,
                 )
             }
 
@@ -360,28 +415,38 @@ private fun AppContent(
     onRequestNotificationPermission: () -> Unit,
     onImportLyrics: () -> Unit,
     onAddAuthorizedFolder: () -> Unit,
+    onImportPlaylist: () -> Unit,
+    onExportPlaylist: (UserPlaylist) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (playlistsVisible) {
-        PlaylistsScreen(
-            playlistState = playlistState,
-            librarySongs = state.songs,
-            currentMediaId = state.playback.mediaId,
-            onOpenPlaylist = playlistViewModel::openPlaylist,
-            onClosePlaylist = playlistViewModel::closePlaylist,
-            onCreatePlaylist = playlistViewModel::createPlaylist,
-            onRenamePlaylist = playlistViewModel::renamePlaylist,
-            onDeletePlaylist = playlistViewModel::deletePlaylist,
-            onAddSongs = playlistViewModel::addSongs,
-            onRemoveSong = playlistViewModel::removeSong,
-            onSwapSongs = playlistViewModel::swapSongs,
-            onClearSongs = playlistViewModel::clearSongs,
-            onRemoveUnavailableSongs = playlistViewModel::removeUnavailableSongs,
-            onPlaySong = playlistViewModel::playSong,
-            onPlayAll = playlistViewModel::playAll,
-            onClearError = playlistViewModel::clearError,
-            modifier = modifier,
-        )
+        Column(modifier.fillMaxSize()) {
+            PlaylistTransferBar(
+                state = playlistState,
+                onImport = onImportPlaylist,
+                onExport = onExportPlaylist,
+                onDismissInfo = playlistViewModel::clearInfoMessage,
+            )
+            PlaylistsScreen(
+                playlistState = playlistState,
+                librarySongs = state.songs,
+                currentMediaId = state.playback.mediaId,
+                onOpenPlaylist = playlistViewModel::openPlaylist,
+                onClosePlaylist = playlistViewModel::closePlaylist,
+                onCreatePlaylist = playlistViewModel::createPlaylist,
+                onRenamePlaylist = playlistViewModel::renamePlaylist,
+                onDeletePlaylist = playlistViewModel::deletePlaylist,
+                onAddSongs = playlistViewModel::addSongs,
+                onRemoveSong = playlistViewModel::removeSong,
+                onSwapSongs = playlistViewModel::swapSongs,
+                onClearSongs = playlistViewModel::clearSongs,
+                onRemoveUnavailableSongs = playlistViewModel::removeUnavailableSongs,
+                onPlaySong = playlistViewModel::playSong,
+                onPlayAll = playlistViewModel::playAll,
+                onClearError = playlistViewModel::clearError,
+                modifier = Modifier.weight(1f),
+            )
+        }
     } else {
         DestinationContent(
             destination = destination,
