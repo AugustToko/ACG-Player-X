@@ -178,7 +178,10 @@ internal fun resolveM3uPlaylist(
 
     parsed.entries.forEach { entry ->
         val explicitMediaId = normalizeMediaId(entry.explicitMediaId)
-        val explicitSong = explicitMediaId?.let(songsById::get)
+        val explicitSong =
+            explicitMediaId
+                ?.let(songsById::get)
+                ?.takeIf { song -> explicitSongMatchesEntry(song, entry) }
         val outcome =
             explicitSong?.let { MatchOutcome(it, ambiguous = false) }
                 ?: matchByUri(entry, songsByUri)
@@ -241,6 +244,64 @@ fun m3uExportFileName(name: String): String {
             .take(MAX_EXPORT_FILE_STEM_LENGTH)
             .ifBlank { "playlist" }
     return "$stem.m3u8"
+}
+
+private fun explicitSongMatchesEntry(
+    song: Song,
+    entry: M3uEntry,
+): Boolean {
+    if (normalizeUri(song.contentUri) == normalizeUri(entry.location)) return true
+
+    val fileNameHint =
+        entry.fileNameHint
+            ?.takeIf(String::isNotBlank)
+            ?: fileNameFromLocation(entry.location)
+    if (!fileNameHint.isNullOrBlank()) {
+        if (
+            song.displayName.isBlank() ||
+            normalizeFileName(song.displayName) != normalizeFileName(fileNameHint)
+        ) {
+            return false
+        }
+        return metadataHintsMatch(song, entry)
+    }
+
+    val hasPortableMetadata =
+        !entry.title.isNullOrBlank() ||
+            !entry.artist.isNullOrBlank() ||
+            entry.durationSeconds != null ||
+            !entry.folderHint.isNullOrBlank()
+    return if (hasPortableMetadata) {
+        metadataHintsMatch(song, entry)
+    } else {
+        isAcgMediaLocation(entry.location)
+    }
+}
+
+private fun metadataHintsMatch(
+    song: Song,
+    entry: M3uEntry,
+): Boolean {
+    if (
+        !entry.title.isNullOrBlank() &&
+        normalizeText(song.title) != normalizeText(entry.title)
+    ) {
+        return false
+    }
+    if (
+        !entry.artist.isNullOrBlank() &&
+        normalizeText(song.artist) != normalizeText(entry.artist)
+    ) {
+        return false
+    }
+    if (!durationMatches(song, entry.durationSeconds)) return false
+
+    val folderHint = entry.folderHint?.takeIf(String::isNotBlank) ?: return true
+    val normalizedHint = normalizePath(folderHint)
+    val normalizedSongFolder = normalizePath(displayMusicFolderPath(song.folderPath))
+    return normalizedSongFolder == normalizedHint ||
+        normalizedSongFolder.endsWith("/$normalizedHint") ||
+        normalizedHint.endsWith("/$normalizedSongFolder")
 }
 
 private fun matchByUri(
