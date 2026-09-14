@@ -33,7 +33,7 @@ class MainActivityInstrumentedTest {
     @Test
     fun warmShortcutRoutesToFavorites() {
         composeRule.activityRule.scenario.onActivity { activity ->
-            activity.startActivity(
+            activity.dispatchNavigationIntent(
                 Intent(activity, MainActivity::class.java)
                     .setAction(AppShortcuts.ACTION_OPEN_FAVORITES),
             )

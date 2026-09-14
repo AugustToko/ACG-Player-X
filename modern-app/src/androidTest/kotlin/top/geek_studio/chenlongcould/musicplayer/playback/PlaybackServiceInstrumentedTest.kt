@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.playback
 
 import android.content.ComponentName
+import android.os.Looper
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -18,7 +19,8 @@ import org.junit.runner.RunWith
 class PlaybackServiceInstrumentedTest {
     @Test
     fun mediaControllerConnectsToSessionAndStartsPaused() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
         val sessionToken =
             SessionToken(
                 context,
@@ -26,13 +28,13 @@ class PlaybackServiceInstrumentedTest {
             )
         val controllerFuture =
             MediaController.Builder(context, sessionToken)
+                .setApplicationLooper(Looper.getMainLooper())
                 .buildAsync()
         val controller = controllerFuture.get(CONTROLLER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 
-        try {
+        instrumentation.runOnMainSync {
             assertFalse(controller.isPlaying)
             assertTrue(controller.availableCommands.contains(Player.COMMAND_PLAY_PAUSE))
-        } finally {
             controller.release()
         }
     }
