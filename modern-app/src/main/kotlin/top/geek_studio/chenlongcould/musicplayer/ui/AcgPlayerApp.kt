@@ -3,6 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -23,14 +24,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import top.geek_studio.chenlongcould.musicplayer.ui.components.MiniPlayer
 
 private val AppDestination.label: String
@@ -55,6 +59,8 @@ fun AcgPlayerApp(
     viewModel: MainViewModel,
 ) {
     val context = LocalContext.current
+    val playlistViewModel: PlaylistViewModel = viewModel()
+    val playlistState by playlistViewModel.uiState.collectAsStateWithLifecycle()
     val audioPermission =
         remember {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -79,6 +85,7 @@ fun AcgPlayerApp(
                 ) == PackageManager.PERMISSION_GRANTED,
         )
     }
+    var playlistsVisible by rememberSaveable { mutableStateOf(false) }
 
     val audioPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -109,6 +116,17 @@ fun AcgPlayerApp(
     LaunchedEffect(audioPermission) {
         viewModel.onAudioPermissionChanged(localPermissionGranted)
     }
+    LaunchedEffect(state.section) {
+        if (playlistsVisible && state.section != LibrarySection.SONGS) {
+            playlistsVisible = false
+        }
+    }
+
+    BackHandler(
+        enabled = playlistsVisible && playlistState.activePlaylist == null,
+    ) {
+        playlistsVisible = false
+    }
 
     val notificationPermissionRequired =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -121,14 +139,28 @@ fun AcgPlayerApp(
     val onAddAuthorizedFolder = {
         musicFolderLauncher.launch(null)
     }
+    val onOpenPlaylists = {
+        viewModel.showSection(LibrarySection.SONGS)
+        viewModel.updateQuery("")
+        viewModel.clearCollectionFilter()
+        playlistsVisible = true
+    }
+    val onClosePlaylists = {
+        playlistsVisible = false
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 840.dp) {
             ExpandedLayout(
                 destination = state.destination,
+                playlistsVisible = playlistsVisible,
                 onDestinationChange = viewModel::navigateTo,
+                onOpenPlaylists = onOpenPlaylists,
+                onClosePlaylists = onClosePlaylists,
                 state = state,
                 viewModel = viewModel,
+                playlistState = playlistState,
+                playlistViewModel = playlistViewModel,
                 notificationPermissionRequired = notificationPermissionRequired,
                 onRequestAudioPermission = { audioPermissionLauncher.launch(audioPermission) },
                 onRequestNotificationPermission = {
@@ -140,9 +172,14 @@ fun AcgPlayerApp(
         } else {
             CompactLayout(
                 destination = state.destination,
+                playlistsVisible = playlistsVisible,
                 onDestinationChange = viewModel::navigateTo,
+                onOpenPlaylists = onOpenPlaylists,
+                onClosePlaylists = onClosePlaylists,
                 state = state,
                 viewModel = viewModel,
+                playlistState = playlistState,
+                playlistViewModel = playlistViewModel,
                 notificationPermissionRequired = notificationPermissionRequired,
                 onRequestAudioPermission = { audioPermissionLauncher.launch(audioPermission) },
                 onRequestNotificationPermission = {
@@ -158,9 +195,14 @@ fun AcgPlayerApp(
 @Composable
 private fun CompactLayout(
     destination: AppDestination,
+    playlistsVisible: Boolean,
     onDestinationChange: (AppDestination) -> Unit,
+    onOpenPlaylists: () -> Unit,
+    onClosePlaylists: () -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
+    playlistState: PlaylistUiState,
+    playlistViewModel: PlaylistViewModel,
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -170,19 +212,34 @@ private fun CompactLayout(
     Scaffold(
         bottomBar = {
             Column {
-                if (state.playback.mediaId != null && destination != AppDestination.NOW_PLAYING) {
+                if (
+                    state.playback.mediaId != null &&
+                    (playlistsVisible || destination != AppDestination.NOW_PLAYING)
+                ) {
                     MiniPlayer(
                         playback = state.playback,
-                        onOpenPlayer = { onDestinationChange(AppDestination.NOW_PLAYING) },
+                        onOpenPlayer = {
+                            onClosePlaylists()
+                            onDestinationChange(AppDestination.NOW_PLAYING)
+                        },
                         onPlayPause = viewModel::togglePlayPause,
                     )
                 }
 
                 NavigationBar {
+                    NavigationBarItem(
+                        selected = playlistsVisible,
+                        onClick = onOpenPlaylists,
+                        icon = { Text("☷") },
+                        label = { Text("歌单") },
+                    )
                     AppDestination.entries.forEach { item ->
                         NavigationBarItem(
-                            selected = destination == item,
-                            onClick = { onDestinationChange(item) },
+                            selected = !playlistsVisible && destination == item,
+                            onClick = {
+                                onClosePlaylists()
+                                onDestinationChange(item)
+                            },
                             icon = { Text(item.glyph) },
                             label = { Text(item.label) },
                         )
@@ -191,10 +248,13 @@ private fun CompactLayout(
             }
         },
     ) { innerPadding ->
-        DestinationContent(
+        AppContent(
+            playlistsVisible = playlistsVisible,
             destination = destination,
             state = state,
             viewModel = viewModel,
+            playlistState = playlistState,
+            playlistViewModel = playlistViewModel,
             notificationPermissionRequired = notificationPermissionRequired,
             onRequestAudioPermission = onRequestAudioPermission,
             onRequestNotificationPermission = onRequestNotificationPermission,
@@ -208,9 +268,14 @@ private fun CompactLayout(
 @Composable
 private fun ExpandedLayout(
     destination: AppDestination,
+    playlistsVisible: Boolean,
     onDestinationChange: (AppDestination) -> Unit,
+    onOpenPlaylists: () -> Unit,
+    onClosePlaylists: () -> Unit,
     state: MainUiState,
     viewModel: MainViewModel,
+    playlistState: PlaylistUiState,
+    playlistViewModel: PlaylistViewModel,
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -221,10 +286,19 @@ private fun ExpandedLayout(
         NavigationRail(
             modifier = Modifier.fillMaxHeight(),
         ) {
+            NavigationRailItem(
+                selected = playlistsVisible,
+                onClick = onOpenPlaylists,
+                icon = { Text("☷") },
+                label = { Text("歌单") },
+            )
             AppDestination.entries.forEach { item ->
                 NavigationRailItem(
-                    selected = destination == item,
-                    onClick = { onDestinationChange(item) },
+                    selected = !playlistsVisible && destination == item,
+                    onClick = {
+                        onClosePlaylists()
+                        onDestinationChange(item)
+                    },
                     icon = { Text(item.glyph) },
                     label = { Text(item.label) },
                 )
@@ -241,10 +315,13 @@ private fun ExpandedLayout(
 
         Column(Modifier.weight(1f)) {
             Box(Modifier.weight(1f)) {
-                DestinationContent(
+                AppContent(
+                    playlistsVisible = playlistsVisible,
                     destination = destination,
                     state = state,
                     viewModel = viewModel,
+                    playlistState = playlistState,
+                    playlistViewModel = playlistViewModel,
                     notificationPermissionRequired = notificationPermissionRequired,
                     onRequestAudioPermission = onRequestAudioPermission,
                     onRequestNotificationPermission = onRequestNotificationPermission,
@@ -253,10 +330,16 @@ private fun ExpandedLayout(
                 )
             }
 
-            if (state.playback.mediaId != null && destination != AppDestination.NOW_PLAYING) {
+            if (
+                state.playback.mediaId != null &&
+                (playlistsVisible || destination != AppDestination.NOW_PLAYING)
+            ) {
                 MiniPlayer(
                     playback = state.playback,
-                    onOpenPlayer = { onDestinationChange(AppDestination.NOW_PLAYING) },
+                    onOpenPlayer = {
+                        onClosePlaylists()
+                        onDestinationChange(AppDestination.NOW_PLAYING)
+                    },
                     onPlayPause = viewModel::togglePlayPause,
                 )
             }
@@ -265,10 +348,62 @@ private fun ExpandedLayout(
 }
 
 @Composable
+private fun AppContent(
+    playlistsVisible: Boolean,
+    destination: AppDestination,
+    state: MainUiState,
+    viewModel: MainViewModel,
+    playlistState: PlaylistUiState,
+    playlistViewModel: PlaylistViewModel,
+    notificationPermissionRequired: Boolean,
+    onRequestAudioPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit,
+    onImportLyrics: () -> Unit,
+    onAddAuthorizedFolder: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (playlistsVisible) {
+        PlaylistsScreen(
+            playlistState = playlistState,
+            librarySongs = state.songs,
+            currentMediaId = state.playback.mediaId,
+            onOpenPlaylist = playlistViewModel::openPlaylist,
+            onClosePlaylist = playlistViewModel::closePlaylist,
+            onCreatePlaylist = playlistViewModel::createPlaylist,
+            onRenamePlaylist = playlistViewModel::renamePlaylist,
+            onDeletePlaylist = playlistViewModel::deletePlaylist,
+            onAddSongs = playlistViewModel::addSongs,
+            onRemoveSong = playlistViewModel::removeSong,
+            onSwapSongs = playlistViewModel::swapSongs,
+            onClearSongs = playlistViewModel::clearSongs,
+            onRemoveUnavailableSongs = playlistViewModel::removeUnavailableSongs,
+            onPlaySong = playlistViewModel::playSong,
+            onPlayAll = playlistViewModel::playAll,
+            onClearError = playlistViewModel::clearError,
+            modifier = modifier,
+        )
+    } else {
+        DestinationContent(
+            destination = destination,
+            state = state,
+            viewModel = viewModel,
+            playlistCount = playlistState.playlists.size,
+            notificationPermissionRequired = notificationPermissionRequired,
+            onRequestAudioPermission = onRequestAudioPermission,
+            onRequestNotificationPermission = onRequestNotificationPermission,
+            onImportLyrics = onImportLyrics,
+            onAddAuthorizedFolder = onAddAuthorizedFolder,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
 private fun DestinationContent(
     destination: AppDestination,
     state: MainUiState,
     viewModel: MainViewModel,
+    playlistCount: Int,
     notificationPermissionRequired: Boolean,
     onRequestAudioPermission: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -332,6 +467,7 @@ private fun DestinationContent(
                 authorizedFolderSongCount = state.authorizedFolderSongCount,
                 favoriteSongCount = state.favoriteMediaIds.size,
                 recentSongCount = state.recentMediaIds.size,
+                playlistCount = playlistCount,
                 onThemeModeChange = viewModel::setThemeMode,
                 onRequestNotificationPermission = onRequestNotificationPermission,
                 onAddAuthorizedFolder = onAddAuthorizedFolder,
