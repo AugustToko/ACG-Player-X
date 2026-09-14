@@ -167,6 +167,7 @@ class DocumentTreeMusicScanner(
                                     displayPath = displayFolderPath,
                                 ),
                             dateAddedMs = lastModifiedMs,
+                            displayName = displayName,
                         )
                 }
             }

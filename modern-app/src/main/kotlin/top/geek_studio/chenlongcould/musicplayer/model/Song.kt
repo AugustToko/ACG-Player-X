@@ -21,6 +21,7 @@ data class Song(
     val folderName: String,
     val folderPath: String,
     val dateAddedMs: Long = 0L,
+    val displayName: String = "",
 )
 
 fun Song.toMediaItem(): MediaItem {

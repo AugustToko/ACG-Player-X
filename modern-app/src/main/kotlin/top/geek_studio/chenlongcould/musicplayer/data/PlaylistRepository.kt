@@ -65,6 +65,32 @@ class PlaylistRepository(
         return created
     }
 
+    suspend fun createImportedPlaylist(
+        name: String,
+        mediaIds: Collection<String>,
+        nowMs: Long = System.currentTimeMillis(),
+    ): UserPlaylist {
+        val preferredName = normalizePlaylistName(name.ifBlank { "导入歌单" })
+        val createdAtMs = nowMs.coerceAtLeast(0L)
+        var created: UserPlaylist? = null
+
+        dataStore.edit { preferences ->
+            val current = decodeUserPlaylists(preferences[PLAYLISTS])
+            created =
+                UserPlaylist(
+                    id = UUID.randomUUID().toString(),
+                    name = uniquePlaylistName(current, preferredName),
+                    mediaIds = appendPlaylistMediaIds(emptyList(), mediaIds),
+                    createdAtMs = createdAtMs,
+                    updatedAtMs = createdAtMs,
+                )
+            preferences[PLAYLISTS] =
+                encodeUserPlaylists(sortUserPlaylists(listOf(checkNotNull(created)) + current))
+        }
+
+        return checkNotNull(created)
+    }
+
     suspend fun renamePlaylist(
         playlistId: String,
         name: String,
@@ -193,6 +219,28 @@ internal fun normalizePlaylistName(value: String): String {
             .take(MAX_PLAYLIST_NAME_LENGTH)
     require(normalized.isNotEmpty()) { "歌单名称不能为空" }
     return normalized
+}
+
+internal fun uniquePlaylistName(
+    playlists: List<UserPlaylist>,
+    preferredName: String,
+): String {
+    val baseName = normalizePlaylistName(preferredName)
+    val occupied = playlists.mapTo(hashSetOf()) { it.name.lowercase(Locale.ROOT) }
+    if (baseName.lowercase(Locale.ROOT) !in occupied) return baseName
+
+    var index = 2
+    while (index < 10_000) {
+        val suffix = " ($index)"
+        val prefix =
+            baseName
+                .take((MAX_PLAYLIST_NAME_LENGTH - suffix.length).coerceAtLeast(1))
+                .trimEnd()
+        val candidate = "$prefix$suffix"
+        if (candidate.lowercase(Locale.ROOT) !in occupied) return candidate
+        index += 1
+    }
+    throw IllegalStateException("无法生成不重复的歌单名称")
 }
 
 internal fun appendPlaylistMediaIds(

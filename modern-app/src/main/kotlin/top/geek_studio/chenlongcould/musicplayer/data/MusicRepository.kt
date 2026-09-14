@@ -142,6 +142,7 @@ class MusicRepository(
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.ALBUM_ID,
+                MediaStore.Audio.Media.DISPLAY_NAME,
                 MediaStore.Audio.Media.DATE_ADDED,
                 MediaStore.Audio.Media.DATE_MODIFIED,
                 pathColumnName,
@@ -163,6 +164,7 @@ class MusicRepository(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val displayNameColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
             val dateAddedColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
             val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED)
             val pathColumn = cursor.getColumnIndex(pathColumnName)
@@ -176,6 +178,12 @@ class MusicRepository(
                     val album = cursor.getString(albumColumn).orUnknown("未知专辑")
                     val duration = cursor.getLong(durationColumn).coerceAtLeast(0L)
                     val albumId = cursor.getLong(albumIdColumn)
+                    val displayName =
+                        if (displayNameColumn >= 0) {
+                            cursor.getString(displayNameColumn).orUnknown(title)
+                        } else {
+                            title
+                        }
                     val dateAddedSeconds =
                         if (dateAddedColumn >= 0) cursor.getLong(dateAddedColumn) else 0L
                     val dateModifiedSeconds =
@@ -216,6 +224,7 @@ class MusicRepository(
                                     dateAddedSeconds = dateAddedSeconds,
                                     dateModifiedSeconds = dateModifiedSeconds,
                                 ),
+                            displayName = displayName,
                         ),
                     )
                 }
