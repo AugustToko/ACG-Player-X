@@ -463,6 +463,17 @@ private fun AppContent(
                     onCommitOrder = playlistViewModel::reorderSongs,
                     modifier = Modifier.fillMaxSize(),
                 )
+                PlaylistImportPreviewDialog(
+                    preview = playlistState.importPreview,
+                    librarySongs = state.songs,
+                    isWorking = playlistState.isWorking,
+                    errorMessage = playlistState.errorMessage,
+                    onNameChange = playlistViewModel::updateImportPreviewName,
+                    onSelectionChange = playlistViewModel::updateImportEntrySelection,
+                    onConfirm = playlistViewModel::confirmImportPreview,
+                    onDismiss = playlistViewModel::cancelImportPreview,
+                    onClearError = playlistViewModel::clearError,
+                )
             }
         }
     } else {
