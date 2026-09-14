@@ -24,6 +24,13 @@ import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.playback.PlaybackUiState
 import top.geek_studio.chenlongcould.musicplayer.playback.PlayerConnection
+import top.geek_studio.chenlongcould.musicplayer.shortcuts.AppShortcuts
+
+enum class AppDestination {
+    LIBRARY,
+    NOW_PLAYING,
+    SETTINGS,
+}
 
 enum class LibrarySection {
     SONGS,
@@ -47,6 +54,7 @@ data class CollectionFilter(
 )
 
 data class MainUiState(
+    val destination: AppDestination = AppDestination.LIBRARY,
     val songs: List<Song> = emptyList(),
     val totalSongCount: Int = 0,
     val mediaStoreSongCount: Int = 0,
@@ -161,6 +169,29 @@ class MainViewModel(
                 }
             }
         }
+    }
+
+    fun navigateTo(destination: AppDestination) {
+        _uiState.update { it.copy(destination = destination) }
+    }
+
+    fun handleShortcutAction(action: String?) {
+        val targetSection =
+            when (action) {
+                AppShortcuts.ACTION_OPEN_FAVORITES -> LibrarySection.FAVORITES
+                AppShortcuts.ACTION_OPEN_RECENT -> LibrarySection.RECENT
+                else -> null
+            } ?: return
+
+        _uiState.update {
+            it.copy(
+                destination = AppDestination.LIBRARY,
+                section = targetSection,
+                query = "",
+                activeFilter = null,
+            )
+        }
+        publishFilteredLibrary()
     }
 
     fun onAudioPermissionChanged(granted: Boolean) {
