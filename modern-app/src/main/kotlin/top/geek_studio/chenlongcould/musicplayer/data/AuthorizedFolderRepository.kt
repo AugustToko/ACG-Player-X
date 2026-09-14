@@ -69,7 +69,7 @@ class AuthorizedFolderRepository(
         require(uri.scheme == ContentScheme) {
             "所选目录不是可持久化的文档目录"
         }
-        require(DocumentsContract.isTreeUri(uri)) {
+        require(isDocumentTreeUri(uri)) {
             "请选择一个目录，而不是单个文件"
         }
 
@@ -159,3 +159,8 @@ class AuthorizedFolderRepository(
         val FOLDER_URIS = stringSetPreferencesKey("folder_uris")
     }
 }
+
+internal fun isDocumentTreeUri(uri: Uri): Boolean =
+    runCatching {
+        DocumentsContract.getTreeDocumentId(uri).isNotBlank()
+    }.getOrDefault(false)
