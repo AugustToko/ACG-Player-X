@@ -249,39 +249,32 @@ fun m3uExportFileName(name: String): String {
 private fun explicitSongMatchesEntry(
     song: Song,
     entry: M3uEntry,
-): Boolean {
-    if (normalizeUri(song.contentUri) == normalizeUri(entry.location)) return true
+): Boolean =
+    if (hasPortableIdentityHints(entry)) {
+        portableIdentityMatches(song, entry)
+    } else {
+        normalizeUri(song.contentUri) == normalizeUri(entry.location) ||
+            isAcgMediaLocation(entry.location)
+    }
 
-    val fileNameHint =
-        entry.fileNameHint
-            ?.takeIf(String::isNotBlank)
-            ?: fileNameFromLocation(entry.location)
-    if (!fileNameHint.isNullOrBlank()) {
+private fun hasPortableIdentityHints(entry: M3uEntry): Boolean =
+    !entry.fileNameHint.isNullOrBlank() ||
+        !entry.title.isNullOrBlank() ||
+        !entry.artist.isNullOrBlank() ||
+        entry.durationSeconds != null
+
+private fun portableIdentityMatches(
+    song: Song,
+    entry: M3uEntry,
+): Boolean {
+    entry.fileNameHint?.takeIf(String::isNotBlank)?.let { fileNameHint ->
         if (
             song.displayName.isBlank() ||
             normalizeFileName(song.displayName) != normalizeFileName(fileNameHint)
         ) {
             return false
         }
-        return metadataHintsMatch(song, entry)
     }
-
-    val hasPortableMetadata =
-        !entry.title.isNullOrBlank() ||
-            !entry.artist.isNullOrBlank() ||
-            entry.durationSeconds != null ||
-            !entry.folderHint.isNullOrBlank()
-    return if (hasPortableMetadata) {
-        metadataHintsMatch(song, entry)
-    } else {
-        isAcgMediaLocation(entry.location)
-    }
-}
-
-private fun metadataHintsMatch(
-    song: Song,
-    entry: M3uEntry,
-): Boolean {
     if (
         !entry.title.isNullOrBlank() &&
         normalizeText(song.title) != normalizeText(entry.title)
@@ -294,14 +287,7 @@ private fun metadataHintsMatch(
     ) {
         return false
     }
-    if (!durationMatches(song, entry.durationSeconds)) return false
-
-    val folderHint = entry.folderHint?.takeIf(String::isNotBlank) ?: return true
-    val normalizedHint = normalizePath(folderHint)
-    val normalizedSongFolder = normalizePath(displayMusicFolderPath(song.folderPath))
-    return normalizedSongFolder == normalizedHint ||
-        normalizedSongFolder.endsWith("/$normalizedHint") ||
-        normalizedHint.endsWith("/$normalizedSongFolder")
+    return durationMatches(song, entry.durationSeconds)
 }
 
 private fun matchByUri(
@@ -309,7 +295,13 @@ private fun matchByUri(
     songsByUri: Map<String, List<Song>>,
 ): MatchOutcome? {
     val candidates = songsByUri[normalizeUri(entry.location)].orEmpty()
-    return chooseCandidate(candidates, entry)
+    val compatibleCandidates =
+        if (hasPortableIdentityHints(entry)) {
+            candidates.filter { song -> portableIdentityMatches(song, entry) }
+        } else {
+            candidates
+        }
+    return chooseCandidate(compatibleCandidates, entry)
 }
 
 private fun matchByFileName(
@@ -321,7 +313,12 @@ private fun matchByFileName(
             ?.takeIf(String::isNotBlank)
             ?: fileNameFromLocation(entry.location)
     if (fileName.isNullOrBlank()) return null
-    return chooseCandidate(songsByFileName[normalizeFileName(fileName)].orEmpty(), entry)
+
+    val compatibleCandidates =
+        songsByFileName[normalizeFileName(fileName)]
+            .orEmpty()
+            .filter { song -> portableIdentityMatches(song, entry) }
+    return chooseCandidate(compatibleCandidates, entry)
 }
 
 private fun matchByMetadata(
