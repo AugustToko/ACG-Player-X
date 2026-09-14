@@ -246,6 +246,29 @@ class PlaylistViewModel(
         )
     }
 
+    fun reorderSongs(
+        playlistId: String,
+        orderedMediaIds: List<String>,
+    ) {
+        mutatePlaylistMediaIds(playlistId) { current ->
+            val normalized =
+                orderedMediaIds
+                    .asSequence()
+                    .filter(String::isNotBlank)
+                    .distinct()
+                    .toList()
+            require(
+                normalized.size == current.size &&
+                    normalized.toSet() == current.toSet(),
+            ) { "排序结果与当前歌单内容不一致" }
+
+            PlaylistMediaEdit(
+                mediaIds = normalized,
+                undoMessage = "已通过拖拽调整歌单顺序",
+            )
+        }
+    }
+
     fun clearSongs(playlistId: String) {
         mutatePlaylistMediaIds(playlistId) { _ ->
             PlaylistMediaEdit(

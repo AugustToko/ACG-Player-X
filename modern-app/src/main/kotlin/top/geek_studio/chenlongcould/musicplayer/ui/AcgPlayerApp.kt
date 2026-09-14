@@ -457,6 +457,12 @@ private fun AppContent(
                     onDismissUndo = playlistViewModel::clearUndoMessage,
                     modifier = Modifier.fillMaxSize(),
                 )
+                PlaylistDragReorderOverlay(
+                    state = playlistState,
+                    librarySongs = state.songs,
+                    onCommitOrder = playlistViewModel::reorderSongs,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     } else {

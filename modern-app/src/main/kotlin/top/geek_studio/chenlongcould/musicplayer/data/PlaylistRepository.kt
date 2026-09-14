@@ -303,6 +303,24 @@ internal fun movePlaylistMediaIds(
     return reordered.takeUnless { it == current } ?: current
 }
 
+internal fun movePlaylistMediaIdToIndex(
+    current: List<String>,
+    mediaId: String,
+    targetIndex: Int,
+): List<String> {
+    if (current.size < 2 || mediaId.isBlank()) return current
+    val sourceIndex = current.indexOf(mediaId)
+    if (sourceIndex < 0) return current
+
+    val finalIndex = targetIndex.coerceIn(0, current.lastIndex)
+    if (sourceIndex == finalIndex) return current
+
+    return current.toMutableList().apply {
+        val moving = removeAt(sourceIndex)
+        add(finalIndex, moving)
+    }
+}
+
 internal fun swapPlaylistMediaIds(
     current: List<String>,
     firstMediaId: String,

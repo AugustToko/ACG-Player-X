@@ -93,6 +93,48 @@ class PlaylistRepositoryTest {
     }
 
     @Test
+    fun draggingSongDownUsesFinalTargetIndex() {
+        val updated =
+            movePlaylistMediaIdToIndex(
+                current = listOf("1", "2", "3", "4"),
+                mediaId = "2",
+                targetIndex = 3,
+            )
+
+        assertEquals(listOf("1", "3", "4", "2"), updated)
+    }
+
+    @Test
+    fun draggingSongUpUsesFinalTargetIndex() {
+        val updated =
+            movePlaylistMediaIdToIndex(
+                current = listOf("1", "2", "3", "4"),
+                mediaId = "4",
+                targetIndex = 1,
+            )
+
+        assertEquals(listOf("1", "4", "2", "3"), updated)
+    }
+
+    @Test
+    fun dragTargetIsClampedAndUnknownMediaIsIgnored() {
+        val current = listOf("1", "2", "3")
+
+        assertEquals(
+            listOf("2", "3", "1"),
+            movePlaylistMediaIdToIndex(current, "1", 99),
+        )
+        assertEquals(
+            listOf("3", "1", "2"),
+            movePlaylistMediaIdToIndex(current, "3", -10),
+        )
+        assertEquals(
+            current,
+            movePlaylistMediaIdToIndex(current, "missing", 1),
+        )
+    }
+
+    @Test
     fun swappingSongsUsesStoredOrder() {
         val updated =
             swapPlaylistMediaIds(
