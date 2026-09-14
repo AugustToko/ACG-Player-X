@@ -123,6 +123,7 @@ jobs:
           ./gradlew --no-daemon --info
           :benchmark:pixel2Api35BenchmarkBenchmarkAndroidTest
           -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
+          -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.StartupBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.SettingsScrollBenchmark
 
       - name: Upload profiles and benchmark reports
         if: always()
