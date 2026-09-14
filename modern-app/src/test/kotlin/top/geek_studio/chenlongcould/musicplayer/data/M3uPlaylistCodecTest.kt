@@ -59,6 +59,36 @@ class M3uPlaylistCodecTest {
     }
 
     @Test
+    fun collidingDeviceMediaIdDoesNotOverridePortableHints() {
+        val sourcePlaylist =
+            UserPlaylist(
+                id = "playlist",
+                name = "Portable",
+                mediaIds = listOf("1"),
+                createdAtMs = 1L,
+                updatedAtMs = 1L,
+            )
+        val sourceSong = song(1, "Again", "YUI", "Again.m4a", "Music/JPop")
+        val unrelatedTargetSong =
+            song(1, "Different", "Other", "Different.mp3", "Music/Other")
+        val correctTargetSong =
+            sourceSong.copy(
+                id = 42,
+                contentUri = "content://target/audio/42",
+            )
+
+        val parsed = parseM3uPlaylist(encodeM3uPlaylist(sourcePlaylist, listOf(sourceSong)))
+        val resolved =
+            resolveM3uPlaylist(
+                parsed = parsed,
+                songs = listOf(unrelatedTargetSong, correctTargetSong),
+            )
+
+        assertEquals(listOf("42"), resolved.mediaIds)
+        assertEquals(1, resolved.matchedCount)
+    }
+
+    @Test
     fun externalPlaylistMatchesByFileNameAndMetadata() {
         val content =
             """
