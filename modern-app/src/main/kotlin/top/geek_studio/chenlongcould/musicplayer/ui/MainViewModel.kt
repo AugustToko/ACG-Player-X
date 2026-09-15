@@ -19,10 +19,16 @@ import top.geek_studio.chenlongcould.musicplayer.data.MusicRepository
 import top.geek_studio.chenlongcould.musicplayer.data.PlaybackStats
 import top.geek_studio.chenlongcould.musicplayer.data.SettingsRepository
 import top.geek_studio.chenlongcould.musicplayer.data.ThemeMode
+import top.geek_studio.chenlongcould.musicplayer.data.isInProgress
+import top.geek_studio.chenlongcould.musicplayer.data.resolveCompletedSongs
+import top.geek_studio.chenlongcould.musicplayer.data.resolveInProgressSongs
+import top.geek_studio.chenlongcould.musicplayer.data.resolveLongFormSongs
 import top.geek_studio.chenlongcould.musicplayer.data.resolveMostPlayedSongs
 import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentSongs
 import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentlyAddedSongs
+import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentlyPlayedWithin
 import top.geek_studio.chenlongcould.musicplayer.data.resolveUnplayedSongs
+import top.geek_studio.chenlongcould.musicplayer.data.saturatingAdd
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsRepository
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
@@ -40,8 +46,12 @@ enum class LibrarySection {
     SONGS,
     FAVORITES,
     RECENT,
+    RECENT_WEEK,
     RECENTLY_ADDED,
     MOST_PLAYED,
+    IN_PROGRESS,
+    COMPLETED,
+    LONG_FORM,
     UNPLAYED,
     ALBUMS,
     ARTISTS,
@@ -71,7 +81,11 @@ data class MainUiState(
     val playbackStats: Map<String, PlaybackStats> = emptyMap(),
     val playedSongCount: Int = 0,
     val unplayedSongCount: Int = 0,
+    val inProgressSongCount: Int = 0,
+    val completedSongCount: Int = 0,
     val totalPlayCount: Long = 0L,
+    val totalCompletedCount: Long = 0L,
+    val totalListenTimeMs: Long = 0L,
     val query: String = "",
     val section: LibrarySection = LibrarySection.SONGS,
     val activeFilter: CollectionFilter? = null,
@@ -115,7 +129,6 @@ class MainViewModel(
     private var loadJob: Job? = null
     private var lyricsJob: Job? = null
     private var folderJob: Job? = null
-    private var lastRecordedPlayingMediaId: String? = null
 
     init {
         viewModelScope.launch {
@@ -172,18 +185,6 @@ class MainViewModel(
 
                 if (previousPlayback.mediaId != playback.mediaId) {
                     loadLyrics(playback.mediaId)
-                }
-
-                val mediaId = playback.mediaId
-                if (
-                    playback.isPlaying &&
-                    mediaId != null &&
-                    mediaId != lastRecordedPlayingMediaId
-                ) {
-                    lastRecordedPlayingMediaId = mediaId
-                    libraryStateRepository.recordPlayed(mediaId)
-                } else if (mediaId == null) {
-                    lastRecordedPlayingMediaId = null
                 }
             }
         }
@@ -577,7 +578,11 @@ class MainViewModel(
                 authorizedFolderSongCount = 0,
                 playedSongCount = 0,
                 unplayedSongCount = 0,
+                inProgressSongCount = 0,
+                completedSongCount = 0,
                 totalPlayCount = 0L,
+                totalCompletedCount = 0L,
+                totalListenTimeMs = 0L,
                 libraryWarnings = emptyList(),
                 isLoading = false,
                 errorMessage = null,
@@ -680,6 +685,13 @@ class MainViewModel(
                         recentMediaIds = current.recentMediaIds,
                     )
 
+                LibrarySection.RECENT_WEEK ->
+                    resolveRecentlyPlayedWithin(
+                        songs = library,
+                        playbackStats = current.playbackStats,
+                        nowMs = System.currentTimeMillis(),
+                    )
+
                 LibrarySection.RECENTLY_ADDED ->
                     resolveRecentlyAddedSongs(library)
 
@@ -688,6 +700,21 @@ class MainViewModel(
                         songs = library,
                         playbackStats = current.playbackStats,
                     )
+
+                LibrarySection.IN_PROGRESS ->
+                    resolveInProgressSongs(
+                        songs = library,
+                        playbackStats = current.playbackStats,
+                    )
+
+                LibrarySection.COMPLETED ->
+                    resolveCompletedSongs(
+                        songs = library,
+                        playbackStats = current.playbackStats,
+                    )
+
+                LibrarySection.LONG_FORM ->
+                    resolveLongFormSongs(library)
 
                 LibrarySection.UNPLAYED ->
                     resolveUnplayedSongs(
@@ -715,6 +742,13 @@ class MainViewModel(
             }
         val playedSongCount = availableStats.count { it.playCount > 0 }
         val totalPlayCount = availableStats.sumOf { it.playCount.toLong() }
+        val completedSongCount = availableStats.count { it.completedCount > 0 }
+        val totalCompletedCount = availableStats.sumOf { it.completedCount.toLong() }
+        val inProgressSongCount = availableStats.count(PlaybackStats::isInProgress)
+        val totalListenTimeMs =
+            availableStats.fold(0L) { total, stats ->
+                saturatingAdd(total, stats.totalListenTimeMs)
+            }
 
         _uiState.update {
             it.copy(
@@ -722,7 +756,11 @@ class MainViewModel(
                 totalSongCount = library.size,
                 playedSongCount = playedSongCount,
                 unplayedSongCount = (library.size - playedSongCount).coerceAtLeast(0),
+                inProgressSongCount = inProgressSongCount,
+                completedSongCount = completedSongCount,
                 totalPlayCount = totalPlayCount,
+                totalCompletedCount = totalCompletedCount,
+                totalListenTimeMs = totalListenTimeMs,
             )
         }
     }

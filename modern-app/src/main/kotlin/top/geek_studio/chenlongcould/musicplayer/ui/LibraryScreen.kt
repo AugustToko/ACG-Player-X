@@ -49,6 +49,7 @@ import java.util.Date
 import java.util.Locale
 import top.geek_studio.chenlongcould.musicplayer.data.displayMusicFolderPath
 import top.geek_studio.chenlongcould.musicplayer.data.isAuthorizedFolderPath
+import top.geek_studio.chenlongcould.musicplayer.data.progressPercent
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.ui.components.ArtworkImage
 import top.geek_studio.chenlongcould.musicplayer.ui.components.formatDuration
@@ -182,11 +183,23 @@ private fun librarySummary(state: MainUiState): String =
         LibrarySection.RECENT ->
             "最近播放 ${state.songs.size} 首 · 最多保留 100 首"
 
+        LibrarySection.RECENT_WEEK ->
+            "近 7 天 ${state.songs.size} 首 · 按最近播放排序"
+
         LibrarySection.RECENTLY_ADDED ->
             "最近添加 ${state.songs.size} 首 · 按可用时间排序"
 
         LibrarySection.MOST_PLAYED ->
-            "常听 ${state.songs.size} 首 · 累计 ${state.totalPlayCount} 次播放"
+            "常听 ${state.songs.size} 首 · 累计 ${state.totalPlayCount} 次 · ${formatListenTime(state.totalListenTimeMs)}"
+
+        LibrarySection.IN_PROGRESS ->
+            "继续听 ${state.songs.size} 首 · 全库 ${state.inProgressSongCount} 首"
+
+        LibrarySection.COMPLETED ->
+            "已听完 ${state.completedSongCount} 首 · 共 ${state.totalCompletedCount} 次"
+
+        LibrarySection.LONG_FORM ->
+            "长音频 ${state.songs.size} 首 · 20 分钟以上"
 
         LibrarySection.UNPLAYED ->
             "未播放 ${state.songs.size} 首 · 已播放 ${state.playedSongCount} 首"
@@ -265,8 +278,12 @@ private fun LibrarySectionSelector(
                             LibrarySection.SONGS -> "歌曲"
                             LibrarySection.FAVORITES -> "收藏"
                             LibrarySection.RECENT -> "最近"
+                            LibrarySection.RECENT_WEEK -> "近 7 天"
                             LibrarySection.RECENTLY_ADDED -> "新添加"
                             LibrarySection.MOST_PLAYED -> "常听"
+                            LibrarySection.IN_PROGRESS -> "继续听"
+                            LibrarySection.COMPLETED -> "已听完"
+                            LibrarySection.LONG_FORM -> "长音频"
                             LibrarySection.UNPLAYED -> "未播放"
                             LibrarySection.ALBUMS -> "专辑"
                             LibrarySection.ARTISTS -> "艺术家"
@@ -319,6 +336,20 @@ private fun LibraryContent(
             }
         }
 
+        LibrarySection.RECENT_WEEK -> {
+            SmartSongSection(
+                title = "近 7 天播放",
+                message = "只显示过去 7 天产生有效播放会话的歌曲。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song ->
+                    val timestamp = state.playbackStats[song.id.toString()]?.lastPlayedAtMs ?: 0L
+                    formatRelativePlaybackTime(timestamp)
+                },
+            )
+        }
+
         LibrarySection.RECENTLY_ADDED -> {
             SmartSongSection(
                 title = "最近添加",
@@ -341,6 +372,53 @@ private fun LibraryContent(
                     val count = state.playbackStats[song.id.toString()]?.playCount ?: 0
                     "$count 次播放"
                 },
+            )
+        }
+
+        LibrarySection.IN_PROGRESS -> {
+            SmartSongSection(
+                title = "继续听",
+                message = "保留已实际收听至少 10 秒、进度位于 10% 到 89% 的歌曲。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song ->
+                    state.playbackStats[song.id.toString()]?.let { stats ->
+                        "继续 ${stats.progressPercent()}% · ${formatDuration(stats.lastPositionMs)} / ${formatDuration(stats.durationMs)}"
+                    }
+                },
+            )
+        }
+
+        LibrarySection.COMPLETED -> {
+            SmartSongSection(
+                title = "已听完",
+                message = "达到曲尾阈值且满足有效收听时间后才计为完成，快进跳转不会虚增。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song ->
+                    state.playbackStats[song.id.toString()]?.let { stats ->
+                        buildString {
+                            append("听完 ${stats.completedCount} 次")
+                            if (stats.lastCompletedAtMs > 0L) {
+                                append(" · ")
+                                append(formatRelativePlaybackTime(stats.lastCompletedAtMs))
+                            }
+                        }
+                    }
+                },
+            )
+        }
+
+        LibrarySection.LONG_FORM -> {
+            SmartSongSection(
+                title = "长音频",
+                message = "时长不少于 20 分钟，适合播客、广播剧、现场和长篇合集。",
+                state = state,
+                onPlaySong = onPlaySong,
+                onToggleFavorite = onToggleFavorite,
+                contextLabel = { song -> "时长 ${formatDuration(song.durationMs)}" },
             )
         }
 
@@ -663,6 +741,32 @@ private fun formatAddedDate(dateAddedMs: Long): String {
     return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(dateAddedMs))
 }
 
+private fun formatRelativePlaybackTime(timestampMs: Long): String {
+    if (timestampMs <= 0L) return "时间未知"
+    val elapsedMs = (System.currentTimeMillis() - timestampMs).coerceAtLeast(0L)
+    val minuteMs = 60_000L
+    val hourMs = 60L * minuteMs
+    val dayMs = 24L * hourMs
+    return when {
+        elapsedMs < minuteMs -> "刚刚"
+        elapsedMs < hourMs -> "${elapsedMs / minuteMs} 分钟前"
+        elapsedMs < dayMs -> "${elapsedMs / hourMs} 小时前"
+        elapsedMs < 7L * dayMs -> "${elapsedMs / dayMs} 天前"
+        else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestampMs))
+    }
+}
+
+private fun formatListenTime(durationMs: Long): String {
+    val totalMinutes = durationMs.coerceAtLeast(0L) / 60_000L
+    val hours = totalMinutes / 60L
+    val minutes = totalMinutes % 60L
+    return when {
+        hours > 0L && minutes > 0L -> "收听 ${hours} 小时 ${minutes} 分"
+        hours > 0L -> "收听 ${hours} 小时"
+        else -> "收听 ${minutes} 分钟"
+    }
+}
+
 private data class CollectionSummary(
     val key: String,
     val name: String,
@@ -956,7 +1060,11 @@ private fun EmptyLibraryState(
             libraryIsEmpty -> "音乐库为空"
             section == LibrarySection.FAVORITES -> "还没有收藏歌曲"
             section == LibrarySection.RECENT -> "还没有播放记录"
+            section == LibrarySection.RECENT_WEEK -> "近 7 天还没有播放"
             section == LibrarySection.MOST_PLAYED -> "还没有播放统计"
+            section == LibrarySection.IN_PROGRESS -> "没有待继续的歌曲"
+            section == LibrarySection.COMPLETED -> "还没有听完的歌曲"
+            section == LibrarySection.LONG_FORM -> "没有长音频"
             section == LibrarySection.UNPLAYED -> "当前歌曲都已播放过"
             section == LibrarySection.RECENTLY_ADDED -> "没有可排序的歌曲"
             else -> "音乐库为空"
@@ -967,7 +1075,11 @@ private fun EmptyLibraryState(
             libraryIsEmpty -> "可以刷新系统媒体库，或授权另一个音乐目录。"
             section == LibrarySection.FAVORITES -> "点击歌曲右侧的星标即可加入收藏。"
             section == LibrarySection.RECENT -> "开始播放歌曲后，这里会按最近顺序记录。"
+            section == LibrarySection.RECENT_WEEK -> "过去 7 天没有产生有效播放会话。"
             section == LibrarySection.MOST_PLAYED -> "开始播放歌曲后，这里会按累计次数排序。"
+            section == LibrarySection.IN_PROGRESS -> "实际收听至少 10 秒并停在中间进度后，会出现在这里。"
+            section == LibrarySection.COMPLETED -> "接近曲尾且满足有效收听时间后，才会计为听完。"
+            section == LibrarySection.LONG_FORM -> "当前音乐库中没有 20 分钟以上的音频。"
             section == LibrarySection.UNPLAYED -> "当前音乐库里的歌曲已经全部产生播放记录。"
             section == LibrarySection.RECENTLY_ADDED -> "当前音乐来源没有提供可用的时间信息。"
             else -> "可以刷新系统媒体库，或授权另一个音乐目录。"
