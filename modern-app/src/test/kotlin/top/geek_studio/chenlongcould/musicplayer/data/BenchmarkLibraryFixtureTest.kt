@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import top.geek_studio.chenlongcould.musicplayer.ui.filterSongs
@@ -17,6 +18,15 @@ class BenchmarkLibraryFixtureTest {
         assertEquals(result.mediaStoreSongCount, result.songs.count { it.id > 0L })
         assertEquals(result.authorizedFolderSongCount, result.songs.count { it.id < 0L })
         assertTrue(result.songs.zipWithNext().all { (first, second) -> first.title < second.title })
+    }
+
+    @Test
+    fun fixtureModeCoversBenchmarkAndGeneratedProfileTargetsOnly() {
+        assertTrue(benchmarkFixturesEnabled("benchmark", explicitlyEnabled = true))
+        assertTrue(benchmarkFixturesEnabled("nonMinifiedRelease", explicitlyEnabled = false))
+        assertTrue(benchmarkFixturesEnabled("NONMINIFIEDRELEASE", explicitlyEnabled = false))
+        assertFalse(benchmarkFixturesEnabled("debug", explicitlyEnabled = false))
+        assertFalse(benchmarkFixturesEnabled("release", explicitlyEnabled = false))
     }
 
     @Test(timeout = 10_000L)
