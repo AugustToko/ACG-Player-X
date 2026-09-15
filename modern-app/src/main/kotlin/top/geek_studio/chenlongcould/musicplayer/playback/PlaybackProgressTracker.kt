@@ -38,30 +38,9 @@ internal class PlaybackProgressTracker(
                 positionMs <= RESTART_POSITION_MAX_MS &&
                 current.lastPositionMs >= completionPositionThresholdMs(durationMs)
         if (restarted) {
-            val previousUpdate =
-                when {
-                    !current.completionEmitted &&
-                        qualifiesAsCompleted(
-                            positionMs = current.lastPositionMs,
-                            durationMs = durationMs,
-                            listenedMs = current.sessionListenedMs,
-                        ) -> current.snapshot(completed = true, recordedAtMs = sample.wallClockMs)
-
-                    current.unflushedListenMs > 0L ->
-                        current.snapshot(completed = false, recordedAtMs = sample.wallClockMs)
-
-                    else -> null
-                }
+            val previousUpdate = current.finish(sample.wallClockMs)
             session = Session.from(sample, mediaId)
             return previousUpdate
-        }
-
-        if (current.completionEmitted) {
-            current.lastPositionMs = positionMs
-            current.durationMs = durationMs
-            current.lastElapsedRealtimeMs = sample.elapsedRealtimeMs.coerceAtLeast(0L)
-            current.wasPlaying = sample.isPlaying
-            return null
         }
 
         val previousWasPlaying = current.wasPlaying
@@ -69,16 +48,29 @@ internal class PlaybackProgressTracker(
             (sample.elapsedRealtimeMs - current.lastElapsedRealtimeMs)
                 .coerceAtLeast(0L)
         val positionDeltaMs = positionMs - current.lastPositionMs
-        if (
-            previousWasPlaying &&
-            elapsedDeltaMs in 1..maxSampleGapMs.coerceAtLeast(1L) &&
-            positionDeltaMs > 0L &&
-            positionDeltaMs <= elapsedDeltaMs * MAX_PLAYBACK_SPEED_MULTIPLIER + positionSlackMs
-        ) {
+        val naturallyListenedDeltaMs =
+            if (
+                previousWasPlaying &&
+                elapsedDeltaMs in 1..maxSampleGapMs.coerceAtLeast(1L) &&
+                positionDeltaMs > 0L &&
+                positionDeltaMs <= elapsedDeltaMs * MAX_PLAYBACK_SPEED_MULTIPLIER + positionSlackMs
+            ) {
+                positionDeltaMs
+            } else {
+                0L
+            }
+        if (naturallyListenedDeltaMs > 0L) {
             current.sessionListenedMs =
-                saturatingAdd(current.sessionListenedMs, positionDeltaMs)
+                saturatingAdd(current.sessionListenedMs, naturallyListenedDeltaMs)
             current.unflushedListenMs =
-                saturatingAdd(current.unflushedListenMs, positionDeltaMs)
+                saturatingAdd(current.unflushedListenMs, naturallyListenedDeltaMs)
+            if (positionMs >= completionPositionThresholdMs(durationMs)) {
+                current.completionZoneListenedMs =
+                    saturatingAdd(
+                        current.completionZoneListenedMs,
+                        naturallyListenedDeltaMs,
+                    )
+            }
         }
 
         current.lastPositionMs = positionMs
@@ -86,12 +78,7 @@ internal class PlaybackProgressTracker(
         current.lastElapsedRealtimeMs = sample.elapsedRealtimeMs.coerceAtLeast(0L)
         current.wasPlaying = sample.isPlaying
 
-        val completed =
-            qualifiesAsCompleted(
-                positionMs = positionMs,
-                durationMs = durationMs,
-                listenedMs = current.sessionListenedMs,
-            )
+        val completed = current.shouldEmitCompletion()
         val paused = previousWasPlaying && !sample.isPlaying
         val shouldFlush =
             completed ||
@@ -118,9 +105,19 @@ internal class PlaybackProgressTracker(
         var lastElapsedRealtimeMs: Long,
         var wasPlaying: Boolean,
         var sessionListenedMs: Long = 0L,
+        var completionZoneListenedMs: Long = 0L,
         var unflushedListenMs: Long = 0L,
         var completionEmitted: Boolean = false,
     ) {
+        fun shouldEmitCompletion(): Boolean =
+            !completionEmitted &&
+                qualifiesAsCompleted(
+                    positionMs = lastPositionMs,
+                    durationMs = durationMs,
+                    listenedMs = sessionListenedMs,
+                ) &&
+                completionZoneListenedMs >= requiredCompletionZoneListenMs(durationMs)
+
         fun snapshot(
             completed: Boolean,
             recordedAtMs: Long,
@@ -141,13 +138,7 @@ internal class PlaybackProgressTracker(
         }
 
         fun finish(recordedAtMs: Long): PlaybackProgressUpdate? {
-            if (completionEmitted) return null
-            val completed =
-                qualifiesAsCompleted(
-                    positionMs = lastPositionMs,
-                    durationMs = durationMs,
-                    listenedMs = sessionListenedMs,
-                )
+            val completed = shouldEmitCompletion()
             if (!completed && unflushedListenMs <= 0L) return null
             return snapshot(completed = completed, recordedAtMs = recordedAtMs)
         }
@@ -186,6 +177,14 @@ internal fun requiredCompletionListenMs(durationMs: Long): Long {
         .coerceAtLeast(minimum)
 }
 
+internal fun requiredCompletionZoneListenMs(durationMs: Long): Long {
+    if (durationMs <= 0L) return Long.MAX_VALUE
+    val remainingMs =
+        (durationMs - completionPositionThresholdMs(durationMs))
+            .coerceAtLeast(1L)
+    return minOf(COMPLETION_ZONE_LISTEN_MS, remainingMs)
+}
+
 internal fun qualifiesAsCompleted(
     positionMs: Long,
     durationMs: Long,
@@ -216,3 +215,4 @@ private const val STANDARD_COMPLETION_PERCENT = 90L
 private const val LONG_MEDIA_FINAL_WINDOW_MS = 5L * 60L * 1_000L
 private const val MINIMUM_COMPLETION_LISTEN_MS = 5_000L
 private const val MAXIMUM_COMPLETION_LISTEN_MS = 10L * 60L * 1_000L
+private const val COMPLETION_ZONE_LISTEN_MS = 5_000L

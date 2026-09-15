@@ -6,6 +6,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import top.geek_studio.chenlongcould.musicplayer.data.PlaybackProgressUpdate
 
 class PlaybackProgressTrackerTest {
     @Test
@@ -81,19 +82,57 @@ class PlaybackProgressTrackerTest {
     }
 
     @Test
-    fun completionIsEmittedOncePerPlaybackCycle() {
+    fun completionRequiresNaturalListeningInsideCompletionZone() {
         val tracker = PlaybackProgressTracker(flushIntervalMs = 60_000L)
-        tracker.update(
-            sample(
-                durationMs = 20_000L,
-                positionMs = 0L,
-                elapsedMs = 0L,
-                playing = true,
-            ),
-        )
+        tracker.update(sample(durationMs = 20_000L, positionMs = 0L, elapsedMs = 0L, playing = true))
+        for (second in 1..10) {
+            tracker.update(
+                sample(
+                    durationMs = 20_000L,
+                    positionMs = second * 1_000L,
+                    elapsedMs = second * 1_000L,
+                    playing = true,
+                ),
+            )
+        }
 
-        var completion =
-            (1..16).firstNotNullOfOrNull { second ->
+        val seekIntoEnd =
+            tracker.update(
+                sample(
+                    durationMs = 20_000L,
+                    positionMs = 16_000L,
+                    elapsedMs = 11_000L,
+                    playing = true,
+                ),
+            )
+        assertNull(seekIntoEnd)
+
+        var completion: PlaybackProgressUpdate? = null
+        for (second in 17..20) {
+            completion =
+                tracker.update(
+                    sample(
+                        durationMs = 20_000L,
+                        positionMs = second * 1_000L,
+                        elapsedMs = (second - 5L) * 1_000L,
+                        playing = true,
+                    ),
+                ) ?: completion
+        }
+
+        assertNotNull(completion)
+        assertTrue(completion?.completed == true)
+        assertEquals(14_000L, completion?.sessionListenedMs)
+    }
+
+    @Test
+    fun completionIsEmittedOnceAndTailListeningStillFlushes() {
+        val tracker = PlaybackProgressTracker(flushIntervalMs = 60_000L)
+        tracker.update(sample(durationMs = 20_000L, positionMs = 0L, elapsedMs = 0L, playing = true))
+
+        var completion: PlaybackProgressUpdate? = null
+        for (second in 1..19) {
+            completion =
                 tracker.update(
                     sample(
                         durationMs = 20_000L,
@@ -101,31 +140,37 @@ class PlaybackProgressTrackerTest {
                         elapsedMs = second * 1_000L,
                         playing = true,
                     ),
-                )
-            }
+                ) ?: completion
+        }
 
         assertNotNull(completion)
         assertTrue(completion?.completed == true)
-        assertEquals(16_000L, completion?.sessionListenedMs)
+        assertEquals(19_000L, completion?.sessionListenedMs)
 
-        completion =
+        val afterCompletion =
             tracker.update(
                 sample(
                     durationMs = 20_000L,
-                    positionMs = 17_000L,
-                    elapsedMs = 17_000L,
+                    positionMs = 20_000L,
+                    elapsedMs = 20_000L,
                     playing = true,
                 ),
             )
-        assertNull(completion)
+        assertNull(afterCompletion)
+
+        val tail = tracker.finish(recordedAtMs = 21_000L)
+        assertNotNull(tail)
+        assertFalse(tail?.completed == true)
+        assertEquals(1_000L, tail?.listenedDeltaMs)
+        assertEquals(20_000L, tail?.sessionListenedMs)
     }
 
     @Test
     fun repeatRestartBeginsNewCycleWithoutDuplicateCompletion() {
         val tracker = PlaybackProgressTracker(flushIntervalMs = 60_000L)
         tracker.update(sample(durationMs = 20_000L, positionMs = 0L, elapsedMs = 0L, playing = true))
-        var completion = null as top.geek_studio.chenlongcould.musicplayer.data.PlaybackProgressUpdate?
-        for (second in 1..16) {
+        var completion: PlaybackProgressUpdate? = null
+        for (second in 1..19) {
             completion =
                 tracker.update(
                     sample(
@@ -143,22 +188,23 @@ class PlaybackProgressTrackerTest {
                 sample(
                     durationMs = 20_000L,
                     positionMs = 0L,
-                    elapsedMs = 17_000L,
+                    elapsedMs = 20_000L,
                     playing = true,
                 ),
             )
         assertNull(restart)
 
-        tracker.update(sample(durationMs = 20_000L, positionMs = 1_000L, elapsedMs = 18_000L, playing = true))
-        val next = tracker.finish(recordedAtMs = 19_000L)
+        tracker.update(sample(durationMs = 20_000L, positionMs = 1_000L, elapsedMs = 21_000L, playing = true))
+        val next = tracker.finish(recordedAtMs = 22_000L)
         assertEquals(1_000L, next?.sessionListenedMs)
         assertFalse(next?.completed == true)
     }
 
     @Test
-    fun completionThresholdRequiresBothPositionAndMeaningfulListening() {
+    fun completionThresholdRequiresPositionOverallListeningAndTailListening() {
         assertEquals(16_000L, completionPositionThresholdMs(20_000L))
         assertEquals(10_000L, requiredCompletionListenMs(20_000L))
+        assertEquals(4_000L, requiredCompletionZoneListenMs(20_000L))
         assertFalse(qualifiesAsCompleted(16_000L, 20_000L, 9_999L))
         assertTrue(qualifiesAsCompleted(16_000L, 20_000L, 10_000L))
     }
