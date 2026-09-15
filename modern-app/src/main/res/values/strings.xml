@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ACG Player X</string>
+    <string name="playback_widget_name">ACG Player X 播放器</string>
+    <string name="playback_widget_description">显示当前歌曲并提供上一首、播放暂停和下一首控制。</string>
 </resources>
