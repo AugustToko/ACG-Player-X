@@ -11,6 +11,7 @@
 | 手机/大屏导航 | 完成 | Bottom Navigation / Navigation Rail | 折叠屏双栏 |
 | 主路由 | 完成 | `MainUiState.destination` | 类型安全深链 |
 | 动态快捷入口 | 完成 | 收藏、最近、新添加、常听 | OEM Launcher 实机验证 |
+| Glance 桌面播放小组件 | 完成 | 曲目信息、上一首、播放暂停、下一首、零状态入口和 MediaSession 动作 | 封面、进度与 Launcher/OEM 尺寸矩阵 |
 | 主题 | 完成 | 动态配色、亮/暗/系统、DataStore | 高对比度 |
 
 ## 音乐库
@@ -35,6 +36,7 @@
 | 状态恢复 | 完成 | 队列、索引、位置、随机、循环；服务重建后暂停 | 系统重启和低内存实机 |
 | 强制停止恢复门禁 | 完成 | benchmark 变体真实 `am force-stop` 后验证曲目与模式 | 多 Android 版本 |
 | 持久化耐久性 | 完成 | IO 线程同步提交；生命周期回调非阻塞写入 | 数据迁移版本号 |
+| 小组件状态同步 | 完成 | Timeline、元数据和 isPlaying 变化去抖写入轻量快照并更新 Glance | 进度节流与进程异常终止矩阵 |
 | 封面 | 完成 | ContentResolver、内嵌图片、LRU | 磁盘缓存和压力测试 |
 | LRC 导入/同步 | 完成 | UTF-8/GB18030、内部存储、逐行同步 | 同目录自动匹配 |
 | 歌词编辑/双语/逐字 | 未开始 | 无 | 独立编辑器和双时间轴 |
@@ -70,9 +72,9 @@
 
 | 能力 | 状态 | 当前实现 | 后续 |
 | --- | --- | --- | --- |
-| JVM 单元测试 | 部分完成 | 数据、歌单、M3U 便携路径、旧歌单辅助逻辑、LRC、恢复与夹具选择 | 覆盖率门槛 |
+| JVM 单元测试 | 部分完成 | 数据、歌单、M3U 便携路径、旧歌单辅助逻辑、LRC、恢复、Glance 文本状态与夹具选择 | 覆盖率门槛 |
 | Android Lint/APK | 完成 | Push/PR 阻断，含 AndroidTest 和 benchmark APK | Release lint |
-| 应用仪器化 | 部分完成 | API 35：导航、快捷入口、MediaSession、便携 M3U 文件往返、恢复存储 | 多版本/Provider |
+| 应用仪器化 | 部分完成 | API 35：导航、快捷入口、MediaSession、Glance 状态/Receiver、便携 M3U 文件往返、恢复存储 | 多版本/Provider/OEM Launcher |
 | Baseline/Startup Profile | 完成 | 独立 benchmark 模块生成并合入主源集 | 真机收益对比 |
 | 冷启动 Macrobenchmark | 完成 | None 与 Baseline Profile 两种模式 | 真机数值门槛 |
 | 设置页 FrameTiming | 完成 | API 35 托管设备双向滚动 | 截图关联 |
@@ -88,7 +90,7 @@
 | --- | --- | --- |
 | 音频标签编辑 | 未开始 | 写入授权 + 独立数据层 |
 | Live2D | 未开始 | AndroidView 隔离层 + 生命周期 |
-| 桌面小组件 | 未开始 | Jetpack Glance |
+| 桌面小组件 | 完成 | Jetpack Glance + MediaSession 控制；后续补封面、进度和更多尺寸 |
 | 购买/Bug Report/远程功能 | 未开始 | 重新评估价值和隐私 |
 
 ## 下一批顺序
@@ -97,4 +99,4 @@
 2. 目标真机启动、帧时、PSS、GC 与大型歌单/队列基线。
 3. 规则智能列表与播放完成度。
 4. SAF 增量索引、磁盘缓存与 Provider 变更监听。
-5. 歌词增强、Glance、Live2D 和标签编辑。
+5. 歌词增强、Live2D 和标签编辑。
