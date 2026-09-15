@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.playback
 
 import android.content.Intent
+import androidx.glance.appwidget.updateAll
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
@@ -16,6 +17,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import top.geek_studio.chenlongcould.musicplayer.widget.PlaybackWidget
+import top.geek_studio.chenlongcould.musicplayer.widget.PlaybackWidgetStateStore
+import top.geek_studio.chenlongcould.musicplayer.widget.toPlaybackWidgetState
 
 class PlaybackService : MediaSessionService() {
     private val serviceScope =
@@ -23,9 +27,11 @@ class PlaybackService : MediaSessionService() {
 
     private lateinit var player: ExoPlayer
     private lateinit var playbackStateStore: PlaybackStateStore
+    private lateinit var playbackWidgetStateStore: PlaybackWidgetStateStore
     private var mediaSession: MediaSession? = null
     private var queueSaveJob: Job? = null
     private var positionSaveJob: Job? = null
+    private var widgetUpdateJob: Job? = null
 
     private val playerListener =
         object : Player.Listener {
@@ -45,6 +51,14 @@ class PlaybackService : MediaSessionService() {
                 ) {
                     persistPosition()
                 }
+                if (
+                    events.contains(Player.EVENT_TIMELINE_CHANGED) ||
+                    events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
+                    events.contains(Player.EVENT_MEDIA_METADATA_CHANGED) ||
+                    events.contains(Player.EVENT_IS_PLAYING_CHANGED)
+                ) {
+                    publishWidgetState()
+                }
             }
         }
 
@@ -52,6 +66,7 @@ class PlaybackService : MediaSessionService() {
         super.onCreate()
 
         playbackStateStore = PlaybackStateStore(this)
+        playbackWidgetStateStore = PlaybackWidgetStateStore(this)
         val audioAttributes =
             AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -71,6 +86,7 @@ class PlaybackService : MediaSessionService() {
             MediaSession.Builder(this, player)
                 .build()
 
+        publishWidgetState()
         restorePlaybackState()
         startPeriodicPositionPersistence()
     }
@@ -87,7 +103,11 @@ class PlaybackService : MediaSessionService() {
     override fun onDestroy() {
         queueSaveJob?.cancel()
         positionSaveJob?.cancel()
+        widgetUpdateJob?.cancel()
         playbackStateStore.savePositionAsync(player.capturePositionSnapshot())
+        playbackWidgetStateStore.write(
+            player.toPlaybackWidgetState().copy(isPlaying = false),
+        )
         player.removeListener(playerListener)
         mediaSession?.release()
         mediaSession = null
@@ -114,6 +134,7 @@ class PlaybackService : MediaSessionService() {
             )
             player.prepare()
             player.pause()
+            publishWidgetState()
         }
     }
 
@@ -148,6 +169,19 @@ class PlaybackService : MediaSessionService() {
             }
     }
 
+    private fun publishWidgetState() {
+        val snapshot = player.toPlaybackWidgetState()
+        widgetUpdateJob?.cancel()
+        widgetUpdateJob =
+            serviceScope.launch {
+                delay(WIDGET_UPDATE_DEBOUNCE_MS)
+                withContext(Dispatchers.IO) {
+                    playbackWidgetStateStore.write(snapshot)
+                }
+                PlaybackWidget().updateAll(this@PlaybackService)
+            }
+    }
+
     private fun startPeriodicPositionPersistence() {
         serviceScope.launch {
             while (isActive) {
@@ -161,6 +195,7 @@ class PlaybackService : MediaSessionService() {
 
     private companion object {
         const val QUEUE_SAVE_DEBOUNCE_MS = 300L
+        const val WIDGET_UPDATE_DEBOUNCE_MS = 180L
         const val POSITION_SAVE_INTERVAL_MS = 5_000L
     }
 }
