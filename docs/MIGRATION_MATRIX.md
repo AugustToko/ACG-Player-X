@@ -54,8 +54,8 @@
 | M3U 读取与编码 | 完成 | OpenDocument、UTF-8/BOM、GB18030、4 MB | Provider 样本 |
 | 自动匹配与冲突保护 | 完成 | ID/URI 校验、路径、元数据 | 语义匹配可选 |
 | 导入预览/手工映射 | 完成 | 状态、候选、排除、恢复、完整库搜索 | 截图门禁 |
-| M3U8 导出 | 完成 | EXTINF、ACG 注释、离线占位 | 相对路径策略 |
-| 旧 MediaStore Playlist | 未开始 | 无 | 只读导入评估 |
+| M3U8 便携导出 | 完成 | 相对路径、精确内容 URI 注释、ACG 元数据与离线占位 | 更多第三方播放器样本 |
+| 旧 MediaStore Playlist | 完成 | 已弃用系统表的一次性只读导入，保持顺序与媒体 ID，不回写 | Android 旧版本和 OEM Provider 样本 |
 
 ## 智能音乐库
 
@@ -70,9 +70,9 @@
 
 | 能力 | 状态 | 当前实现 | 后续 |
 | --- | --- | --- | --- |
-| JVM 单元测试 | 部分完成 | 数据、歌单、M3U、LRC、恢复与夹具选择 | 覆盖率门槛 |
+| JVM 单元测试 | 部分完成 | 数据、歌单、M3U 便携路径、旧歌单辅助逻辑、LRC、恢复与夹具选择 | 覆盖率门槛 |
 | Android Lint/APK | 完成 | Push/PR 阻断，含 AndroidTest 和 benchmark APK | Release lint |
-| 应用仪器化 | 部分完成 | API 35：导航、快捷入口、MediaSession、文件往返、恢复存储 | 多版本/Provider |
+| 应用仪器化 | 部分完成 | API 35：导航、快捷入口、MediaSession、便携 M3U 文件往返、恢复存储 | 多版本/Provider |
 | Baseline/Startup Profile | 完成 | 独立 benchmark 模块生成并合入主源集 | 真机收益对比 |
 | 冷启动 Macrobenchmark | 完成 | None 与 Baseline Profile 两种模式 | 真机数值门槛 |
 | 设置页 FrameTiming | 完成 | API 35 托管设备双向滚动 | 截图关联 |
@@ -95,6 +95,6 @@
 
 1. 真实 SAF Provider、权限撤销、文件移动和系统选择器测试。
 2. 目标真机启动、帧时、PSS、GC 与大型歌单/队列基线。
-3. M3U 相对路径导出和旧 MediaStore Playlist 只读导入。
-4. 规则智能列表与播放完成度。
-5. SAF 增量索引、歌词增强、Glance、Live2D 和标签编辑。
+3. 规则智能列表与播放完成度。
+4. SAF 增量索引、磁盘缓存与 Provider 变更监听。
+5. 歌词增强、Glance、Live2D 和标签编辑。

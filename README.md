@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活动应用已经迁移到 **Jetpack Compose + Material 3 + AndroidX Media3**；旧 Java/XML/Fragment 源码仍保留作迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha15**。
+当前开发版本：**2.0.0-alpha16**。
 
 ## 已实现能力
 
@@ -48,6 +48,9 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 媒体 ID、内容 URI、文件名/目录、标题/艺术家/时长分层匹配
 - 跨设备 MediaStore ID 与 `content://` URI 碰撞保护
 - 导入预览、歧义候选、手工映射、排除/恢复自动结果和最终顺序去重
+- 可用歌曲导出为便携相对路径，并通过 `#ACGPLAYER-CONTENT-URI` 保留同设备精确回导能力
+- Android 存储根与 Windows 盘符会从导出路径中剥离，路径穿越片段会被中和
+- 旧 MediaStore Playlist 支持一次性只读导入，保持播放顺序和媒体 ID，不回写或删除系统歌单
 
 ### Compose 体验
 
@@ -145,6 +148,7 @@ API 35 应用仪器化测试：
 - Android 12L 及以下：`READ_EXTERNAL_STORAGE`
 - 用户目录：`OpenDocumentTree` + 持久只读 URI 权限
 - M3U/M3U8 与歌词：系统单文件选择器
+- 旧 MediaStore Playlist：仅在系统仍公开兼容表且已有音乐媒体权限时只读迁移
 - Android 13+ 播放通知：`POST_NOTIFICATIONS`
 - 后台播放：`FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
@@ -155,7 +159,6 @@ API 35 应用仪器化测试：
 - 真实 DocumentsProvider、SD 卡、USB、云盘和持久授权撤销矩阵
 - 低内存杀进程、系统重启、通知、锁屏、蓝牙、车机与 OEM 后台限制
 - Android 多版本实机性能门槛和 PSS / GC 监控
-- M3U 相对路径导出与旧 MediaStore Playlist 只读导入
 - 规则智能列表和播放完成度统计
 - SAF 增量索引、磁盘缓存与 Provider 变更监听
 - 歌词编辑、双语/逐字歌词、音频标签编辑、Glance 小组件和 Live2D 隔离适配

@@ -14,7 +14,7 @@ DataStore + 本地文件存储
 Baseline Profile + Macrobenchmark
 ```
 
-工具链：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。当前版本为 `2.0.0-alpha15`。
+工具链：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。当前版本为 `2.0.0-alpha16`。
 
 逻辑模块仍为 `:app`，实际目录映射到 `modern-app/`；旧 `app/` 与 `appthemehelper/` 不参与默认构建。
 
@@ -41,6 +41,9 @@ PlaylistViewModel
   ├── PlaylistTransferRepository
   ├── M3U 预览/映射
   └── 单步撤销快照
+
+PlaylistTransferBar
+  └── LegacyMediaStorePlaylistRepository ── 只读兼容迁移
 
 PlaybackService
   ├── ExoPlayer
@@ -96,6 +99,10 @@ OpenDocument
   → 一次性创建歌单
 ```
 
+M3U8 导出对当前可用歌曲写入便携相对路径，剥离 Android 存储根和 Windows 盘符，并中和 `..` 路径片段。同时使用 `#ACGPLAYER-CONTENT-URI` 保存同设备精确 URI，继续附带媒体 ID、文件名、目录和离线占位注释。第三方播放器可以忽略这些注释，ACG Player X 回导时则能先精确匹配，再回退到可移植元数据。
+
+旧 MediaStore Playlist 自 API 31 起属于弃用兼容接口。本项目仅提供一次性只读迁移：读取名称、播放顺序和音频 ID，写入自己的 DataStore 歌单；不会创建、更新或删除系统 Playlist 记录。系统不再公开该表、权限不足或 OEM Provider 不兼容时，会给出可操作错误并保留 M3U 导入路径。
+
 LRC 使用纯 Kotlin parser，导入后复制到应用内部目录，支持 UTF-8/GB18030、文件 offset、每曲偏移、逐行同步和点击跳转。
 
 ## 6. 性能工程
@@ -133,6 +140,7 @@ Process recovery + Macrobenchmark smoke suite
 - 不使用 requestLegacyExternalStorage
 - 不启用明文网络
 - 音频、收藏、历史、统计、歌词和歌单均留在本地
+- 旧系统歌单迁移只读，不回写 MediaStore Playlist
 - 当前树已删除旧签名材料、Firebase 配置和发布产物
 
 Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前仍须轮换。
@@ -147,9 +155,9 @@ Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前�
 
 ### P1
 
-- M3U 相对路径导出与旧 MediaStore Playlist 只读导入
 - 规则智能列表和播放完成度
 - SAF 增量索引、磁盘缓存和目录层级导航
+- M3U 与旧系统歌单的更多 OEM/第三方样本回归
 
 ### P2
 
