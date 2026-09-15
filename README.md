@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活动应用已经迁移到 **Jetpack Compose + Material 3 + AndroidX Media3**；旧 Java/XML/Fragment 源码仍保留作迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha16**。
+当前开发版本：**2.0.0-alpha17**。
 
 ## 已实现能力
 
@@ -27,6 +27,16 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 队列和位置的常规保存使用可确认落盘的后台写入
 - API 35 性能设备会真实执行 `am force-stop`，验证队列、随机和循环模式恢复
 - 专辑封面、音频内嵌图片回退、尺寸采样和受限 LRU 缓存
+
+### 桌面播放小组件
+
+- Jetpack Glance 桌面播放小组件
+- 显示当前曲目和艺术家
+- 上一首、播放/暂停、下一首控制直接连接现有 MediaSession
+- 没有播放队列时提供安全的“打开播放器”入口
+- Media3 时间线、媒体元数据和播放状态变化会去抖同步到小组件
+- 小组件状态使用独立轻量快照保存，应用或服务重建后仍可显示最近上下文
+- 亮色和深色使用公开的 Glance 日夜颜色 API，不依赖受限资源解析接口
 
 ### 歌词
 
@@ -68,7 +78,7 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 设置页滚动 FrameTiming Macrobenchmark
 - 10,000 首混合资料库滚动 FrameTiming Macrobenchmark
 - 10,000 首夹具由 7,000 个 MediaStore 风格和 3,000 个 SAF 风格条目组成，只在 benchmark/profile 变体启用
-- API 35 AOSP ATD 托管设备执行 Compose、MediaSession、文件往返和进程恢复测试
+- API 35 AOSP ATD 托管设备执行 Compose、MediaSession、Glance 状态、文件往返和进程恢复测试
 - 性能、托管设备与 Profile 报告都会作为 GitHub Actions artifact 保留
 
 详细说明见 [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) 和 [`docs/TESTING.md`](docs/TESTING.md)。
@@ -84,6 +94,7 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 | minSdk | 23 |
 | Compose BOM | 2026.08.00 |
 | AndroidX Media3 | 1.11.0 |
+| AndroidX Glance AppWidget | 1.2.0 |
 | AndroidX Benchmark / Baseline Profile | 1.5.0 |
 | AndroidX Lifecycle | 2.11.0 |
 | AndroidX DataStore | 1.2.1 |
@@ -98,6 +109,7 @@ modern-app/                       活动 Compose 应用
   src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U 与性能夹具
   src/main/kotlin/.../lyrics/     LRC 解析、存储与歌词状态
   src/main/kotlin/.../playback/   Media3、队列和恢复状态
+  src/main/kotlin/.../widget/     Glance 小组件、MediaSession 动作与轻量状态
   src/main/kotlin/.../ui/         Compose 页面和编辑器
   src/test/                       JVM 单元测试
   src/androidTest/                应用设备级测试
@@ -152,7 +164,7 @@ API 35 应用仪器化测试：
 - Android 13+ 播放通知：`POST_NOTIFICATIONS`
 - 后台播放：`FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
-应用不申请共享存储写权限，不启用明文网络，也不使用 legacy external storage。收藏、历史、统计、歌词索引和歌单均保存在设备本地。
+应用不申请共享存储写权限，不启用明文网络，也不使用 legacy external storage。收藏、历史、统计、歌词索引、歌单和小组件快照均保存在设备本地。
 
 ## 当前剩余重点
 
@@ -161,7 +173,8 @@ API 35 应用仪器化测试：
 - Android 多版本实机性能门槛和 PSS / GC 监控
 - 规则智能列表和播放完成度统计
 - SAF 增量索引、磁盘缓存与 Provider 变更监听
-- 歌词编辑、双语/逐字歌词、音频标签编辑、Glance 小组件和 Live2D 隔离适配
+- 歌词编辑、双语/逐字歌词、音频标签编辑和 Live2D 隔离适配
+- 小组件封面、播放进度和不同 Launcher/OEM 尺寸矩阵
 - 睡眠定时、均衡器、无缝播放与正式签名发布流水线
 
 - 技术说明：[`docs/MODERNIZATION.md`](docs/MODERNIZATION.md)
