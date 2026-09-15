@@ -1,25 +1,30 @@
 # ACG Player X 现代化说明
 
-## 1. 目标与基线
+## 1. 目标与当前基线
 
-原项目主要实现停留在 2020 年，采用 Java/XML/Fragment、ButterKnife、SlidingUpPanel、旧 MediaPlayer 控制、legacy storage、Fabric、JCenter 和旧 Gradle 工具链。现代化分支将活动应用替换为 Kotlin DSL、Version Catalog、Jetpack Compose、Material 3、Media3、DataStore 和 SAF。
+原项目主要停留在 2020 年的 Java/XML/Fragment、ButterKnife、SlidingUpPanel、旧播放控制、legacy storage、Fabric、JCenter 和旧 Gradle 工具链。
 
-当前基线：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。
+当前活动实现为：
+
+```text
+Jetpack Compose + Material 3
+Media3 ExoPlayer + MediaSessionService
+MediaStore + SAF
+DataStore + 本地文件存储
+Baseline Profile + Macrobenchmark
+```
+
+工具链：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。当前版本为 `2.0.0-alpha15`。
 
 逻辑模块仍为 `:app`，实际目录映射到 `modern-app/`；旧 `app/` 与 `appthemehelper/` 不参与默认构建。
 
-## 2. 当前架构
+## 2. 架构
 
 ```text
 MainActivity
-  ├── cold/warm shortcut action handling
   └── AcgPlayerApp
         ├── LibraryScreen
         ├── PlaylistsScreen
-        │     ├── PlaylistTransferBar
-        │     ├── PlaylistBatchEditorOverlay
-        │     ├── PlaylistDragReorderOverlay
-        │     └── PlaylistImportPreviewDialog
         ├── NowPlayingScreen
         └── SettingsScreen
 
@@ -32,156 +37,122 @@ MainViewModel
   └── PlayerConnection ── MediaController
 
 PlaylistViewModel
-  ├── PlaylistRepository ── Preferences DataStore
+  ├── PlaylistRepository
   ├── PlaylistTransferRepository
-  │     ├── M3uPlaylistCodec
-  │     └── PlaylistImportPreview
-  ├── one-step undo snapshot
-  └── PlayerConnection ── same MediaSession
+  ├── M3U 预览/映射
+  └── 单步撤销快照
 
 PlaybackService
   ├── ExoPlayer
   ├── MediaSession
   └── PlaybackStateStore
+
+benchmark
+  ├── BaselineProfileGenerator
+  ├── StartupBenchmark
+  ├── SettingsScrollBenchmark
+  ├── LargeLibraryScrollBenchmark
+  └── PlaybackProcessRecoveryTest
 ```
 
 ## 3. 音乐来源
 
-- MediaStore 分版本读取 `RELATIVE_PATH` 或旧 `DATA`
-- 保存 `DISPLAY_NAME`，最近添加优先使用 `DATE_ADDED`
-- SAF 使用 `OpenDocumentTree` 持久只读授权
-- DocumentsContract BFS 扫描，限制 20,000 项和 32 层
+- MediaStore 分版本读取 RELATIVE_PATH 或旧 DATA
+- 保存 DISPLAY_NAME，最近添加优先 DATE_ADDED
+- SAF 持久只读授权，DocumentsContract BFS 扫描
+- 单目录限制 20,000 项和 32 层
 - SAF URI 通过 SHA-256 派生稳定负数媒体 ID
 - MediaStore 与 SAF 按 URI 和元数据指纹合并，冲突时优先 MediaStore
-- MediaStore 使用 ContentObserver 去抖刷新；SAF 使用进程内缓存与主动重扫
+- MediaStore 使用 ContentObserver 去抖刷新；SAF 使用缓存和主动重扫
 
-## 4. 播放与歌词
+## 4. 播放与恢复
 
-- PlaybackService 托管 ExoPlayer 和 MediaSession
-- PlayerConnection 异步连接 MediaController
-- 播放状态通过 `StateFlow<PlaybackUiState>` 驱动 Compose
-- PlaybackStateStore 保存队列、索引、位置、随机和循环状态
-- 服务重建后恢复上下文并保持暂停
-- LRC 使用纯 Kotlin parser，导入后复制到应用内部目录
-- 封面链路为专辑 URI → 图片流/缩略图 → 音频内嵌图片 → Material 3 占位
+PlaybackService 托管 ExoPlayer 和 MediaSession，PlayerConnection 通过异步 MediaController 将状态暴露给 Compose。
 
-## 5. 自定义歌单
+PlaybackStateStore 保存：
 
-`UserPlaylist` 保存 UUID、规范化名称、有序媒体 ID 以及创建/更新时间。MediaStore 正数 ID 与 SAF 稳定负数 ID 可以混排。
+- 完整队列和媒体元数据；
+- 当前索引和位置；
+- 随机和循环模式。
 
-歌单支持创建、重命名、删除、添加、移出、清空、搜索、顺序/随机播放、单曲交换、批量选择、批量置顶/置底/移出和任意位置长按拖拽。
+完整队列与常规位置保存使用后台同步提交，以便调用完成时数据已经落盘。生命周期回调保留非阻塞写入，避免主线程磁盘 I/O。
 
-拖拽期间只更新 Compose 本地草稿；保存时校验新旧媒体 ID 集合完全一致，并只执行一次 DataStore 写入。不可用媒体项目仍参与排序。破坏性媒体 ID 修改保存一次进程内快照，并通过 Snackbar 提供单步撤销。
+Timeline 变化采用 300ms 去抖。快照在去抖结束后捕获，队列提交完成后再补写最新位置和模式，避免首次建队列时快速切换随机/循环被旧状态覆盖。
 
-## 6. M3U 导入与预览
+服务重建会恢复上下文、prepare，并保持暂停。Benchmark 设备测试进一步执行真实 `am force-stop` 和重新启动，验证当前曲目、随机和循环模式。
 
-导入链路为：
+## 5. 歌单、M3U 与歌词
+
+自定义歌单保存 UUID、规范化名称、有序媒体 ID 和时间戳，支持 MediaStore 与 SAF 混排、批量编辑、拖拽、不在线项目保序和 Snackbar 撤销。
+
+M3U 导入链路：
 
 ```text
 OpenDocument
-  ↓
-读取与编码识别
-  ↓
-parseM3uPlaylist
-  ↓
-resolveM3uPlaylistDetailed
-  ↓
-PlaylistImportPreview
-  ↓ 用户审查、排除、恢复或手工映射
-finalizePlaylistImport
-  ↓
-一次性创建 UserPlaylist
+  → 编码识别
+  → 解析
+  → 分层自动匹配
+  → 逐条预览/手工映射
+  → 一次性创建歌单
 ```
 
-支持 UTF-8、UTF-8 BOM 和 GB18030；单文件最大 4 MB，最多 20,000 个位置条目。标准字段包括 `#EXTM3U`、`#PLAYLIST` 和 `#EXTINF`，未知注释会被忽略。
+LRC 使用纯 Kotlin parser，导入后复制到应用内部目录，支持 UTF-8/GB18030、文件 offset、每曲偏移、逐行同步和点击跳转。
 
-匹配按可靠性递减：
+## 6. 性能工程
 
-1. 经过文件名/元数据校验的 ACG 媒体 ID
-2. 经过同样校验的精确内容 URI
-3. 文件名与目录提示
-4. 标题、艺术家和允许 3 秒误差的时长
+独立 benchmark 模块目标为 release-like benchmark 变体。Profile 插件将生成规则合并到应用主源集，ProfileInstaller 为兼容设备提供安装支持。
 
-不同设备复用同一 MediaStore 数字 ID 或内容 URI 时，不会绕过可移植提示直接绑定。
+性能夹具固定为 10,000 首：7,000 MediaStore 风格、3,000 SAF 风格。夹具只在 benchmark 和 Profile 目标变体启用。
 
-每个原始条目保存索引、位置、元数据、自动结果、候选集合、状态和用户最终选择。用户可以搜索导入条目、仅看未处理项、排除或恢复自动结果、从候选中选择，或搜索完整音乐库进行手工映射。
+门禁覆盖：
 
-同一媒体 ID 最终只保留第一次出现；最终歌单按原始 M3U 索引排序。取消预览不会创建歌单，也不会修改已有歌单。
+- 无编译与 Baseline Profile 冷启动；
+- 设置页 FrameTiming；
+- 10,000 首资料库 FrameTiming；
+- 强制停止后的播放上下文恢复。
 
-## 7. M3U 导出
+具体命令和限制见 `docs/PERFORMANCE.md`。
 
-导出通过 `CreateDocument` 写入 UTF-8 M3U8。除标准 EXTINF 外，附带可忽略的 `#ACGPLAYER-MEDIA-ID`、文件名和目录注释。当前不可用项目使用 `acg-player://media/<id>` 保留顺序。
-
-## 8. Alpha12 测试架构
-
-### 静态与 JVM 门禁
-
-Push 和 Pull Request 都执行：
-
-```bash
-./gradlew --no-daemon \
-  :app:lintDebug \
-  :app:testDebugUnitTest \
-  :app:assembleDebug \
-  :app:assembleDebugAndroidTest
-```
-
-这会阻断 Lint、单元测试、应用 APK 或测试 APK 的编译/打包回归。
-
-### API 35 托管设备
-
-Pull Request、默认分支和手动运行还会启动：
+## 7. CI 门禁
 
 ```text
-Pixel 2
-API 35
-AOSP ATD
-x86_64
-系统动画关闭
+Lint + JVM tests + APK builds
+  ↓
+API 35 application instrumentation
+  ↓
+Baseline/Startup Profile generation
+  ↓
+Process recovery + Macrobenchmark smoke suite
 ```
 
-设备测试通过 `:app:pixel2Api35DebugAndroidTest` 执行。Linux runner 会显式开放 `/dev/kvm`，失败或成功报告均上传为 7 天 artifact。
+成功或失败均上传设备和性能报告。普通分支 Push 只运行构建层，PR、默认分支和手动运行执行完整设备与性能链路。
 
-### 当前设备级覆盖
+## 8. 安全与数据边界
 
-- Compose 壳层在音乐库与设置页之间导航
-- 暖启动快捷入口进入收藏页
-- Activity recreate 后保留当前目的地
-- MediaController 连接 PlaybackService 的 MediaSession，并验证初始暂停状态
-- M3U 预览待处理筛选与手工映射回调
-- LyricsRepository 的 UTF-8 导入、内部存储读取、用户偏移和删除清理
-- LyricsRepository 的 GB18030 回退解码
-- PlaylistTransferRepository 的文件 URI 导入预览、UTF-8 M3U8 导出、离线项目与再导入
+- 不申请共享存储写权限
+- 不使用 requestLegacyExternalStorage
+- 不启用明文网络
+- 音频、收藏、历史、统计、歌词和歌单均留在本地
+- 当前树已删除旧签名材料、Firebase 配置和发布产物
 
-快捷入口测试通过独立动作分发入口验证 ViewModel 路由，不替换 ActivityScenario 的原始启动 Intent，避免生命周期跟踪失效。
+Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前仍须轮换。
 
-详细测试命令和剩余边界见 `docs/TESTING.md`。
-
-## 9. 仍需实机覆盖
-
-- Android 8/12/13/16/17 的权限和前台服务差异
-- 真实 DocumentsProvider、系统文件选择器与持久 URI 授权撤销
-- 系统强制进程回收后的播放、导航和 DataStore 恢复
-- 通知、锁屏、蓝牙、车机和 OEM 后台限制
-- 10,000 首音乐库、数千首歌单、大队列和大歌词
-
-## 10. 后续优先级
+## 9. 后续优先级
 
 ### P0
 
-- Baseline Profile、Macrobenchmark、大型混合库/歌单/队列基准
-- 真实 SAF Provider、权限撤销、文件移动和播放错误恢复测试
-- 强制进程回收、通知和前台服务仪器化测试
+- 真实 DocumentsProvider、授权撤销、文件移动和系统选择器矩阵
+- 低内存杀进程、系统重启、通知和 OEM 后台限制
+- 目标硬件冷启动、帧时、PSS、GC 和首帧门槛
 
 ### P1
 
 - M3U 相对路径导出与旧 MediaStore Playlist 只读导入
-- 类型安全、可恢复的统一导航和歌单深链
-- 规则智能列表、播放完成度和时间窗口统计
-- SAF 增量索引、磁盘缓存和目录面包屑
+- 规则智能列表和播放完成度
+- SAF 增量索引、磁盘缓存和目录层级导航
 
 ### P2
 
-- 同目录歌词、歌词编辑、双语与逐字歌词
-- 音频标签编辑、Glance 小组件和 Live2D 隔离层
-- 睡眠定时、均衡器、无缝播放和发布流水线
+- 歌词编辑、双语与逐字歌词
+- 标签编辑、Glance 小组件和 Live2D 隔离层
+- 睡眠定时、均衡器、无缝播放和正式发布流水线

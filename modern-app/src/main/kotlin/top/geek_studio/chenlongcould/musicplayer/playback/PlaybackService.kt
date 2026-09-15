@@ -125,8 +125,14 @@ class PlaybackService : MediaSessionService() {
                 // Capture after the debounce so rapid repeat/shuffle changes cannot be overwritten
                 // by the stale state that existed when the timeline event first arrived.
                 val snapshot = player.captureQueueSnapshot()
-                withContext(Dispatchers.IO) {
-                    playbackStateStore.saveQueue(snapshot)
+                val queuePersisted =
+                    withContext(Dispatchers.IO) {
+                        playbackStateStore.saveQueue(snapshot)
+                    }
+                // Capture once more after the durable queue write. This closes the small window in
+                // which playback modes can change while SharedPreferences is committing the queue.
+                if (queuePersisted) {
+                    persistPosition()
                 }
             }
     }
