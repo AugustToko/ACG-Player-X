@@ -3,6 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.widget
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.Button
@@ -15,6 +16,7 @@ import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -26,9 +28,7 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import top.geek_studio.chenlongcould.musicplayer.MainActivity
-import top.geek_studio.chenlongcould.musicplayer.R
 
 class PlaybackWidget : GlanceAppWidget() {
     override suspend fun provideGlance(
@@ -57,15 +57,28 @@ private fun PlaybackWidgetContent(
     state: PlaybackWidgetState,
     openPlayerIntent: Intent,
 ) {
-    val titleColor = ColorProvider(R.color.widget_on_background)
-    val subtitleColor = ColorProvider(R.color.widget_on_background_secondary)
+    val backgroundColor =
+        ColorProvider(
+            day = Color(0xFFFFF8FF),
+            night = Color(0xFF1D1B20),
+        )
+    val titleColor =
+        ColorProvider(
+            day = Color(0xFF1D1B20),
+            night = Color(0xFFE6E0E9),
+        )
+    val subtitleColor =
+        ColorProvider(
+            day = Color(0xFF49454F),
+            night = Color(0xFFCAC4D0),
+        )
     val openPlayerAction = actionStartActivity(openPlayerIntent)
 
     Column(
         modifier =
             GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(R.color.widget_background))
+                .background(backgroundColor)
                 .padding(16.dp),
     ) {
         Text(
@@ -100,7 +113,6 @@ private fun PlaybackWidgetContent(
                 Button(
                     text = "上一首",
                     onClick = actionRunCallback<PreviousPlaybackWidgetAction>(),
-                    enabled = state.hasPrevious,
                 )
                 Spacer(GlanceModifier.width(8.dp))
                 Button(
