@@ -118,11 +118,13 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun persistQueue() {
-        val snapshot = player.captureQueueSnapshot()
         queueSaveJob?.cancel()
         queueSaveJob =
             serviceScope.launch {
                 delay(QUEUE_SAVE_DEBOUNCE_MS)
+                // Capture after the debounce so rapid repeat/shuffle changes cannot be overwritten
+                // by the stale state that existed when the timeline event first arrived.
+                val snapshot = player.captureQueueSnapshot()
                 withContext(Dispatchers.IO) {
                     playbackStateStore.saveQueue(snapshot)
                 }

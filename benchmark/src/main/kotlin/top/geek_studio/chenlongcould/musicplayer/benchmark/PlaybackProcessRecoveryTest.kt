@@ -40,6 +40,8 @@ class PlaybackProcessRecoveryTest {
             )
         searchField.click()
         searchField.text = SONG_QUERY
+        device.pressBack()
+        device.waitForIdle()
 
         requireUiObject(
             selector = By.text(SONG_TITLE),
