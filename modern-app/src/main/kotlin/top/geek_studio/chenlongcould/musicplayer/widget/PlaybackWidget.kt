@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,8 +36,14 @@ class PlaybackWidget : GlanceAppWidget() {
         id: GlanceId,
     ) {
         val state = PlaybackWidgetStateStore(context).read()
+        val openPlayerIntent =
+            Intent(context, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         provideContent {
-            PlaybackWidgetContent(state)
+            PlaybackWidgetContent(
+                state = state,
+                openPlayerIntent = openPlayerIntent,
+            )
         }
     }
 }
@@ -46,9 +53,13 @@ class PlaybackWidgetReceiver : GlanceAppWidgetReceiver() {
 }
 
 @Composable
-private fun PlaybackWidgetContent(state: PlaybackWidgetState) {
+private fun PlaybackWidgetContent(
+    state: PlaybackWidgetState,
+    openPlayerIntent: Intent,
+) {
     val titleColor = ColorProvider(R.color.widget_on_background)
     val subtitleColor = ColorProvider(R.color.widget_on_background_secondary)
+    val openPlayerAction = actionStartActivity(openPlayerIntent)
 
     Column(
         modifier =
@@ -62,7 +73,7 @@ private fun PlaybackWidgetContent(state: PlaybackWidgetState) {
             modifier =
                 GlanceModifier
                     .fillMaxWidth()
-                    .clickable(actionStartActivity<MainActivity>()),
+                    .clickable(openPlayerAction),
             style =
                 TextStyle(
                     color = titleColor,
@@ -106,7 +117,7 @@ private fun PlaybackWidgetContent(state: PlaybackWidgetState) {
         } else {
             Button(
                 text = "打开播放器",
-                onClick = actionStartActivity<MainActivity>(),
+                onClick = openPlayerAction,
             )
         }
     }
