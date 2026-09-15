@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -52,10 +53,10 @@ class PlaybackProcessRecoveryTest {
         openDestination("播放")
         requireUiObject(By.text(SONG_TITLE), "Now-playing metadata did not appear")
 
-        clickText("随机")
-        requireUiObject(By.text("随机✓"), "Shuffle state was not enabled")
-        clickText("顺序")
-        requireUiObject(By.text("循环"), "Repeat-all state was not enabled")
+        clickAfterVerticalScroll("随机")
+        requireAfterVerticalScroll(By.text("随机✓"), "Shuffle state was not enabled")
+        clickAfterVerticalScroll("顺序")
+        requireAfterVerticalScroll(By.text("循环"), "Repeat-all state was not enabled")
 
         Thread.sleep(PERSISTENCE_SETTLE_MS)
         shell("am force-stop $TARGET_PACKAGE")
@@ -65,8 +66,8 @@ class PlaybackProcessRecoveryTest {
         openDestination("播放")
 
         requireUiObject(By.text(SONG_TITLE), "Queue item was not restored after force-stop")
-        requireUiObject(By.text("随机✓"), "Shuffle state was not restored after force-stop")
-        requireUiObject(By.text("循环"), "Repeat mode was not restored after force-stop")
+        requireAfterVerticalScroll(By.text("随机✓"), "Shuffle state was not restored after force-stop")
+        requireAfterVerticalScroll(By.text("循环"), "Repeat mode was not restored after force-stop")
     }
 
     private fun launchTargetAndWaitForLibrary() {
@@ -87,13 +88,35 @@ class PlaybackProcessRecoveryTest {
         device.waitForIdle()
     }
 
-    private fun clickText(text: String) {
-        requireUiObject(By.text(text), "Control was not visible: $text").click()
+    private fun clickAfterVerticalScroll(text: String) {
+        requireAfterVerticalScroll(
+            selector = By.text(text),
+            message = "Control was not visible: $text",
+        ).click()
         device.waitForIdle()
     }
 
+    private fun requireAfterVerticalScroll(
+        selector: BySelector,
+        message: String,
+    ): UiObject2 {
+        repeat(MAX_SCROLL_ATTEMPTS) {
+            device.wait(Until.findObject(selector), SCROLL_LOOKUP_TIMEOUT_MS)?.let { return it }
+            device.swipe(
+                device.displayWidth / 2,
+                (device.displayHeight * SCROLL_START_FRACTION).toInt(),
+                device.displayWidth / 2,
+                (device.displayHeight * SCROLL_END_FRACTION).toInt(),
+                SCROLL_STEPS,
+            )
+            device.waitForIdle()
+        }
+        return device.wait(Until.findObject(selector), SCROLL_LOOKUP_TIMEOUT_MS)
+            ?: error(message)
+    }
+
     private fun requireUiObject(
-        selector: androidx.test.uiautomator.BySelector,
+        selector: BySelector,
         message: String,
         timeoutMs: Long = UI_TIMEOUT_MS,
     ): UiObject2 =
@@ -115,5 +138,10 @@ class PlaybackProcessRecoveryTest {
         const val LARGE_LIBRARY_TIMEOUT_MS = 35_000L
         const val PERSISTENCE_SETTLE_MS = 2_000L
         const val FORCE_STOP_SETTLE_MS = 500L
+        const val MAX_SCROLL_ATTEMPTS = 4
+        const val SCROLL_LOOKUP_TIMEOUT_MS = 1_000L
+        const val SCROLL_STEPS = 20
+        const val SCROLL_START_FRACTION = 0.82f
+        const val SCROLL_END_FRACTION = 0.28f
     }
 }
