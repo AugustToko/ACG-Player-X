@@ -116,7 +116,11 @@ jobs:
           fi
 
       - name: Generate Baseline and Startup Profiles
-        run: ./gradlew --no-daemon --info :app:generateBaselineProfile
+        run: >-
+          ./gradlew --no-daemon --info
+          :app:generateBaselineProfile
+          -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
+          -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.BaselineProfileGenerator
 
       - name: Run process recovery and macrobenchmark smoke suite
         run: >-
