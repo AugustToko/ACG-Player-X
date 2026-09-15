@@ -162,6 +162,7 @@ fun SettingsScreen(
                     StatusItem("音频焦点", "自动管理")
                     StatusItem("队列与进度恢复", "已启用")
                     StatusItem("可视化播放队列", "已启用")
+                    StatusItem("桌面播放小组件", "Glance")
                     StatusItem("收藏歌曲", "$favoriteSongCount 首")
                     StatusItem("最近播放", "$recentSongCount 条")
                     StatusItem("自定义歌单", "$playlistCount 个")
@@ -200,7 +201,8 @@ fun SettingsScreen(
                     StatusItem("收藏与最近播放", "已迁移")
                     StatusItem("最近添加 / 常听 / 未播放", "已迁移")
                     StatusItem("桌面长按快捷入口", "4 个")
-                    StatusItem("Live2D / 标签编辑 / 小组件", "待兼容迁移")
+                    StatusItem("Glance 桌面播放小组件", "已迁移")
+                    StatusItem("Live2D / 标签编辑", "待兼容迁移")
                 }
             }
 
