@@ -1,5 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.widget
 
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -10,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import top.geek_studio.chenlongcould.musicplayer.R
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -61,5 +64,22 @@ class PlaybackWidgetStateStoreInstrumentedTest {
         assertFalse(restored.isPlaying)
         assertEquals(PlaybackWidgetState.DEFAULT_TITLE, restored.title)
         assertEquals(PlaybackWidgetState.DEFAULT_ARTIST, restored.artist)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun receiverIsExportedWithWidgetProviderMetadata() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val receiverInfo =
+            context.packageManager.getReceiverInfo(
+                ComponentName(context, PlaybackWidgetReceiver::class.java),
+                PackageManager.GET_META_DATA,
+            )
+
+        assertTrue(receiverInfo.exported)
+        assertEquals(
+            R.xml.playback_widget_info,
+            receiverInfo.metaData.getInt("android.appwidget.provider"),
+        )
     }
 }
