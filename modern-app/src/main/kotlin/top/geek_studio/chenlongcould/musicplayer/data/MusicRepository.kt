@@ -49,7 +49,12 @@ class MusicRepository(
         authorizedFolders: List<AuthorizedFolder>,
         refreshAuthorizedFolders: Boolean,
     ): MusicLibraryResult = withContext(Dispatchers.IO) {
-        if (BuildConfig.BENCHMARK_FIXTURES_ENABLED && includeMediaStore) {
+        if (
+            benchmarkFixturesEnabled(
+                buildType = BuildConfig.BUILD_TYPE,
+                explicitlyEnabled = BuildConfig.BENCHMARK_FIXTURES_ENABLED,
+            ) && includeMediaStore
+        ) {
             return@withContext createBenchmarkMusicLibrary()
         }
 
@@ -247,6 +252,12 @@ class MusicRepository(
     }
 }
 
+internal fun benchmarkFixturesEnabled(
+    buildType: String,
+    explicitlyEnabled: Boolean,
+): Boolean =
+    explicitlyEnabled || buildType.equals(BASELINE_PROFILE_BUILD_TYPE, ignoreCase = true)
+
 internal fun resolveMediaStoreDateMs(
     dateAddedSeconds: Long,
     dateModifiedSeconds: Long,
@@ -297,3 +308,5 @@ private fun Song.sourceFingerprint(): String =
         album.trim().lowercase(Locale.ROOT),
         (durationMs / 1_000L).toString(),
     ).joinToString("|")
+
+private const val BASELINE_PROFILE_BUILD_TYPE = "nonMinifiedRelease"
