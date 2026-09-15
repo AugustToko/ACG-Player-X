@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活动应用已经迁移到 **Jetpack Compose + Material 3 + AndroidX Media3**；旧 Java/XML/Fragment 源码仍保留作迁移参考，但不参与默认构建。
 
-当前开发版本：**2.0.0-alpha17**。
+当前开发版本：**2.0.0-alpha18**。
 
 ## 已实现能力
 
@@ -14,6 +14,7 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 递归扫描 MediaStore 未索引音频，合并并去重 MediaStore 与 SAF 曲目
 - MediaStore 变化监听、去抖刷新、SAF 主动重扫和失效授权降级
 - 歌曲、专辑、艺术家、文件夹、收藏、最近播放、最近添加、最常播放和未播放
+- 近 7 天、继续听、已听完和 20 分钟以上长音频智能列表
 - 标题、艺术家、专辑、显示文件名与目录联合搜索
 
 ### 播放核心
@@ -27,6 +28,18 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 队列和位置的常规保存使用可确认落盘的后台写入
 - API 35 性能设备会真实执行 `am force-stop`，验证队列、随机和循环模式恢复
 - 专辑封面、音频内嵌图片回退、尺寸采样和受限 LRU 缓存
+
+### 播放完成度与智能列表
+
+- `PlaybackService` 每秒采样实际播放进度，后台播放与桌面小组件控制同样会进入统计
+- 大幅 Seek 跳转不会计入有效收听时长
+- 暂停、切歌、周期阈值与接近曲尾时会增量落盘，避免频繁写入 DataStore
+- 完成判定同时要求曲尾位置和有效收听时长，不会因直接拖到结尾虚增
+- 每首歌曲保存播放次数、最后播放、完成次数、最后完成、累计收听时间和可恢复中途进度
+- `playback_stats_v1` 会向兼容的 `playback_stats_v2` 自动迁移
+- “继续听”仅显示已实际收听至少 10 秒、进度处于 10% 到 89% 的歌曲
+- “已听完”按最近完成时间与完成次数排序
+- “近 7 天”和“长音频”继续支持搜索、收藏与以当前结果建立播放队列
 
 ### 桌面播放小组件
 
@@ -79,6 +92,7 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 10,000 首混合资料库滚动 FrameTiming Macrobenchmark
 - 10,000 首夹具由 7,000 个 MediaStore 风格和 3,000 个 SAF 风格条目组成，只在 benchmark/profile 变体启用
 - API 35 AOSP ATD 托管设备执行 Compose、MediaSession、Glance 状态、文件往返和进程恢复测试
+- 播放完成阈值、Seek 排除、周期落盘、统计迁移和智能列表排序由 JVM 单元测试覆盖
 - 性能、托管设备与 Profile 报告都会作为 GitHub Actions artifact 保留
 
 详细说明见 [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) 和 [`docs/TESTING.md`](docs/TESTING.md)。
@@ -106,9 +120,9 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 
 ```text
 modern-app/                       活动 Compose 应用
-  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U 与性能夹具
+  src/main/kotlin/.../data/       MediaStore、SAF、智能库、歌单、M3U、播放统计与性能夹具
   src/main/kotlin/.../lyrics/     LRC 解析、存储与歌词状态
-  src/main/kotlin/.../playback/   Media3、队列和恢复状态
+  src/main/kotlin/.../playback/   Media3、队列、恢复状态和播放进度采样
   src/main/kotlin/.../widget/     Glance 小组件、MediaSession 动作与轻量状态
   src/main/kotlin/.../ui/         Compose 页面和编辑器
   src/test/                       JVM 单元测试
@@ -164,14 +178,14 @@ API 35 应用仪器化测试：
 - Android 13+ 播放通知：`POST_NOTIFICATIONS`
 - 后台播放：`FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
-应用不申请共享存储写权限，不启用明文网络，也不使用 legacy external storage。收藏、历史、统计、歌词索引、歌单和小组件快照均保存在设备本地。
+应用不申请共享存储写权限，不启用明文网络，也不使用 legacy external storage。收藏、历史、完成度统计、歌词索引、歌单和小组件快照均保存在设备本地。
 
 ## 当前剩余重点
 
 - 真实 DocumentsProvider、SD 卡、USB、云盘和持久授权撤销矩阵
 - 低内存杀进程、系统重启、通知、锁屏、蓝牙、车机与 OEM 后台限制
 - Android 多版本实机性能门槛和 PSS / GC 监控
-- 规则智能列表和播放完成度统计
+- 可配置的目录、时长、时间窗口和标签组合规则智能列表
 - SAF 增量索引、磁盘缓存与 Provider 变更监听
 - 歌词编辑、双语/逐字歌词、音频标签编辑和 Live2D 隔离适配
 - 小组件封面、播放进度和不同 Launcher/OEM 尺寸矩阵

@@ -15,7 +15,7 @@ Jetpack Glance AppWidget
 Baseline Profile + Macrobenchmark
 ```
 
-工具链：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。当前版本为 `2.0.0-alpha17`。
+工具链：AGP 9.4、Gradle 9.6、Kotlin 2.4.20、JDK 17、compile/target SDK 37、minSdk 23。当前版本为 `2.0.0-alpha18`。
 
 逻辑模块仍为 `:app`，实际目录映射到 `modern-app/`；旧 `app/` 与 `appthemehelper/` 不参与默认构建。
 
@@ -50,6 +50,7 @@ PlaybackService
   ├── ExoPlayer
   ├── MediaSession
   ├── PlaybackStateStore
+  ├── PlaybackProgressTracker ── LibraryStateRepository
   └── PlaybackWidgetStateStore ── PlaybackWidget.updateAll()
 
 PlaybackWidgetReceiver
@@ -92,7 +93,46 @@ Timeline 变化采用 300ms 去抖。快照在去抖结束后捕获，队列提�
 
 服务重建会恢复上下文、prepare，并保持暂停。Benchmark 设备测试进一步执行真实 `am force-stop` 和重新启动，验证当前曲目、随机和循环模式。
 
-## 5. Glance 桌面播放小组件
+## 5. 播放完成度与智能音乐库
+
+完成度统计位于 PlaybackService，而不是 Activity：
+
+```text
+ExoPlayer 状态与位置
+  → PlaybackProgressTracker
+  → PlaybackProgressUpdate
+  → LibraryStateRepository / DataStore
+  → MainViewModel 智能列表
+```
+
+服务每秒采样一次，但仅在以下条件写入：
+
+- 未提交的有效收听达到 15 秒；
+- 播放暂停；
+- 切换媒体；
+- 达到完成阈值。
+
+位置增量会与 `SystemClock.elapsedRealtime()` 交叉验证。明显超过真实经过时间的大幅前跳视为 Seek，不计入累计收听时长。后退 Seek 会更新恢复位置，但不会生成负收听时间。
+
+完成判定不是“位置接近结尾”单一条件：
+
+- 30 秒以内音频要求达到 80%；
+- 常规音频要求达到 90%；
+- 长音频同时采用“距离结尾 5 分钟”保护；
+- 还必须满足有效收听时长，防止直接拖到曲尾虚增完成次数。
+
+PlaybackStats v2 保存播放次数、最后播放、完成次数、最后完成、累计收听、最后中途位置和已知时长，并兼容解码 v1 的三字段记录。
+
+Compose 智能列表包括：
+
+- 近 7 天；
+- 继续听（有效收听至少 10 秒且进度 10%～89%）；
+- 已听完；
+- 长音频（20 分钟以上）。
+
+这些列表继续复用原有搜索、收藏、高亮和“按当前结果建立队列”的语义。
+
+## 6. Glance 桌面播放小组件
 
 小组件不维护第二套播放器。所有控制通过 `MediaController` 连接现有 `PlaybackService` 和 `MediaSession`：
 
@@ -115,7 +155,7 @@ PlaybackService 在 Timeline、媒体切换、元数据和 `isPlaying` 变化时
 
 无队列状态不会尝试启动空播放，而是展示“打开播放器”。亮色和深色通过公开的 Glance 日夜 `ColorProvider(Color, Color)` 处理，不使用受限的资源型 ColorProvider。
 
-## 6. 歌单、M3U 与歌词
+## 7. 歌单、M3U 与歌词
 
 自定义歌单保存 UUID、规范化名称、有序媒体 ID 和时间戳，支持 MediaStore 与 SAF 混排、批量编辑、拖拽、不在线项目保序和 Snackbar 撤销。
 
@@ -136,7 +176,7 @@ M3U8 导出对当前可用歌曲写入便携相对路径，剥离 Android 存储
 
 LRC 使用纯 Kotlin parser，导入后复制到应用内部目录，支持 UTF-8/GB18030、文件 offset、每曲偏移、逐行同步和点击跳转。
 
-## 7. 性能工程
+## 8. 性能工程
 
 独立 benchmark 模块目标为 release-like benchmark 变体。Profile 插件将生成规则合并到应用主源集，ProfileInstaller 为兼容设备提供安装支持。
 
@@ -151,7 +191,7 @@ LRC 使用纯 Kotlin parser，导入后复制到应用内部目录，支持 UTF-
 
 具体命令和限制见 `docs/PERFORMANCE.md`。
 
-## 8. CI 门禁
+## 9. CI 门禁
 
 ```text
 Lint + JVM tests + APK builds
@@ -163,21 +203,21 @@ Baseline/Startup Profile generation
 Process recovery + Macrobenchmark smoke suite
 ```
 
-应用设备测试包含 Glance 状态持久化、Receiver provider metadata 和 MediaSession 到小组件快照的同步。成功或失败均上传设备和性能报告。普通分支 Push 只运行构建层，PR、默认分支和手动运行执行完整设备与性能链路。
+JVM 测试覆盖会话采样、前后 Seek、暂停/切歌提交、重复播放周期、完成阈值、v1/v2 统计兼容和智能列表排序。应用设备测试包含 Glance 状态持久化、Receiver provider metadata 和 MediaSession 到小组件快照的同步。成功或失败均上传设备和性能报告。
 
-## 9. 安全与数据边界
+## 10. 安全与数据边界
 
 - 不申请共享存储写权限
 - 不使用 requestLegacyExternalStorage
 - 不启用明文网络
-- 音频、收藏、历史、统计、歌词、歌单和小组件快照均留在本地
+- 音频、收藏、历史、完成度统计、歌词、歌单和小组件快照均留在本地
 - 旧系统歌单迁移只读，不回写 MediaStore Playlist
 - 小组件 ActionCallback 只连接应用自己的非导出 MediaSessionService
 - 当前树已删除旧签名材料、Firebase 配置和发布产物
 
 Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前仍须轮换。
 
-## 10. 后续优先级
+## 11. 后续优先级
 
 ### P0
 
@@ -187,10 +227,10 @@ Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前�
 
 ### P1
 
-- 规则智能列表和播放完成度
+- 可配置的目录、时长、时间窗口、标签和完成度组合规则
+- 统计数据导出、清理和隐私重置入口
 - SAF 增量索引、磁盘缓存和目录层级导航
 - 小组件封面、播放进度和不同 Launcher/OEM 尺寸矩阵
-- M3U 与旧系统歌单的更多 OEM/第三方样本回归
 
 ### P2
 
