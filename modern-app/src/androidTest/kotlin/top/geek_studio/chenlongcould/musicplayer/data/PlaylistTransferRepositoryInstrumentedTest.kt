@@ -75,6 +75,8 @@ class PlaylistTransferRepositoryInstrumentedTest {
             val content = destination.readText(Charsets.UTF_8)
             assertTrue(content.startsWith("#EXTM3U"))
             assertTrue(content.contains("#PLAYLIST:Instrumented Export"))
+            assertTrue(content.contains("#ACGPLAYER-CONTENT-URI:content://test/audio/7"))
+            assertTrue(content.contains("Music/Anime/Brave Shine.mp3"))
             assertTrue(content.contains("acg-player://media/99"))
 
             val roundTrip =

@@ -55,10 +55,10 @@ fun PlaylistTransferBar(
         }
 
     var showExportPicker by rememberSaveable { mutableStateOf(false) }
-    var showLegacyPicker by rememberSaveable { mutableStateOf(false) }
-    var legacyWorking by rememberSaveable { mutableStateOf(false) }
-    var legacyMessage by rememberSaveable { mutableStateOf<String?>(null) }
-    var legacyError by rememberSaveable { mutableStateOf<String?>(null) }
+    var showLegacyPicker by remember { mutableStateOf(false) }
+    var legacyWorking by remember { mutableStateOf(false) }
+    var legacyMessage by remember { mutableStateOf<String?>(null) }
+    var legacyError by remember { mutableStateOf<String?>(null) }
     var legacyPlaylists by remember { mutableStateOf<List<LegacyMediaStorePlaylist>>(emptyList()) }
 
     val activePlaylist = state.activePlaylist
