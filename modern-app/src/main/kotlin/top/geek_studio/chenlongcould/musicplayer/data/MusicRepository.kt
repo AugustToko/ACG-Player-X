@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import top.geek_studio.chenlongcould.musicplayer.BuildConfig
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 
 data class MusicLibraryResult(
@@ -48,6 +49,10 @@ class MusicRepository(
         authorizedFolders: List<AuthorizedFolder>,
         refreshAuthorizedFolders: Boolean,
     ): MusicLibraryResult = withContext(Dispatchers.IO) {
+        if (BuildConfig.BENCHMARK_FIXTURES_ENABLED && includeMediaStore) {
+            return@withContext createBenchmarkMusicLibrary()
+        }
+
         val warnings = mutableListOf<String>()
         val mediaStoreSongs =
             if (includeMediaStore) {

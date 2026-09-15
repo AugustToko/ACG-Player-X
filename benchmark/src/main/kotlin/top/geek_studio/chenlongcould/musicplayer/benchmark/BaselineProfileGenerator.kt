@@ -20,6 +20,7 @@ class BaselineProfileGenerator {
             includeInStartupProfile = true,
             filterPredicate = ::isApplicationProfileRule,
         ) {
+            revokeAudioPermission()
             launchFromHome()
         }
 
@@ -30,7 +31,9 @@ class BaselineProfileGenerator {
             includeInStartupProfile = false,
             filterPredicate = ::isApplicationProfileRule,
         ) {
-            launchFromHome()
+            launchLargeLibrary()
+            swipeLibraryUp(repetitions = 5)
+            swipeLibraryDown(repetitions = 3)
             openDestination("设置")
             swipeSettingsUp()
             swipeSettingsDown()

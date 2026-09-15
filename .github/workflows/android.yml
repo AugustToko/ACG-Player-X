@@ -88,11 +88,11 @@ jobs:
           retention-days: 7
 
   performance:
-    name: Baseline profile and macrobenchmark smoke
+    name: Profiles, startup and 10k library performance
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master'
     needs: instrumentation
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 90
 
     steps:
       - name: Check out source
@@ -123,7 +123,7 @@ jobs:
           ./gradlew --no-daemon --info
           :benchmark:pixel2Api35BenchmarkBenchmarkAndroidTest
           -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
-          -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.StartupBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.SettingsScrollBenchmark
+          -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.StartupBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.SettingsScrollBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.LargeLibraryScrollBenchmark
 
       - name: Upload profiles and benchmark reports
         if: always()

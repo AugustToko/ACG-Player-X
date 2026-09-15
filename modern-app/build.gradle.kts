@@ -12,11 +12,12 @@ android {
         applicationId = "top.geek_studio.chenlongcould.musicplayer"
         minSdk = 23
         targetSdk = 37
-        versionCode = 212
-        versionName = "2.0.0-alpha13"
+        versionCode = 213
+        versionName = "2.0.0-alpha14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        buildConfigField("boolean", "BENCHMARK_FIXTURES_ENABLED", "false")
     }
 
     buildTypes {
@@ -37,6 +38,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
             isDebuggable = false
+            buildConfigField("boolean", "BENCHMARK_FIXTURES_ENABLED", "true")
         }
     }
 
