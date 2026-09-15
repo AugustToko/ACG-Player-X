@@ -55,13 +55,13 @@ class LibraryStateRepositoryTest {
     }
 
     @Test
-    fun playbackStatsDeduplicateParallelStartSignalsAndKeepLatestTimestamp() {
+    fun playbackStatsCountEachAuthoritativeStartAndKeepLatestTimestamp() {
         val first = updatePlaybackStats(emptyMap(), "7", 1_000L)
-        val duplicate = updatePlaybackStats(first, "7", 2_000L)
-        val secondSession = updatePlaybackStats(duplicate, "7", 5_000L)
-        val staleTimestamp = updatePlaybackStats(secondSession, "7", 1_500L)
+        val second = updatePlaybackStats(first, "7", 2_000L)
+        val third = updatePlaybackStats(second, "7", 5_000L)
+        val staleTimestamp = updatePlaybackStats(third, "7", 1_500L)
 
-        assertEquals(2, staleTimestamp.getValue("7").playCount)
+        assertEquals(4, staleTimestamp.getValue("7").playCount)
         assertEquals(5_000L, staleTimestamp.getValue("7").lastPlayedAtMs)
     }
 
