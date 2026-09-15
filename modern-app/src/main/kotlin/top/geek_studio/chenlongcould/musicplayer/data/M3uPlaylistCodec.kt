@@ -12,6 +12,7 @@ data class M3uEntry(
     val artist: String? = null,
     val durationSeconds: Long? = null,
     val explicitMediaId: String? = null,
+    val contentUriHint: String? = null,
     val fileNameHint: String? = null,
     val folderHint: String? = null,
 )
@@ -61,6 +62,7 @@ internal fun parseM3uPlaylist(
     var pendingArtist: String? = null
     var pendingDurationSeconds: Long? = null
     var pendingMediaId: String? = null
+    var pendingContentUri: String? = null
     var pendingFileName: String? = null
     var pendingFolder: String? = null
     var truncated = false
@@ -91,6 +93,13 @@ internal fun parseM3uPlaylist(
                 pendingMediaId = normalizeMediaId(line.substring(MEDIA_ID_PREFIX.length))
             }
 
+            line.startsWith(CONTENT_URI_PREFIX, ignoreCase = true) -> {
+                pendingContentUri =
+                    line.substring(CONTENT_URI_PREFIX.length)
+                        .trim()
+                        .takeIf(String::isNotEmpty)
+            }
+
             line.startsWith(FILE_NAME_PREFIX, ignoreCase = true) -> {
                 pendingFileName =
                     line.substring(FILE_NAME_PREFIX.length)
@@ -119,6 +128,7 @@ internal fun parseM3uPlaylist(
                         artist = pendingArtist,
                         durationSeconds = pendingDurationSeconds,
                         explicitMediaId = pendingMediaId ?: mediaIdFromAcgLocation(line),
+                        contentUriHint = pendingContentUri,
                         fileNameHint = pendingFileName,
                         folderHint = pendingFolder,
                     )
@@ -126,6 +136,7 @@ internal fun parseM3uPlaylist(
                 pendingArtist = null
                 pendingDurationSeconds = null
                 pendingMediaId = null
+                pendingContentUri = null
                 pendingFileName = null
                 pendingFolder = null
             }
@@ -167,6 +178,7 @@ internal fun encodeM3uPlaylist(
                     .joinToString(" - ")
             appendLine("#EXTINF:$durationSeconds,$label")
             appendLine("$MEDIA_ID_PREFIX$mediaId")
+            appendLine("$CONTENT_URI_PREFIX${sanitizeM3uLocation(song.contentUri)}")
             if (song.displayName.isNotBlank()) {
                 appendLine("$FILE_NAME_PREFIX${sanitizeM3uComment(song.displayName)}")
             }
@@ -174,9 +186,25 @@ internal fun encodeM3uPlaylist(
             if (folder.isNotBlank()) {
                 appendLine("$FOLDER_PREFIX${sanitizeM3uComment(folder)}")
             }
-            appendLine(sanitizeM3uLocation(song.contentUri))
+            appendLine(
+                portableM3uLocation(song)
+                    ?: sanitizeM3uLocation(song.contentUri),
+            )
         }
     }
+}
+
+internal fun portableM3uLocation(song: Song): String? {
+    val fileName = sanitizePortablePathSegment(song.displayName) ?: return null
+    val rawFolder = displayMusicFolderPath(song.folderPath)
+    val normalizedFolder = normalizePortableFolder(rawFolder)
+    val folderSegments =
+        normalizedFolder
+            .split('/')
+            .mapNotNull(::sanitizePortablePathSegment)
+            .map { segment -> if (segment == "..") "_" else segment }
+            .filterNot { it == "." }
+    return (folderSegments + fileName).joinToString("/")
 }
 
 internal fun resolveM3uPlaylist(
@@ -332,7 +360,9 @@ private fun explicitSongMatchesEntry(
     if (hasPortableIdentityHints(entry)) {
         portableIdentityMatches(song, entry)
     } else {
-        normalizeUri(song.contentUri) == normalizeUri(entry.location) ||
+        sequenceOf(entry.contentUriHint, entry.location)
+            .filterNotNull()
+            .any { candidate -> normalizeUri(song.contentUri) == normalizeUri(candidate) } ||
             isAcgMediaLocation(entry.location)
     }
 
@@ -373,7 +403,12 @@ private fun matchByUri(
     entry: M3uEntry,
     songsByUri: Map<String, List<Song>>,
 ): MatchOutcome? {
-    val candidates = songsByUri[normalizeUri(entry.location)].orEmpty()
+    val candidates =
+        sequenceOf(entry.contentUriHint, entry.location)
+            .filterNotNull()
+            .flatMap { location -> songsByUri[normalizeUri(location)].orEmpty().asSequence() }
+            .distinctBy(Song::id)
+            .toList()
     val compatibleCandidates =
         if (hasPortableIdentityHints(entry)) {
             candidates.filter { song -> portableIdentityMatches(song, entry) }
@@ -546,6 +581,26 @@ private fun folderFromLocation(location: String): String? {
     return parent.takeIf(String::isNotBlank)?.let(::decodeUrl)
 }
 
+private fun normalizePortableFolder(value: String): String {
+    var normalized =
+        value
+            .replace('\\', '/')
+            .trim()
+    normalized = normalized.replace(WINDOWS_DRIVE_PREFIX, "")
+    normalized = normalized.replace(ANDROID_PRIMARY_STORAGE_PREFIX, "")
+    normalized = normalized.replace(ANDROID_REMOVABLE_STORAGE_PREFIX, "")
+    return normalized.trim('/')
+}
+
+private fun sanitizePortablePathSegment(value: String): String? {
+    val cleaned =
+        sanitizeM3uLocation(value)
+            .trim()
+            .replace('/', '／')
+            .replace('\\', '＼')
+    return cleaned.takeIf(String::isNotBlank)
+}
+
 private fun decodeUrl(value: String): String =
     runCatching { URLDecoder.decode(value, StandardCharsets.UTF_8.name()) }
         .getOrDefault(value)
@@ -577,7 +632,13 @@ private const val MAX_EXPORT_FILE_STEM_LENGTH = 72
 private const val PLAYLIST_PREFIX = "#PLAYLIST:"
 private const val EXTINF_PREFIX = "#EXTINF:"
 private const val MEDIA_ID_PREFIX = "#ACGPLAYER-MEDIA-ID:"
+private const val CONTENT_URI_PREFIX = "#ACGPLAYER-CONTENT-URI:"
 private const val FILE_NAME_PREFIX = "#ACGPLAYER-FILE-NAME:"
 private const val FOLDER_PREFIX = "#ACGPLAYER-FOLDER:"
 private const val ACG_MEDIA_LOCATION_PREFIX = "acg-player://media/"
 private val INVALID_FILE_NAME_CHARACTERS = setOf('/', '\\', ':', '*', '?', '"', '<', '>', '|')
+private val WINDOWS_DRIVE_PREFIX = Regex("^[A-Za-z]:/+", RegexOption.IGNORE_CASE)
+private val ANDROID_PRIMARY_STORAGE_PREFIX =
+    Regex("^/?(?:storage/emulated/0|sdcard)/+", RegexOption.IGNORE_CASE)
+private val ANDROID_REMOVABLE_STORAGE_PREFIX =
+    Regex("^/?storage/[^/]+/+", RegexOption.IGNORE_CASE)

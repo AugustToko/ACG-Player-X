@@ -23,7 +23,8 @@ class M3uPlaylistCodecTest {
                 song(-7, "青鸟", "生物股长", "青鸟.flac", "SD/Anime"),
             )
 
-        val parsed = parseM3uPlaylist(encodeM3uPlaylist(playlist, songs))
+        val encoded = encodeM3uPlaylist(playlist, songs)
+        val parsed = parseM3uPlaylist(encoded)
         val resolved = resolveM3uPlaylist(parsed, songs)
 
         assertEquals("Anime Mix", parsed.name)
@@ -31,6 +32,55 @@ class M3uPlaylistCodecTest {
         assertEquals(2, resolved.matchedCount)
         assertEquals(1, resolved.preservedUnavailableCount)
         assertEquals(0, resolved.unmatchedCount)
+        assertTrue(encoded.contains("Music/Anime/Brave Shine.mp3"))
+        assertTrue(encoded.contains("SD/Anime/青鸟.flac"))
+        assertTrue(encoded.contains("#ACGPLAYER-CONTENT-URI:content://test/audio/1"))
+    }
+
+    @Test
+    fun sameDeviceRoundTripUsesContentUriHintBehindRelativeLocation() {
+        val playlist =
+            UserPlaylist(
+                id = "playlist",
+                name = "Exact URI",
+                mediaIds = listOf("1"),
+                createdAtMs = 1L,
+                updatedAtMs = 1L,
+            )
+        val expected = song(1, "Same", "Artist", "Same.mp3", "Music/A")
+        val collision =
+            expected.copy(
+                id = 2,
+                contentUri = "content://test/audio/2",
+                folderPath = "Music/B",
+            )
+
+        val parsed = parseM3uPlaylist(encodeM3uPlaylist(playlist, listOf(expected)))
+        val resolved = resolveM3uPlaylist(parsed, listOf(collision, expected))
+
+        assertEquals("Music/A/Same.mp3", parsed.entries.single().location)
+        assertEquals("content://test/audio/1", parsed.entries.single().contentUriHint)
+        assertEquals(listOf("1"), resolved.mediaIds)
+    }
+
+    @Test
+    fun portableLocationStripsStorageRootsAndNeutralizesTraversalSegments() {
+        val removable =
+            song(
+                id = 1,
+                title = "Track",
+                artist = "Artist",
+                displayName = "Track.flac",
+                folderPath = "/storage/1234-5678/Music/../Anime",
+            )
+        val primary =
+            removable.copy(
+                id = 2,
+                folderPath = "/storage/emulated/0/Music/Anime",
+            )
+
+        assertEquals("Music/_/Anime/Track.flac", portableM3uLocation(removable))
+        assertEquals("Music/Anime/Track.flac", portableM3uLocation(primary))
     }
 
     @Test
