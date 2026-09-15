@@ -55,25 +55,89 @@ class LibraryStateRepositoryTest {
     }
 
     @Test
-    fun playbackStatsIncrementAndKeepLatestTimestamp() {
+    fun playbackStatsDeduplicateParallelStartSignalsAndKeepLatestTimestamp() {
         val first = updatePlaybackStats(emptyMap(), "7", 1_000L)
-        val second = updatePlaybackStats(first, "7", 2_000L)
-        val staleTimestamp = updatePlaybackStats(second, "7", 1_500L)
+        val duplicate = updatePlaybackStats(first, "7", 2_000L)
+        val secondSession = updatePlaybackStats(duplicate, "7", 5_000L)
+        val staleTimestamp = updatePlaybackStats(secondSession, "7", 1_500L)
 
-        assertEquals(3, staleTimestamp.getValue("7").playCount)
-        assertEquals(2_000L, staleTimestamp.getValue("7").lastPlayedAtMs)
+        assertEquals(2, staleTimestamp.getValue("7").playCount)
+        assertEquals(5_000L, staleTimestamp.getValue("7").lastPlayedAtMs)
     }
 
     @Test
-    fun playbackStatsRoundTripAndIgnoreInvalidRows() {
+    fun playbackStatsRoundTripAllCompletionFields() {
         val stats =
             mapOf(
-                "1" to PlaybackStats(playCount = 4, lastPlayedAtMs = 8_000L),
+                "1" to
+                    PlaybackStats(
+                        playCount = 4,
+                        lastPlayedAtMs = 8_000L,
+                        completedCount = 2,
+                        lastCompletedAtMs = 7_500L,
+                        totalListenTimeMs = 600_000L,
+                        lastPositionMs = 45_000L,
+                        durationMs = 180_000L,
+                    ),
                 "-2" to PlaybackStats(playCount = 1, lastPlayedAtMs = 9_000L),
             )
         val encoded = encodePlaybackStats(stats) + "\ninvalid"
 
         assertEquals(stats, decodePlaybackStats(encoded))
+    }
+
+    @Test
+    fun playbackStatsDecodeLegacyThreeFieldRows() {
+        val decoded = decodePlaybackStats("7\t3\t9000")
+
+        assertEquals(
+            PlaybackStats(playCount = 3, lastPlayedAtMs = 9_000L),
+            decoded.getValue("7"),
+        )
+    }
+
+    @Test
+    fun progressUpdateStoresMeaningfulPositionAndCompletionClearsIt() {
+        val inProgress =
+            updatePlaybackProgressStats(
+                current = emptyMap(),
+                update =
+                    PlaybackProgressUpdate(
+                        mediaId = "9",
+                        positionMs = 45_000L,
+                        durationMs = 180_000L,
+                        listenedDeltaMs = 15_000L,
+                        sessionListenedMs = 15_000L,
+                        completed = false,
+                        recordedAtMs = 10_000L,
+                    ),
+            )
+        val first = inProgress.getValue("9")
+        assertEquals(45_000L, first.lastPositionMs)
+        assertEquals(15_000L, first.totalListenTimeMs)
+        assertEquals(25, first.progressPercent())
+        assertTrue(first.isInProgress())
+
+        val completed =
+            updatePlaybackProgressStats(
+                current = inProgress,
+                update =
+                    PlaybackProgressUpdate(
+                        mediaId = "9",
+                        positionMs = 170_000L,
+                        durationMs = 180_000L,
+                        listenedDeltaMs = 90_000L,
+                        sessionListenedMs = 105_000L,
+                        completed = true,
+                        recordedAtMs = 20_000L,
+                    ),
+            ).getValue("9")
+
+        assertEquals(1, completed.completedCount)
+        assertEquals(20_000L, completed.lastCompletedAtMs)
+        assertEquals(0L, completed.lastPositionMs)
+        assertEquals(105_000L, completed.totalListenTimeMs)
+        assertFalse(completed.isInProgress())
     }
 
     @Test
@@ -89,6 +153,52 @@ class LibraryStateRepositoryTest {
         assertEquals(
             listOf(3L, 2L, 1L),
             resolveMostPlayedSongs(songs, stats).map(Song::id),
+        )
+    }
+
+    @Test
+    fun inProgressAndCompletedSongsUseIndependentSessionState() {
+        val songs = listOf(song(1), song(2), song(3))
+        val stats =
+            mapOf(
+                "1" to PlaybackStats(lastPlayedAtMs = 8_000L, lastPositionMs = 90_000L, durationMs = 180_000L),
+                "2" to PlaybackStats(completedCount = 2, lastCompletedAtMs = 9_000L),
+                "3" to PlaybackStats(lastPlayedAtMs = 7_000L, lastPositionMs = 1_000L, durationMs = 180_000L),
+            )
+
+        assertEquals(listOf(1L), resolveInProgressSongs(songs, stats).map(Song::id))
+        assertEquals(listOf(2L), resolveCompletedSongs(songs, stats).map(Song::id))
+    }
+
+    @Test
+    fun recentlyPlayedWindowExcludesOldAndFutureEntries() {
+        val now = 10L * 24L * 60L * 60L * 1_000L
+        val songs = listOf(song(1), song(2), song(3))
+        val stats =
+            mapOf(
+                "1" to PlaybackStats(lastPlayedAtMs = now - 1_000L),
+                "2" to PlaybackStats(lastPlayedAtMs = now - RECENT_PLAY_WINDOW_MS - 1L),
+                "3" to PlaybackStats(lastPlayedAtMs = now + 1L),
+            )
+
+        assertEquals(
+            listOf(1L),
+            resolveRecentlyPlayedWithin(songs, stats, now).map(Song::id),
+        )
+    }
+
+    @Test
+    fun longFormSongsSortByDuration() {
+        val songs =
+            listOf(
+                song(1, durationMs = 1_200_000L),
+                song(2, durationMs = 3_600_000L),
+                song(3, durationMs = 600_000L),
+            )
+
+        assertEquals(
+            listOf(2L, 1L),
+            resolveLongFormSongs(songs).map(Song::id),
         )
     }
 
@@ -126,13 +236,14 @@ class LibraryStateRepositoryTest {
     private fun song(
         id: Long,
         dateAddedMs: Long = 0L,
+        durationMs: Long = 180_000L,
     ): Song =
         Song(
             id = id,
             title = "Song $id",
             artist = "Artist",
             album = "Album",
-            durationMs = 180_000L,
+            durationMs = durationMs,
             contentUri = "content://test/$id",
             albumArtUri = null,
             folderName = "Music",
