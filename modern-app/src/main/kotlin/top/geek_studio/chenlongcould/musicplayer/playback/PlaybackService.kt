@@ -80,14 +80,14 @@ class PlaybackService : MediaSessionService() {
     ): MediaSession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        playbackStateStore.savePosition(player.capturePositionSnapshot())
+        playbackStateStore.savePositionAsync(player.capturePositionSnapshot())
         super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
         queueSaveJob?.cancel()
         positionSaveJob?.cancel()
-        playbackStateStore.savePosition(player.capturePositionSnapshot())
+        playbackStateStore.savePositionAsync(player.capturePositionSnapshot())
         player.removeListener(playerListener)
         mediaSession?.release()
         mediaSession = null

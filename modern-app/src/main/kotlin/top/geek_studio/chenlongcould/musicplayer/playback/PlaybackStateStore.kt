@@ -51,10 +51,13 @@ class PlaybackStateStore(
     private val preferences =
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-    fun saveQueue(snapshot: PlaybackQueueSnapshot) {
+    /**
+     * Persists the complete queue synchronously. Callers must invoke this from a background
+     * dispatcher so an OS force-stop immediately after the call cannot lose an acknowledged queue.
+     */
+    fun saveQueue(snapshot: PlaybackQueueSnapshot): Boolean {
         if (snapshot.items.isEmpty()) {
-            clear()
-            return
+            return clear()
         }
 
         val items =
@@ -73,16 +76,32 @@ class PlaybackStateStore(
                 }
             }
 
-        preferences.edit()
+        return preferences.edit()
             .putString(KEY_QUEUE, items.toString())
             .putInt(KEY_CURRENT_INDEX, snapshot.currentIndex)
             .putLong(KEY_POSITION_MS, snapshot.positionMs)
             .putInt(KEY_REPEAT_MODE, snapshot.repeatMode)
             .putBoolean(KEY_SHUFFLE_ENABLED, snapshot.shuffleEnabled)
-            .apply()
+            .commit()
     }
 
-    fun savePosition(snapshot: PlaybackPositionSnapshot) {
+    /** Persists position and playback modes durably. Invoke from a background dispatcher. */
+    fun savePosition(snapshot: PlaybackPositionSnapshot): Boolean {
+        if (!preferences.contains(KEY_QUEUE)) return false
+
+        return preferences.edit()
+            .putInt(KEY_CURRENT_INDEX, snapshot.currentIndex)
+            .putLong(KEY_POSITION_MS, snapshot.positionMs)
+            .putInt(KEY_REPEAT_MODE, snapshot.repeatMode)
+            .putBoolean(KEY_SHUFFLE_ENABLED, snapshot.shuffleEnabled)
+            .commit()
+    }
+
+    /**
+     * Best-effort non-blocking variant for lifecycle callbacks that execute on the main thread.
+     * Regular event and periodic persistence use [savePosition] on Dispatchers.IO.
+     */
+    fun savePositionAsync(snapshot: PlaybackPositionSnapshot) {
         if (!preferences.contains(KEY_QUEUE)) return
 
         preferences.edit()
@@ -163,9 +182,7 @@ class PlaybackStateStore(
         )
     }
 
-    fun clear() {
-        preferences.edit().clear().apply()
-    }
+    fun clear(): Boolean = preferences.edit().clear().commit()
 
     private companion object {
         const val PREFERENCES_NAME = "playback_restore_state"
