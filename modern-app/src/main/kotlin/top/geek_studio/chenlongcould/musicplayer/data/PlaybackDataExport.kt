@@ -1,16 +1,15 @@
 package top.geek_studio.chenlongcould.musicplayer.data
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-
-@Serializable
+/**
+ * Compatibility model for callers that only need the persisted playback counters.
+ * Rich exports with current song metadata use [PlaybackStatisticsSnapshot].
+ */
 data class PlaybackDataExport(
-    val version: Int = CURRENT_VERSION,
+    val version: Int = PLAYBACK_STATISTICS_EXPORT_SCHEMA_VERSION,
     val exportedAtMs: Long,
     val statistics: List<PlaybackStatisticEntry>,
 )
 
-@Serializable
 data class PlaybackStatisticEntry(
     val mediaId: String,
     val playCount: Int,
@@ -23,44 +22,17 @@ data class PlaybackStatisticEntry(
 )
 
 object PlaybackDataExporter {
-    private val json =
-        Json {
-            prettyPrint = true
-            ignoreUnknownKeys = true
-        }
-
     fun encode(
         stats: Map<String, PlaybackStats>,
-        exportedAtMs: Long,
+        exportedAtMs: Long = System.currentTimeMillis(),
     ): String =
-        json.encodeToString(
-            PlaybackDataExport(
-                exportedAtMs = exportedAtMs,
-                statistics =
-                    stats
-                        .asSequence()
-                        .filter { (id, value) ->
-                            id.isNotBlank() &&
-                                (value.playCount > 0 ||
-                                    value.completedCount > 0 ||
-                                    value.totalListenTimeMs > 0L)
-                        }
-                        .map { (id, value) ->
-                            PlaybackStatisticEntry(
-                                mediaId = id,
-                                playCount = value.playCount,
-                                completedCount = value.completedCount,
-                                totalListenTimeMs = value.totalListenTimeMs,
-                                lastPlayedAtMs = value.lastPlayedAtMs,
-                                lastCompletedAtMs = value.lastCompletedAtMs,
-                                lastPositionMs = value.lastPositionMs,
-                                durationMs = value.durationMs,
-                            )
-                        }
-                        .sortedBy { it.mediaId }
-                        .toList(),
-            ),
+        encodePlaybackStatistics(
+            snapshot =
+                buildPlaybackStatisticsSnapshot(
+                    songs = emptyList(),
+                    playbackStats = stats,
+                    generatedAtMs = exportedAtMs,
+                ),
+            format = PlaybackStatisticsExportFormat.JSON,
         )
-
-    private const val CURRENT_VERSION = 1
 }

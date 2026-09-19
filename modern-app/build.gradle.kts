@@ -12,8 +12,8 @@ android {
         applicationId = "top.geek_studio.chenlongcould.musicplayer"
         minSdk = 23
         targetSdk = 37
-        versionCode = 217
-        versionName = "2.0.0-alpha18"
+        versionCode = 218
+        versionName = "2.0.0-alpha19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

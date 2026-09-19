@@ -180,6 +180,10 @@ fun SettingsScreen(
             }
 
             item {
+                ListeningStatisticsCard()
+            }
+
+            item {
                 SettingsCard(
                     title = "Compose 迁移状态",
                     subtitle = "新 UI 已脱离旧 Fragment 与 XML 页面栈。",
@@ -201,6 +205,7 @@ fun SettingsScreen(
                     StatusItem("收藏与最近播放", "已迁移")
                     StatusItem("新添加 / 常听 / 未播放", "已迁移")
                     StatusItem("近 7 天 / 继续听 / 已听完 / 长音频", "已迁移")
+                    StatusItem("统计导出与隐私清理", "已迁移")
                     StatusItem("桌面长按快捷入口", "4 个")
                     StatusItem("Glance 桌面播放小组件", "已迁移")
                     StatusItem("Live2D / 标签编辑", "待兼容迁移")

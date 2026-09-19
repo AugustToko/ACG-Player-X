@@ -124,6 +124,23 @@ class LibraryStateRepository(
         }
     }
 
+    suspend fun clearListeningData(
+        clearRecent: Boolean,
+        clearPlaybackStats: Boolean,
+    ) {
+        if (!clearRecent && !clearPlaybackStats) return
+
+        dataStore.edit { preferences ->
+            if (clearRecent) {
+                preferences.remove(RECENT_MEDIA_IDS)
+            }
+            if (clearPlaybackStats) {
+                preferences.remove(PLAYBACK_STATS_V1)
+                preferences.remove(PLAYBACK_STATS_V2)
+            }
+        }
+    }
+
     private companion object {
         val FAVORITE_MEDIA_IDS = stringSetPreferencesKey("favorite_media_ids")
         val RECENT_MEDIA_IDS = stringPreferencesKey("recent_media_ids")
