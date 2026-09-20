@@ -272,7 +272,7 @@ private fun Song.matchesPortableIdentity(entry: PlaybackStatisticsEntry): Boolea
     val songArtist = artist.normalizedIdentity()
     val songAlbum = album.normalizedIdentity()
     if (entryArtist.isNotEmpty() && songArtist != entryArtist) return false
-    if (entryArtist.isEmpty() && entryAlbum.isNotEmpty() && songAlbum != entryAlbum) return false
+    if (entryAlbum.isNotEmpty() && songAlbum != entryAlbum) return false
 
     if (
         entry.durationMs > 0L &&
