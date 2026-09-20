@@ -12,8 +12,8 @@ android {
         applicationId = "top.geek_studio.chenlongcould.musicplayer"
         minSdk = 23
         targetSdk = 37
-        versionCode = 218
-        versionName = "2.0.0-alpha19"
+        versionCode = 219
+        versionName = "2.0.0-alpha20"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -28,10 +28,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         create("benchmark") {
             initWith(getByName("release"))
@@ -46,31 +43,23 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     buildFeatures {
         compose = true
         buildConfig = true
     }
-
     packaging {
         resources {
-            excludes += setOf(
-                "/META-INF/{AL2.0,LGPL2.1}",
-                "/META-INF/DEPENDENCIES",
-            )
+            excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/DEPENDENCIES")
         }
     }
-
     lint {
         abortOnError = true
         checkReleaseBuilds = true
         warningsAsErrors = false
     }
-
     testOptions {
         animationsDisabled = true
         unitTests.isIncludeAndroidResources = true
-
         managedDevices {
             localDevices {
                 create("pixel2Api35") {
@@ -88,14 +77,11 @@ baselineProfile {
     automaticGenerationDuringBuild = false
     mergeIntoMain = true
     saveInSrc = true
-    filter {
-        include("top.geek_studio.chenlongcould.musicplayer.**")
-    }
+    filter { include("top.geek_studio.chenlongcould.musicplayer.**") }
 }
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
@@ -108,20 +94,15 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.coroutines.android)
-
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-
     baselineProfile(project(":benchmark"))
-
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
     testImplementation(libs.junit)
-
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.runner)
