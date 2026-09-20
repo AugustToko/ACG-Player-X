@@ -3,6 +3,7 @@ package top.geek_studio.chenlongcould.musicplayer.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -10,6 +11,7 @@ import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 
 private val Context.libraryStateDataStore by
     preferencesDataStore(name = "library_state")
@@ -51,11 +53,32 @@ class LibraryStateRepository(
         }
 
     val playbackStats: Flow<Map<String, PlaybackStats>> =
-        preferencesFlow.map { preferences ->
-            decodePlaybackStats(
-                preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
-            )
+        preferencesFlow
+            .onStart { ensurePlaybackStatsSchema() }
+            .map { preferences ->
+                decodePlaybackStats(
+                    preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
+                )
+            }
+
+    suspend fun ensurePlaybackStatsSchema() {
+        dataStore.edit { preferences ->
+            val storedVersion = preferences[PLAYBACK_STATS_SCHEMA_VERSION] ?: 0
+            if (storedVersion >= CURRENT_PLAYBACK_STATS_SCHEMA_VERSION) return@edit
+
+            val stats =
+                decodePlaybackStats(
+                    preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
+                )
+            if (stats.isEmpty()) {
+                preferences.remove(PLAYBACK_STATS_V2)
+            } else {
+                preferences[PLAYBACK_STATS_V2] = encodePlaybackStats(stats)
+            }
+            preferences.remove(PLAYBACK_STATS_V1)
+            preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
         }
+    }
 
     suspend fun toggleFavorite(mediaId: String) {
         if (mediaId.isBlank()) return
@@ -95,6 +118,7 @@ class LibraryStateRepository(
             preferences[RECENT_MEDIA_IDS] = encodeRecentMediaIds(recent)
             preferences[PLAYBACK_STATS_V2] = encodePlaybackStats(stats)
             preferences.remove(PLAYBACK_STATS_V1)
+            preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
         }
     }
 
@@ -115,7 +139,38 @@ class LibraryStateRepository(
                     ),
                 )
             preferences.remove(PLAYBACK_STATS_V1)
+            preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
         }
+    }
+
+    suspend fun importPlaybackStatistics(
+        imported: Map<String, PlaybackStats>,
+        mode: PlaybackStatisticsImportMode,
+    ): Int {
+        if (imported.isEmpty()) return 0
+
+        var importedCount = 0
+        dataStore.edit { preferences ->
+            val current =
+                decodePlaybackStats(
+                    preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
+                )
+            val updated =
+                applyPlaybackStatisticsImport(
+                    current = current,
+                    imported = imported,
+                    mode = mode,
+                )
+            importedCount = imported.size
+            if (updated.isEmpty()) {
+                preferences.remove(PLAYBACK_STATS_V2)
+            } else {
+                preferences[PLAYBACK_STATS_V2] = encodePlaybackStats(updated)
+            }
+            preferences.remove(PLAYBACK_STATS_V1)
+            preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
+        }
+        return importedCount
     }
 
     suspend fun clearRecent() {
@@ -137,6 +192,7 @@ class LibraryStateRepository(
             if (clearPlaybackStats) {
                 preferences.remove(PLAYBACK_STATS_V1)
                 preferences.remove(PLAYBACK_STATS_V2)
+                preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
             }
         }
     }
@@ -146,6 +202,8 @@ class LibraryStateRepository(
         val RECENT_MEDIA_IDS = stringPreferencesKey("recent_media_ids")
         val PLAYBACK_STATS_V1 = stringPreferencesKey("playback_stats_v1")
         val PLAYBACK_STATS_V2 = stringPreferencesKey("playback_stats_v2")
+        val PLAYBACK_STATS_SCHEMA_VERSION = intPreferencesKey("playback_stats_schema_version")
+        const val CURRENT_PLAYBACK_STATS_SCHEMA_VERSION = 2
         const val MAX_RECENT_ITEMS = 100
     }
 }
