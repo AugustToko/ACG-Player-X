@@ -23,13 +23,24 @@ class PlaybackStatisticsImportTest {
     fun collidingIdFallsBackToUniquePortableMetadata() {
         val preview =
             buildPlaybackStatisticsImportPreview(
-                document = document(entry(mediaId = "1", title = "Target", artist = "Artist B", durationMs = 180_000L, playCount = 7)),
+                document = document(entry(mediaId = "1", title = "Target", artist = "Artist B", album = "Album B", durationMs = 180_000L, playCount = 7)),
                 songs = listOf(song(1, "Wrong", "Artist A", "Album A"), song(2, "Target", "Artist B", "Album B")),
             )
         assertEquals(0, preview.exactMatchCount)
         assertEquals(1, preview.portableMatchCount)
         assertEquals(7, preview.matchedStats.getValue("2").playCount)
         assertFalse("1" in preview.matchedStats)
+    }
+
+    @Test
+    fun sameTitleAndArtistButDifferentAlbumDoesNotCrossBind() {
+        val preview =
+            buildPlaybackStatisticsImportPreview(
+                document = document(entry(mediaId = "99", title = "Same", artist = "Artist", album = "Wanted", durationMs = 180_000L)),
+                songs = listOf(song(1, "Same", "Artist", "Other"), song(2, "Same", "Artist", "Wanted")),
+            )
+        assertEquals(1, preview.portableMatchCount)
+        assertEquals(setOf("2"), preview.matchedStats.keys)
     }
 
     @Test
