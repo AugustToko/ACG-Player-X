@@ -244,7 +244,7 @@ class StatisticsViewModel(
                     it.copy(
                         isWorking = false,
                         importPreview = null,
-                        infoMessage = "已通过$modeLabel导入 $importedCount 项收听统计",
+                        infoMessage = "已通过${modeLabel}导入 $importedCount 项收听统计",
                     )
                 }
             } catch (cancellation: CancellationException) {
