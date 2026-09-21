@@ -46,7 +46,7 @@ fun buildPlaybackStatisticsImportPreview(
     document: PlaybackStatisticsImportDocument,
     songs: List<Song>,
 ): PlaybackStatisticsImportPreview {
-    val songsByMediaId = songs.associateBy { it.id.toString() }
+    val songIndex = PlaybackStatisticsSongIndex(songs)
     val matchedStats = linkedMapOf<String, PlaybackStats>()
     val unavailableStats = linkedMapOf<String, PlaybackStats>()
     var exactMatchCount = 0
@@ -58,30 +58,30 @@ fun buildPlaybackStatisticsImportPreview(
 
     document.entries.forEach { entry ->
         val importedStats = entry.toPlaybackStats()
-        val exactSong = songsByMediaId[entry.mediaId]
+        val identity = entry.portableIdentity()
+        val exactSong = songIndex.findByMediaId(entry.mediaId)
         val exactIdentityMatches =
             exactSong != null &&
-                entry.hasPortableIdentity() &&
-                exactSong.matchesPortableIdentity(entry)
+                identity.isUsable &&
+                exactSong.matches(identity)
 
         var entryWasAmbiguous = false
         val targetMediaId =
             when {
                 exactIdentityMatches -> {
                     exactMatchCount += 1
-                    requireNotNull(exactSong).id.toString()
+                    requireNotNull(exactSong).song.id.toString()
                 }
 
-                entry.hasPortableIdentity() -> {
-                    val candidates = songs.filter { it.matchesPortableIdentity(entry) }
-                    when (candidates.size) {
-                        1 -> {
+                identity.isUsable -> {
+                    when (val match = songIndex.findPortableMatch(identity)) {
+                        is PortableMatch.Unique -> {
                             portableMatchCount += 1
-                            candidates.single().id.toString()
+                            match.song.id.toString()
                         }
 
-                        0 -> null
-                        else -> {
+                        PortableMatch.None -> null
+                        PortableMatch.Ambiguous -> {
                             ambiguousEntryCount += 1
                             entryWasAmbiguous = true
                             null
@@ -227,6 +227,145 @@ internal fun mergePlaybackStatsIdempotently(
     )
 }
 
+private data class PortablePlaybackIdentity(
+    val title: String,
+    val artist: String,
+    val album: String,
+    val durationMs: Long,
+) {
+    val isUsable: Boolean
+        get() = title.isNotEmpty() && (artist.isNotEmpty() || album.isNotEmpty() || durationMs > 0L)
+}
+
+private data class IndexedPlaybackSong(
+    val song: Song,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val durationMs: Long,
+) {
+    fun matches(identity: PortablePlaybackIdentity): Boolean =
+        title == identity.title &&
+            (identity.artist.isEmpty() || artist == identity.artist) &&
+            (identity.album.isEmpty() || album == identity.album) &&
+            durationMatches(identity.durationMs)
+
+    fun durationMatches(importedDurationMs: Long): Boolean =
+        importedDurationMs <= 0L ||
+            durationMs <= 0L ||
+            abs(durationMs - importedDurationMs) <= IMPORT_DURATION_TOLERANCE_MS
+}
+
+private class PlaybackStatisticsSongIndex(
+    songs: List<Song>,
+) {
+    private val byMediaId = linkedMapOf<String, IndexedPlaybackSong>()
+    private val byTitle = mutableMapOf<String, MutableList<IndexedPlaybackSong>>()
+    private val byTitleArtist = mutableMapOf<TitleArtistKey, MutableList<IndexedPlaybackSong>>()
+    private val byTitleAlbum = mutableMapOf<TitleAlbumKey, MutableList<IndexedPlaybackSong>>()
+    private val byTitleArtistAlbum =
+        mutableMapOf<TitleArtistAlbumKey, MutableList<IndexedPlaybackSong>>()
+
+    init {
+        songs.forEach { song ->
+            val indexed =
+                IndexedPlaybackSong(
+                    song = song,
+                    title = song.title.normalizedIdentity(),
+                    artist = song.artist.normalizedIdentity(),
+                    album = song.album.normalizedIdentity(),
+                    durationMs = song.durationMs,
+                )
+            // associateBy() used by the previous implementation kept the last item for duplicate IDs.
+            byMediaId[song.id.toString()] = indexed
+            if (indexed.title.isEmpty()) return@forEach
+
+            byTitle.append(indexed.title, indexed)
+            if (indexed.artist.isNotEmpty()) {
+                byTitleArtist.append(
+                    TitleArtistKey(indexed.title, indexed.artist),
+                    indexed,
+                )
+            }
+            if (indexed.album.isNotEmpty()) {
+                byTitleAlbum.append(
+                    TitleAlbumKey(indexed.title, indexed.album),
+                    indexed,
+                )
+            }
+            if (indexed.artist.isNotEmpty() && indexed.album.isNotEmpty()) {
+                byTitleArtistAlbum.append(
+                    TitleArtistAlbumKey(indexed.title, indexed.artist, indexed.album),
+                    indexed,
+                )
+            }
+        }
+    }
+
+    fun findByMediaId(mediaId: String): IndexedPlaybackSong? = byMediaId[mediaId]
+
+    fun findPortableMatch(identity: PortablePlaybackIdentity): PortableMatch {
+        if (!identity.isUsable) return PortableMatch.None
+
+        val candidates: List<IndexedPlaybackSong> =
+            when {
+                identity.artist.isNotEmpty() && identity.album.isNotEmpty() ->
+                    byTitleArtistAlbum[
+                        TitleArtistAlbumKey(identity.title, identity.artist, identity.album),
+                    ].orEmpty()
+
+                identity.artist.isNotEmpty() ->
+                    byTitleArtist[TitleArtistKey(identity.title, identity.artist)].orEmpty()
+
+                identity.album.isNotEmpty() ->
+                    byTitleAlbum[TitleAlbumKey(identity.title, identity.album)].orEmpty()
+
+                else -> byTitle[identity.title].orEmpty()
+            }
+
+        var uniqueSong: Song? = null
+        candidates.forEach { candidate ->
+            if (!candidate.durationMatches(identity.durationMs)) return@forEach
+            if (uniqueSong != null) return PortableMatch.Ambiguous
+            uniqueSong = candidate.song
+        }
+        return uniqueSong?.let(PortableMatch::Unique) ?: PortableMatch.None
+    }
+}
+
+private sealed class PortableMatch {
+    data object None : PortableMatch()
+
+    data object Ambiguous : PortableMatch()
+
+    data class Unique(
+        val song: Song,
+    ) : PortableMatch()
+}
+
+private data class TitleArtistKey(
+    val title: String,
+    val artist: String,
+)
+
+private data class TitleAlbumKey(
+    val title: String,
+    val album: String,
+)
+
+private data class TitleArtistAlbumKey(
+    val title: String,
+    val artist: String,
+    val album: String,
+)
+
+private fun <K> MutableMap<K, MutableList<IndexedPlaybackSong>>.append(
+    key: K,
+    song: IndexedPlaybackSong,
+) {
+    getOrPut(key) { mutableListOf() }.add(song)
+}
+
 private fun PlaybackStatisticsEntry.toPlaybackStats(): PlaybackStats =
     PlaybackStats(
         playCount = playCount,
@@ -256,37 +395,18 @@ private fun PlaybackStats.sanitized(): PlaybackStats {
     )
 }
 
-private fun PlaybackStatisticsEntry.hasPortableIdentity(): Boolean {
-    val normalizedTitle = title.normalizedIdentity()
-    if (normalizedTitle.isEmpty()) return false
-    return artist.normalizedIdentity().isNotEmpty() ||
-        album.normalizedIdentity().isNotEmpty() ||
-        durationMs > 0L
-}
-
-private fun Song.matchesPortableIdentity(entry: PlaybackStatisticsEntry): Boolean {
-    if (title.normalizedIdentity() != entry.title.normalizedIdentity()) return false
-
-    val entryArtist = entry.artist.normalizedIdentity()
-    val entryAlbum = entry.album.normalizedIdentity()
-    val songArtist = artist.normalizedIdentity()
-    val songAlbum = album.normalizedIdentity()
-    if (entryArtist.isNotEmpty() && songArtist != entryArtist) return false
-    if (entryAlbum.isNotEmpty() && songAlbum != entryAlbum) return false
-
-    if (
-        entry.durationMs > 0L &&
-        durationMs > 0L &&
-        abs(durationMs - entry.durationMs) > IMPORT_DURATION_TOLERANCE_MS
-    ) {
-        return false
-    }
-    return true
-}
+private fun PlaybackStatisticsEntry.portableIdentity(): PortablePlaybackIdentity =
+    PortablePlaybackIdentity(
+        title = title.normalizedIdentity(),
+        artist = artist.normalizedIdentity(),
+        album = album.normalizedIdentity(),
+        durationMs = durationMs,
+    )
 
 private fun String.normalizedIdentity(): String =
     trim()
-        .replace(Regex("\\s+"), " ")
+        .replace(IDENTITY_WHITESPACE, " ")
         .lowercase(Locale.ROOT)
 
+private val IDENTITY_WHITESPACE = Regex("\\s+")
 private const val IMPORT_DURATION_TOLERANCE_MS = 3_000L
