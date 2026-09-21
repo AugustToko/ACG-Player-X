@@ -148,6 +148,22 @@ internal object ImportPreviewPreparationCases {
             check(!gate.completePreview(input, "late"))
             check(gate.phase == StatisticsImportPhase.FAILED)
         },
+        "partial provider result is rejected" to {
+            val error = runCatching {
+                requireCompleteStatisticsMetadata(listOf("visible song"), listOf("provider offline"))
+            }.exceptionOrNull()
+            check(error is java.io.IOException)
+        },
+        "failed empty provider result is rejected" to {
+            val error = runCatching {
+                requireCompleteStatisticsMetadata(emptyList<String>(), listOf("query denied"))
+            }.exceptionOrNull()
+            check(error is java.io.IOException)
+        },
+        "successful empty and nonempty metadata are accepted" to {
+            check(requireCompleteStatisticsMetadata(emptyList<String>(), emptyList()).isEmpty())
+            check(requireCompleteStatisticsMetadata(listOf("song"), listOf(" ")) == listOf("song"))
+        },
     )
 
     private fun newGate() = ImportPreviewPreparation<String, List<String>, String>()

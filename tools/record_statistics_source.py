@@ -21,7 +21,7 @@ def main() -> None:
         "tools/check_statistics_import_preparation.sh",
         *[f"modern-app/src/main/kotlin/{package}/{name}.kt" for name in (
             "ImportPreviewPreparation", "StatisticsOperations", "StatisticsViewModel",
-            "StatisticsImportPreparationStatus", "ListeningStatisticsCard",
+            "StatisticsImportPreparationStatus", "ListeningStatisticsCard", "StatisticsMetadataCompleteness",
         )],
         f"modern-app/src/test/kotlin/{package}/ImportPreviewPreparationCases.kt",
         f"modern-app/src/test/kotlin/{package}/ImportPreviewPreparationTest.kt",

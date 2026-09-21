@@ -33,16 +33,19 @@ internal class RepositoryStatisticsOperations(application: Application) : Statis
     private val importRepository = PlaybackStatisticsImportRepository(application)
     private val contentResolver = application.contentResolver
 
-    override suspend fun loadMetadata(includeMediaStore: Boolean, folders: List<AuthorizedFolder>): List<Song> =
-        if (!includeMediaStore && folders.none(AuthorizedFolder::isAvailable)) {
-            emptyList()
-        } else {
-            musicRepository.loadSongs(
-                includeMediaStore = includeMediaStore,
-                authorizedFolders = folders,
-                refreshAuthorizedFolders = false,
-            ).songs
-        }
+    override suspend fun loadMetadata(includeMediaStore: Boolean, folders: List<AuthorizedFolder>): List<Song> {
+        // Explicitly unavailable grants are not part of the current available library.
+        // A provider expected to be available must not silently become an empty/partial scan.
+        val availableFolders = folders.filter(AuthorizedFolder::isAvailable)
+        if (!includeMediaStore && availableFolders.isEmpty()) return emptyList()
+        val result = musicRepository.loadSongs(
+            includeMediaStore = includeMediaStore,
+            authorizedFolders = availableFolders,
+            // Retry must not reuse a previously cached failed or truncated SAF result.
+            refreshAuthorizedFolders = true,
+        )
+        return requireCompleteStatisticsMetadata(result.songs, result.warnings)
+    }
 
     override suspend fun readImport(uri: Uri): PlaybackStatisticsImportDocument = importRepository.read(uri)
 

@@ -10,6 +10,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -47,8 +49,11 @@ class StatisticsImportPreparationInstrumentedTest {
         instrumentation.runOnMainSync {
             store = ViewModelStore()
             operations = DeferredOperations()
-            model = StatisticsViewModel(instrumentation.targetContext.applicationContext as Application, operations)
-            store.put("statistics", model)
+            model = ViewModelProvider(store, object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = modelClass.cast(
+                    StatisticsViewModel(instrumentation.targetContext.applicationContext as Application, operations),
+                )
+            })[StatisticsViewModel::class.java]
             document = parsePlaybackStatisticsImportJson(
                 """{"schemaVersion":$PLAYBACK_STATISTICS_EXPORT_SCHEMA_VERSION,"generatedAtMs":1000,
                 "entries":[{"mediaId":"7","available":true,"title":"Deferred Song","artist":"Artist",
