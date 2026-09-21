@@ -20,22 +20,20 @@ jobs:
     name: Lint, test and assemble
     runs-on: ubuntu-latest
     timeout-minutes: 35
-
     steps:
       - name: Check out source
         uses: actions/checkout@v7
-
+      - name: Record checked-out source identity
+        run: python3 tools/record_statistics_source.py
       - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
-
       - name: Verify Compose application, tests and benchmark APK
         run: >-
           ./gradlew --no-daemon
@@ -44,6 +42,18 @@ jobs:
           :app:assembleDebug
           :app:assembleDebugAndroidTest
           :benchmark:assembleBenchmarkBenchmark
+      - name: Upload build identity and test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-test-results-${{ github.run_id }}
+          path: |
+            build/source-identity.json
+            modern-app/build/test-results/testDebugUnitTest/
+            modern-app/build/reports/tests/testDebugUnitTest/
+            modern-app/build/reports/lint-results-debug.*
+          if-no-files-found: error
+          retention-days: 7
 
   instrumentation:
     name: API 35 managed-device tests
@@ -51,37 +61,34 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
     steps:
       - name: Check out source
         uses: actions/checkout@v7
-
+      - name: Record checked-out source identity
+        run: python3 tools/record_statistics_source.py
       - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
-
       - name: Enable KVM access
         run: |
           if [ -e /dev/kvm ]; then
             sudo chmod 666 /dev/kvm
           fi
-
       - name: Run instrumented tests
         run: ./gradlew --no-daemon --info :app:pixel2Api35DebugAndroidTest
-
       - name: Upload managed-device reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: managed-device-test-results-${{ github.run_id }}
           path: |
+            build/source-identity.json
             modern-app/build/reports/androidTests/managedDevice/
             modern-app/build/outputs/androidTest-results/managedDevice/
           if-no-files-found: warn
@@ -93,47 +100,43 @@ jobs:
     needs: instrumentation
     runs-on: ubuntu-latest
     timeout-minutes: 90
-
     steps:
       - name: Check out source
         uses: actions/checkout@v7
-
+      - name: Record checked-out source identity
+        run: python3 tools/record_statistics_source.py
       - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
-
       - name: Enable KVM access
         run: |
           if [ -e /dev/kvm ]; then
             sudo chmod 666 /dev/kvm
           fi
-
       - name: Generate Baseline and Startup Profiles
         run: >-
           ./gradlew --no-daemon --info
           :app:generateBaselineProfile
           -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
           -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.BaselineProfileGenerator
-
       - name: Run process recovery and macrobenchmark smoke suite
         run: >-
           ./gradlew --no-daemon --info
           :benchmark:pixel2Api35BenchmarkBenchmarkAndroidTest
           -Pandroid.testInstrumentationRunnerArguments.class=top.geek_studio.chenlongcould.musicplayer.benchmark.PlaybackProcessRecoveryTest,top.geek_studio.chenlongcould.musicplayer.benchmark.StartupBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.SettingsScrollBenchmark,top.geek_studio.chenlongcould.musicplayer.benchmark.LargeLibraryScrollBenchmark
-
       - name: Upload profiles and benchmark reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: performance-results-${{ github.run_id }}
           path: |
+            build/source-identity.json
             modern-app/src/main/generated/baselineProfiles/
             benchmark/build/outputs/managed_device_android_test_additional_output/
             benchmark/build/outputs/androidTest-results/managedDevice/

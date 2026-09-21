@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,20 +49,14 @@ import top.geek_studio.chenlongcould.musicplayer.data.topAlbumInsights
 import top.geek_studio.chenlongcould.musicplayer.data.topArtistInsights
 
 @Composable
-fun ListeningStatisticsCard(
-    modifier: Modifier = Modifier,
-) {
+fun ListeningStatisticsCard(modifier: Modifier = Modifier) {
     val mainViewModel: MainViewModel = viewModel()
     val statisticsViewModel: StatisticsViewModel = viewModel()
     val mainState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val statisticsState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
-    val folderSignature =
-        remember(mainState.authorizedFolders) {
-            mainState.authorizedFolders
-                .sortedBy { it.uriString }
-                .map { it.uriString to it.isAvailable }
-        }
-
+    val folderSignature = remember(mainState.authorizedFolders) {
+        mainState.authorizedFolders.sortedBy { it.uriString }.map { it.uriString to it.isAvailable }
+    }
     LaunchedEffect(mainState.hasAudioPermission, folderSignature, mainState.totalSongCount) {
         statisticsViewModel.refreshLibraryMetadata(
             includeMediaStore = mainState.hasAudioPermission,
@@ -67,47 +65,40 @@ fun ListeningStatisticsCard(
         )
     }
 
-    val hasCompleteLibraryMetadata =
-        !statisticsState.isRefreshingLibraryMetadata &&
-            (mainState.totalSongCount == 0 || statisticsState.librarySongs.size == mainState.totalSongCount)
+    // Readiness comes from a completed scan, not from equality with a possibly stale count.
+    val hasCompleteLibraryMetadata = statisticsState.hasLibraryMetadata && !statisticsState.isRefreshingLibraryMetadata
     val statisticsSongs = if (hasCompleteLibraryMetadata) statisticsState.librarySongs else mainState.songs
-    val snapshot =
-        remember(statisticsSongs, mainState.playbackStats) {
-            buildPlaybackStatisticsSnapshot(
-                songs = statisticsSongs,
-                playbackStats = mainState.playbackStats,
+    val snapshot = remember(statisticsSongs, mainState.playbackStats) {
+        buildPlaybackStatisticsSnapshot(songs = statisticsSongs, playbackStats = mainState.playbackStats)
+    }
+    var showClearDialog by rememberSaveable { mutableStateOf(false) }
+    val actionsAvailable = !statisticsState.isWorking && !statisticsState.hasPendingImport
+
+    val jsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(PlaybackStatisticsExportFormat.JSON.mimeType),
+    ) { uri ->
+        uri?.let {
+            statisticsViewModel.export(
+                uri = it,
+                format = PlaybackStatisticsExportFormat.JSON,
+                snapshot = buildPlaybackStatisticsSnapshot(statisticsState.librarySongs, mainState.playbackStats),
             )
         }
-    var showClearDialog by rememberSaveable { mutableStateOf(false) }
-
-    val jsonLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument(PlaybackStatisticsExportFormat.JSON.mimeType),
-        ) { uri ->
-            uri?.let {
-                statisticsViewModel.export(
-                    uri = it,
-                    format = PlaybackStatisticsExportFormat.JSON,
-                    snapshot = buildPlaybackStatisticsSnapshot(statisticsState.librarySongs, mainState.playbackStats),
-                )
-            }
+    }
+    val csvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(PlaybackStatisticsExportFormat.CSV.mimeType),
+    ) { uri ->
+        uri?.let {
+            statisticsViewModel.export(
+                uri = it,
+                format = PlaybackStatisticsExportFormat.CSV,
+                snapshot = buildPlaybackStatisticsSnapshot(statisticsState.librarySongs, mainState.playbackStats),
+            )
         }
-    val csvLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument(PlaybackStatisticsExportFormat.CSV.mimeType),
-        ) { uri ->
-            uri?.let {
-                statisticsViewModel.export(
-                    uri = it,
-                    format = PlaybackStatisticsExportFormat.CSV,
-                    snapshot = buildPlaybackStatisticsSnapshot(statisticsState.librarySongs, mainState.playbackStats),
-                )
-            }
-        }
-    val importLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let(statisticsViewModel::prepareImport)
-        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(statisticsViewModel::prepareImport)
+    }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -115,17 +106,13 @@ fun ListeningStatisticsCard(
         color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 1.dp,
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("收听统计与隐私", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
                 "统计仅保存在本机。导出文件包含媒体标识、曲目信息、次数、完成度、进度和累计收听时长。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
             StatisticsOverview(snapshot)
             if (snapshot.entries.isNotEmpty()) {
                 HorizontalDivider()
@@ -133,52 +120,47 @@ fun ListeningStatisticsCard(
                 RankedGroups("最常听艺术家", topArtistInsights(snapshot, TOP_ITEM_LIMIT))
                 RankedGroups("最常听专辑", topAlbumInsights(snapshot, TOP_ITEM_LIMIT))
             }
-
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
                         onClick = { jsonLauncher.launch(playbackStatisticsFileName(PlaybackStatisticsExportFormat.JSON)) },
-                        enabled = !statisticsState.isWorking && hasCompleteLibraryMetadata,
+                        enabled = actionsAvailable && hasCompleteLibraryMetadata,
                     ) { Text("导出 JSON") }
                     TextButton(
                         onClick = { csvLauncher.launch(playbackStatisticsFileName(PlaybackStatisticsExportFormat.CSV)) },
-                        enabled = !statisticsState.isWorking && hasCompleteLibraryMetadata,
+                        enabled = actionsAvailable && hasCompleteLibraryMetadata,
                     ) { Text("导出 CSV") }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
                         onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
-                        enabled = !statisticsState.isWorking && hasCompleteLibraryMetadata,
+                        enabled = actionsAvailable,
                     ) { Text("导入 JSON") }
-                    TextButton(
-                        onClick = { showClearDialog = true },
-                        enabled = !statisticsState.isWorking,
-                    ) { Text("管理本地数据") }
+                    TextButton(onClick = { showClearDialog = true }, enabled = actionsAvailable) { Text("管理本地数据") }
                 }
             }
-
             if (statisticsState.isRefreshingLibraryMetadata) {
                 Text(
-                    "正在同步完整音乐库元数据，导入和导出将在完成后启用…",
+                    "正在同步完整音乐库元数据。可先选择导入文件，扫描完成后会自动生成预览。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            StatisticsImportPreparationStatus(
+                state = statisticsState,
+                onCancel = statisticsViewModel::cancelImport,
+                onRetryMetadata = statisticsViewModel::retryLibraryMetadata,
+            )
             if (statisticsState.isWorking) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     CircularProgressIndicator()
                     Text("正在处理本地收听数据…")
                 }
             }
-            statisticsState.infoMessage?.let {
-                DismissibleMessage(it, false, statisticsViewModel::clearMessage)
-            }
-            statisticsState.errorMessage?.let {
-                DismissibleMessage(it, true, statisticsViewModel::clearMessage)
-            }
+            statisticsState.infoMessage?.let { DismissibleMessage(it, false, statisticsViewModel::clearMessage) }
+            statisticsState.errorMessage?.let { DismissibleMessage(it, true, statisticsViewModel::clearMessage) }
         }
     }
-
     if (showClearDialog) {
         ClearListeningDataDialog(
             onDismiss = { showClearDialog = false },
@@ -232,13 +214,7 @@ private fun RankedGroups(title: String, groups: List<ListeningGroupInsight>) {
 @Composable
 private fun StatisticValueRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            label,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Text(label, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, fontWeight = FontWeight.Medium)
     }
 }
@@ -246,17 +222,13 @@ private fun StatisticValueRow(label: String, value: String) {
 @Composable
 private fun DismissibleMessage(message: String, isError: Boolean, onDismiss: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            message,
-            modifier = Modifier.weight(1f),
-            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        )
+        Text(message, modifier = Modifier.weight(1f), color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
         TextButton(onClick = onDismiss) { Text("关闭") }
     }
 }
 
 @Composable
-private fun PlaybackStatisticsImportDialog(
+internal fun PlaybackStatisticsImportDialog(
     preview: PlaybackStatisticsImportPreview,
     mode: PlaybackStatisticsImportMode,
     retainUnavailable: Boolean,
@@ -269,13 +241,16 @@ private fun PlaybackStatisticsImportDialog(
     val selectedCount = preview.selectedStats(retainUnavailable).size
     AlertDialog(
         onDismissRequest = { if (!isWorking) onDismiss() },
+        modifier = Modifier.testTag("statistics_import_preview"),
         title = { Text("预览收听统计导入") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Text(
                     "schema v${preview.schemaVersion} · ${formatImportTimestamp(preview.generatedAtMs)} · 源文件 ${preview.sourceEntryCount} 项",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 StatisticValueRow("精确 ID + 元数据", "${preview.exactMatchCount} 项")
                 StatisticValueRow("跨设备元数据匹配", "${preview.portableMatchCount} 项")
@@ -288,11 +263,13 @@ private fun PlaybackStatisticsImportDialog(
                     FilterChip(
                         selected = mode == PlaybackStatisticsImportMode.MERGE,
                         onClick = { onModeChange(PlaybackStatisticsImportMode.MERGE) },
+                        enabled = !isWorking,
                         label = { Text("幂等合并") },
                     )
                     FilterChip(
                         selected = mode == PlaybackStatisticsImportMode.REPLACE,
                         onClick = { onModeChange(PlaybackStatisticsImportMode.REPLACE) },
+                        enabled = !isWorking,
                         label = { Text("完全替换") },
                     )
                 }
@@ -306,22 +283,22 @@ private fun PlaybackStatisticsImportDialog(
                     color = if (mode == PlaybackStatisticsImportMode.REPLACE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (preview.unavailableEntryCount > 0) {
-                    SelectionRow(retainUnavailable, "保留当前不可用媒体 ID", onRetainUnavailableChange)
+                    SelectionRow(retainUnavailable, "保留当前不可用媒体 ID", onRetainUnavailableChange, enabled = !isWorking)
                 }
                 preview.warnings.forEach { warning ->
                     Text("注意：$warning", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(
                     "导入只修改收听统计，不会改动收藏、最近播放顺序、歌单、歌词或音乐文件。",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm, enabled = !isWorking && selectedCount > 0) {
-                Text(if (mode == PlaybackStatisticsImportMode.MERGE) "合并导入" else "替换导入")
-            }
+            TextButton(
+                onClick = onConfirm, enabled = !isWorking && selectedCount > 0,
+                modifier = Modifier.testTag("statistics_import_confirm"),
+            ) { Text(if (mode == PlaybackStatisticsImportMode.MERGE) "合并导入" else "替换导入") }
         },
         dismissButton = { TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") } },
     )
@@ -336,12 +313,11 @@ private fun ClearListeningDataDialog(onDismiss: () -> Unit, onConfirm: (Boolean,
         title = { Text("管理本地收听数据") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SelectionRow(clearRecent, "清除最近播放顺序") { clearRecent = it }
-                SelectionRow(clearStats, "清除次数、完成度、时长和恢复位置") { clearStats = it }
+                SelectionRow(clearRecent, "清除最近播放顺序", { clearRecent = it })
+                SelectionRow(clearStats, "清除次数、完成度、时长和恢复位置", { clearStats = it })
                 Text(
                     "收藏、自定义歌单、歌词文件、主题设置和设备音乐不会被删除。正在播放的歌曲之后仍可能生成新的统计。",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
@@ -353,9 +329,9 @@ private fun ClearListeningDataDialog(onDismiss: () -> Unit, onConfirm: (Boolean,
 }
 
 @Composable
-private fun SelectionRow(checked: Boolean, label: String, onCheckedChange: (Boolean) -> Unit) {
+private fun SelectionRow(checked: Boolean, label: String, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+        Checkbox(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
         Text(label)
     }
 }
