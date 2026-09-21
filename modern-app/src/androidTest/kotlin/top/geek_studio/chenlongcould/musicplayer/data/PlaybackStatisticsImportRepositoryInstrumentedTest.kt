@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 @MediumTest
 class PlaybackStatisticsImportRepositoryInstrumentedTest {
     @Test
-    fun exportedJsonCanBeReadBackFromFileUri() = runBlocking {
+    fun exportedJsonCanBeReadBackFromFileUri(): Unit = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = File(context.cacheDir, "statistics-round-trip.json")
         val snapshot =
@@ -40,7 +40,7 @@ class PlaybackStatisticsImportRepositoryInstrumentedTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun futureSchemaIsRejected() = runBlocking {
+    fun futureSchemaIsRejected(): Unit = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = File(context.cacheDir, "statistics-future-schema.json")
         file.writeText(

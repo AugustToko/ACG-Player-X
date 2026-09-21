@@ -1,6 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -8,8 +9,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import java.io.IOException
+import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
@@ -61,6 +64,10 @@ class LibraryStateRepository(
                 )
             }
 
+    /** Read the real DataStore snapshot; an I/O failure must not produce a fake default generation. */
+    suspend fun readListeningDataGeneration(): ListeningDataGeneration =
+        dataStore.data.first().listeningDataGeneration()
+
     suspend fun ensurePlaybackStatsSchema() {
         dataStore.edit { preferences ->
             val storedVersion = preferences[PLAYBACK_STATS_SCHEMA_VERSION] ?: 0
@@ -92,41 +99,52 @@ class LibraryStateRepository(
         }
     }
 
+    // Direct callers create a new event now. Delayed service writes must pass their sampled generation.
     suspend fun recordPlayed(
         mediaId: String,
         playedAtMs: Long = System.currentTimeMillis(),
+        expectedGeneration: ListeningDataGeneration? = null,
     ) {
         if (mediaId.isBlank()) return
 
         dataStore.edit { preferences ->
-            val recent =
-                recordRecentMediaId(
-                    current = decodeRecentMediaIds(preferences[RECENT_MEDIA_IDS]),
-                    mediaId = mediaId,
-                    limit = MAX_RECENT_ITEMS,
-                )
-            val currentStats =
-                decodePlaybackStats(
-                    preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
-                )
-            val stats =
-                updatePlaybackStats(
-                    current = currentStats,
-                    mediaId = mediaId,
-                    playedAtMs = playedAtMs,
-                )
-            preferences[RECENT_MEDIA_IDS] = encodeRecentMediaIds(recent)
-            preferences[PLAYBACK_STATS_V2] = encodePlaybackStats(stats)
-            preferences.remove(PLAYBACK_STATS_V1)
-            preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
+            val generation = preferences.listeningDataGeneration()
+            if (generation.acceptsRecent(expectedGeneration)) {
+                val recent =
+                    recordRecentMediaId(
+                        current = decodeRecentMediaIds(preferences[RECENT_MEDIA_IDS]),
+                        mediaId = mediaId,
+                        limit = MAX_RECENT_ITEMS,
+                    )
+                preferences[RECENT_MEDIA_IDS] = encodeRecentMediaIds(recent)
+            }
+            if (generation.acceptsStatistics(expectedGeneration)) {
+                val currentStats =
+                    decodePlaybackStats(
+                        preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
+                    )
+                val stats =
+                    updatePlaybackStats(
+                        current = currentStats,
+                        mediaId = mediaId,
+                        playedAtMs = playedAtMs,
+                    )
+                preferences[PLAYBACK_STATS_V2] = encodePlaybackStats(stats)
+                preferences.remove(PLAYBACK_STATS_V1)
+                preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
+            }
         }
     }
 
-    suspend fun recordProgress(update: PlaybackProgressUpdate) {
+    suspend fun recordProgress(
+        update: PlaybackProgressUpdate,
+        expectedGeneration: ListeningDataGeneration? = null,
+    ) {
         if (update.mediaId.isBlank()) return
         if (update.listenedDeltaMs <= 0L && !update.completed) return
 
         dataStore.edit { preferences ->
+            if (!preferences.listeningDataGeneration().acceptsStatistics(expectedGeneration)) return@edit
             val current =
                 decodePlaybackStats(
                     preferences[PLAYBACK_STATS_V2] ?: preferences[PLAYBACK_STATS_V1],
@@ -169,14 +187,15 @@ class LibraryStateRepository(
             }
             preferences.remove(PLAYBACK_STATS_V1)
             preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
+            if (mode == PlaybackStatisticsImportMode.REPLACE) {
+                preferences[STATISTICS_GENERATION] = UUID.randomUUID().toString()
+            }
         }
         return importedCount
     }
 
     suspend fun clearRecent() {
-        dataStore.edit { preferences ->
-            preferences.remove(RECENT_MEDIA_IDS)
-        }
+        clearListeningData(clearRecent = true, clearPlaybackStats = false)
     }
 
     suspend fun clearListeningData(
@@ -186,16 +205,25 @@ class LibraryStateRepository(
         if (!clearRecent && !clearPlaybackStats) return
 
         dataStore.edit { preferences ->
+            // Reset and invalidation are one transaction; a check outside edit would race with writes.
             if (clearRecent) {
                 preferences.remove(RECENT_MEDIA_IDS)
+                preferences[RECENT_GENERATION] = UUID.randomUUID().toString()
             }
             if (clearPlaybackStats) {
                 preferences.remove(PLAYBACK_STATS_V1)
                 preferences.remove(PLAYBACK_STATS_V2)
                 preferences[PLAYBACK_STATS_SCHEMA_VERSION] = CURRENT_PLAYBACK_STATS_SCHEMA_VERSION
+                preferences[STATISTICS_GENERATION] = UUID.randomUUID().toString()
             }
         }
     }
+
+    private fun Preferences.listeningDataGeneration(): ListeningDataGeneration =
+        ListeningDataGeneration(
+            statistics = this[STATISTICS_GENERATION].orEmpty(),
+            recent = this[RECENT_GENERATION].orEmpty(),
+        )
 
     private companion object {
         val FAVORITE_MEDIA_IDS = stringSetPreferencesKey("favorite_media_ids")
@@ -203,6 +231,8 @@ class LibraryStateRepository(
         val PLAYBACK_STATS_V1 = stringPreferencesKey("playback_stats_v1")
         val PLAYBACK_STATS_V2 = stringPreferencesKey("playback_stats_v2")
         val PLAYBACK_STATS_SCHEMA_VERSION = intPreferencesKey("playback_stats_schema_version")
+        val STATISTICS_GENERATION = stringPreferencesKey("playback_stats_generation")
+        val RECENT_GENERATION = stringPreferencesKey("recent_media_generation")
         const val CURRENT_PLAYBACK_STATS_SCHEMA_VERSION = 2
         const val MAX_RECENT_ITEMS = 100
     }

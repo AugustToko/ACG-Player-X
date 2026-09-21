@@ -30,7 +30,7 @@ class PlaybackService : MediaSessionService() {
     private val serviceScope =
         CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val analyticsMutex = Mutex()
-    private val playbackProgressTracker = PlaybackProgressTracker()
+    private val playbackAnalyticsSampler = PlaybackAnalyticsSampler()
 
     private lateinit var player: ExoPlayer
     private lateinit var playbackStateStore: PlaybackStateStore
@@ -41,7 +41,6 @@ class PlaybackService : MediaSessionService() {
     private var positionSaveJob: Job? = null
     private var widgetUpdateJob: Job? = null
     private var analyticsLoopJob: Job? = null
-    private var lastRecordedPlayingMediaId: String? = null
 
     private val playerListener =
         object : Player.Listener {
@@ -49,7 +48,7 @@ class PlaybackService : MediaSessionService() {
                 mediaItem: MediaItem?,
                 reason: Int,
             ) {
-                lastRecordedPlayingMediaId = null
+                playbackAnalyticsSampler.onMediaItemTransition()
                 requestPlaybackAnalyticsSample()
             }
 
@@ -242,40 +241,36 @@ class PlaybackService : MediaSessionService() {
 
     private suspend fun samplePlaybackAnalytics() {
         analyticsMutex.withLock {
-            val mediaId =
-                player.currentMediaItem
-                    ?.mediaId
-                    ?.takeIf(String::isNotBlank)
-            if (mediaId == null) {
-                lastRecordedPlayingMediaId = null
-            }
-            val shouldRecordPlay =
-                player.isPlaying &&
-                    mediaId != null &&
-                    mediaId != lastRecordedPlayingMediaId
-            if (shouldRecordPlay) {
-                lastRecordedPlayingMediaId = mediaId
-            }
-
-            val progressUpdate =
-                playbackProgressTracker.update(
-                    PlaybackProgressSample(
-                        mediaId = mediaId,
-                        positionMs = player.currentPosition,
-                        durationMs = player.duration,
-                        isPlaying = player.isPlaying,
-                        elapsedRealtimeMs = SystemClock.elapsedRealtime(),
-                        wallClockMs = System.currentTimeMillis(),
-                    ),
-                )
-            if (!shouldRecordPlay && progressUpdate == null) return
+            // Capture the persisted generation before sampling. A clear/replace racing with the
+            // following IO writes is rejected inside the repository's DataStore transaction.
+            val generation = libraryStateRepository.readListeningDataGeneration()
+            val batch =
+                playbackAnalyticsSampler.sample(
+                    sample =
+                        PlaybackProgressSample(
+                            mediaId = player.currentMediaItem?.mediaId,
+                            positionMs = player.currentPosition,
+                            durationMs = player.duration,
+                            isPlaying = player.isPlaying,
+                            elapsedRealtimeMs = SystemClock.elapsedRealtime(),
+                            wallClockMs = System.currentTimeMillis(),
+                        ),
+                    currentGeneration = generation,
+                ) ?: return
 
             withContext(Dispatchers.IO) {
-                if (shouldRecordPlay && mediaId != null) {
-                    libraryStateRepository.recordPlayed(mediaId)
+                batch.playedMediaId?.let { mediaId ->
+                    libraryStateRepository.recordPlayed(
+                        mediaId = mediaId,
+                        playedAtMs = batch.playedAtMs,
+                        expectedGeneration = batch.generation,
+                    )
                 }
-                progressUpdate?.let { update ->
-                    libraryStateRepository.recordProgress(update)
+                batch.progress?.let { update ->
+                    libraryStateRepository.recordProgress(
+                        update = update,
+                        expectedGeneration = batch.generation,
+                    )
                 }
             }
         }
