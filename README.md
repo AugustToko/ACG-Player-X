@@ -80,6 +80,7 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 - 无编译和 Baseline Profile 两种冷启动 Macrobenchmark
 - 设置页 FrameTiming 与 10,000 首混合资料库滚动 FrameTiming
 - API 35 AOSP ATD 托管设备执行 Compose、MediaSession、Glance、文件往返、隐私清理和进程恢复测试
+- Samsung SM-G970U / Android 12 / API 31 实机覆盖完整应用仪器化、强停恢复、10,000 首滚动与系统 MediaSession
 - 性能、托管设备与 Profile 报告作为 GitHub Actions artifact 保留
 
 详细说明见 [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) 和 [`docs/TESTING.md`](docs/TESTING.md)。
