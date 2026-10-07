@@ -1,5 +1,7 @@
 package top.geek_studio.chenlongcould.musicplayer.benchmark
 
+import android.Manifest
+import android.os.Build
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
@@ -8,7 +10,13 @@ internal const val TARGET_PACKAGE = "top.geek_studio.chenlongcould.musicplayer"
 internal const val LARGE_LIBRARY_SONG_COUNT = 10_000
 private const val UI_TIMEOUT_MS = 10_000L
 private const val LARGE_LIBRARY_TIMEOUT_MS = 30_000L
-private const val READ_MEDIA_AUDIO_PERMISSION = "android.permission.READ_MEDIA_AUDIO"
+internal val AUDIO_LIBRARY_PERMISSION: String
+    get() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
 
 internal fun MacrobenchmarkScope.launchFromHome() {
     pressHome()
@@ -17,11 +25,11 @@ internal fun MacrobenchmarkScope.launchFromHome() {
 }
 
 internal fun MacrobenchmarkScope.grantAudioPermission() {
-    device.executeShellCommand("pm grant $TARGET_PACKAGE $READ_MEDIA_AUDIO_PERMISSION")
+    device.executeShellCommand("pm grant $TARGET_PACKAGE $AUDIO_LIBRARY_PERMISSION")
 }
 
 internal fun MacrobenchmarkScope.revokeAudioPermission() {
-    device.executeShellCommand("pm revoke $TARGET_PACKAGE $READ_MEDIA_AUDIO_PERMISSION")
+    device.executeShellCommand("pm revoke $TARGET_PACKAGE $AUDIO_LIBRARY_PERMISSION")
 }
 
 internal fun MacrobenchmarkScope.waitForLargeLibrary() {
