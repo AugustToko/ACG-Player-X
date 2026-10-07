@@ -15,6 +15,13 @@ class BenchmarkLibraryFixtureTest {
         assertEquals(BENCHMARK_LIBRARY_MEDIASTORE_COUNT, result.mediaStoreSongCount)
         assertEquals(BENCHMARK_LIBRARY_SAF_COUNT, result.authorizedFolderSongCount)
         assertEquals(result.songs.size, result.songs.map { it.id }.distinct().size)
+        assertEquals(result.songs.size, result.songs.map { it.contentUri }.distinct().size)
+        assertTrue(
+            result.songs.all { song ->
+                song.contentUri.startsWith("content://$BENCHMARK_MEDIA_AUTHORITY/")
+            },
+        )
+        assertTrue(result.songs.all { it.albumArtUri == BENCHMARK_ARTWORK_URI })
         assertEquals(result.mediaStoreSongCount, result.songs.count { it.id > 0L })
         assertEquals(result.authorizedFolderSongCount, result.songs.count { it.id < 0L })
         assertTrue(result.songs.zipWithNext().all { (first, second) -> first.title < second.title })

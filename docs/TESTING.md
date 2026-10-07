@@ -6,8 +6,8 @@ ACG Player X 2.0 当前使用四层验证：
 
 1. **JVM 单元测试**：路径、合并去重、排序、歌单、M3U、LRC、播放状态、完成度、统计导出、Glance 文本状态和 benchmark 夹具选择。
 2. **构建门禁**：Android Lint、JVM 测试、Debug APK、AndroidTest APK 与 benchmark APK。
-3. **应用设备测试**：API 35 AOSP ATD 上运行 Compose、MediaSession、Glance、ContentResolver、DataStore 隐私清理和应用文件系统测试。
-4. **性能与恢复门禁**：生成 Baseline/Startup Profile，运行冷启动、滚动 Macrobenchmark、10,000 首资料库和 `am force-stop` 恢复测试。
+3. **应用设备测试**：API 35 AOSP ATD 与 Samsung Android 12 实机运行 Compose、MediaSession、Glance、ContentResolver、DataStore 隐私清理和应用文件系统测试。
+4. **性能与恢复门禁**：生成 Baseline/Startup Profile，并在托管设备与物理设备运行冷启动、滚动 Macrobenchmark、10,000 首资料库和 `am force-stop` 恢复测试。
 
 ## 2. 本地命令
 
@@ -42,6 +42,24 @@ ACG Player X 2.0 当前使用四层验证：
 ```
 
 托管设备固定为 Pixel 2、API 35、AOSP ATD、x86_64，并关闭系统动画。Linux 环境必须提供 KVM。
+
+### Samsung API 31 实机回归
+
+Alpha21 在 Samsung SM-G970U、Android 12、API 31 上执行了以下门禁：
+
+```bash
+./gradlew --no-daemon \
+  :app:lintDebug \
+  :app:testDebugUnitTest \
+  :app:assembleDebug \
+  :app:assembleDebugAndroidTest \
+  :app:assembleBenchmark \
+  :benchmark:assembleBenchmarkBenchmark
+
+./gradlew --no-daemon :app:connectedDebugAndroidTest
+```
+
+此外，以已签名的 release-like benchmark APK 手工运行 `PlaybackProcessRecoveryTest`、`StartupBenchmark`、`SettingsScrollBenchmark` 与 `LargeLibraryScrollBenchmark`。该设备上的验收结果、自动化差异和性能数据见 [`SAMSUNG_API31_VALIDATION.md`](SAMSUNG_API31_VALIDATION.md)。
 
 ## 3. 应用仪器化覆盖
 
@@ -136,6 +154,9 @@ benchmark/build/reports/androidTests/managedDevice/
 - 性能夹具由 BuildConfig 和 Profile 构建类型双重限定。
 - 测试失败时仍上传报告。
 - Benchmark 模块通过显式 class filter 区分 Profile、Macrobenchmark 和恢复测试。
+- API 31 使用 `READ_EXTERNAL_STORAGE`，API 33+ 使用 `READ_MEDIA_AUDIO`。
+- 三星输入法路径使用 IME Search/Enter，并在 Compose 重组后重新获取 accessibility node。
+- benchmark 变体注册只读媒体 Provider，避免 10,000 首夹具反复查询不存在的 authority。
 - 隐私测试使用唯一 ID，并在结束时移除测试收藏，避免跨方法污染。
 
 ## 10. 仍需真实设备验证
@@ -145,7 +166,7 @@ benchmark/build/reports/androidTests/managedDevice/
 - 系统重启、低内存杀进程和厂商后台限制
 - 前台服务通知、锁屏、耳机、蓝牙和车机
 - 不同 Launcher/OEM 的小组件添加、尺寸、深色模式和控制回调
-- Android 8、12、13、16、17 多版本矩阵
+- Android 8、13、16、17 及更多 OEM 多版本矩阵；Android 12 当前仅覆盖 Samsung SM-G970U
 - 截图、无障碍、PSS、GC 和目标硬件帧时间门槛
 
 API 35 模拟设备结果不能替代这些发布前实机验收。

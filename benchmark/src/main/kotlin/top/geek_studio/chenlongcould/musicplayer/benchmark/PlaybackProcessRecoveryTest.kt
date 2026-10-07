@@ -22,7 +22,7 @@ class PlaybackProcessRecoveryTest {
     fun setUp() {
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         clearTargetPackage()
-        shell("pm grant $TARGET_PACKAGE $READ_MEDIA_AUDIO_PERMISSION")
+        shell("pm grant $TARGET_PACKAGE $AUDIO_LIBRARY_PERMISSION")
         launchTargetAndWaitForLibrary()
     }
 
@@ -41,12 +41,18 @@ class PlaybackProcessRecoveryTest {
             )
         searchField.click()
         searchField.text = SONG_QUERY
-        device.pressBack()
-        device.waitForIdle()
-
         requireUiObject(
             selector = By.text(SONG_TITLE),
             message = "Benchmark song was not visible after filtering",
+        )
+        // Use ImeAction.Search rather than Back. Some Samsung IMEs route Back to the Activity
+        // before consuming it, and clearing focus invalidates the old accessibility node.
+        Thread.sleep(IME_SETTLE_MS)
+        device.pressEnter()
+        device.waitForIdle()
+        requireUiObject(
+            selector = By.text(SONG_TITLE),
+            message = "Benchmark song disappeared after hiding the keyboard",
         ).click()
         device.waitForIdle()
 
@@ -130,12 +136,12 @@ class PlaybackProcessRecoveryTest {
     private fun shell(command: String): String = device.executeShellCommand(command)
 
     private companion object {
-        const val READ_MEDIA_AUDIO_PERMISSION = "android.permission.READ_MEDIA_AUDIO"
         const val EDIT_TEXT_CLASS = "android.widget.EditText"
         const val SONG_QUERY = "00001"
         const val SONG_TITLE = "Benchmark Song 00001"
         const val UI_TIMEOUT_MS = 15_000L
         const val LARGE_LIBRARY_TIMEOUT_MS = 35_000L
+        const val IME_SETTLE_MS = 500L
         const val PERSISTENCE_SETTLE_MS = 2_000L
         const val FORCE_STOP_SETTLE_MS = 500L
         const val MAX_SCROLL_ATTEMPTS = 4

@@ -172,6 +172,8 @@ Process recovery + Macrobenchmark smoke suite
 
 Alpha19 新增 JVM 导出测试和 API 35 DataStore 隐私测试，确认清除收听数据不会删除收藏。
 
+Alpha21 增加 Android 12/API 31 权限分支、三星输入法稳定化、WorkManager 2.11.2 显式约束和 benchmark 专用只读媒体 Provider；Samsung SM-G970U 上已通过完整应用仪器化、强停恢复与 10,000 首性能门禁。
+
 ## 9. 安全与数据边界
 
 - 不申请共享存储写权限

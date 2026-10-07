@@ -85,11 +85,11 @@
 | --- | --- | --- | --- |
 | JVM 单元测试 | 部分完成 | 数据、M3U、LRC、恢复、Glance、完成度、导出编码和聚合 | 覆盖率门槛 |
 | Android Lint/APK | 完成 | Push/PR 阻断，含 AndroidTest 和 benchmark APK | Release lint |
-| 应用仪器化 | 部分完成 | API 35：导航、MediaSession、Glance、文件往返、隐私清理 | 多版本/Provider/OEM Launcher |
+| 应用仪器化 | 部分完成 | API 35 托管设备 + Samsung API 31 实机：导航、MediaSession、Glance、文件往返、隐私清理 | 更多版本/Provider/OEM Launcher |
 | Baseline/Startup Profile | 完成 | benchmark 模块生成并合入主源集 | 真机收益对比 |
-| 冷启动 Macrobenchmark | 完成 | None 与 Baseline Profile | 真机数值门槛 |
-| 设置页 FrameTiming | 完成 | API 35 托管设备双向滚动 | 截图关联 |
-| 10,000 首压力门禁 | 完成 | 7,000 MediaStore + 3,000 SAF | 首次加载/PSS/GC |
+| 冷启动 Macrobenchmark | 完成 | None 与 Baseline Profile；Samsung API 31 已采样 | 更多目标机型数值门槛 |
+| 设置页 FrameTiming | 完成 | API 35 托管设备 + Samsung API 31 实机双向滚动 | 截图关联 |
+| 10,000 首压力门禁 | 完成 | 7,000 MediaStore + 3,000 SAF；Samsung API 31 P99 11.4ms | 首次加载/PSS/GC |
 | 强制停止恢复测试 | 完成 | 队列、随机、循环跨进程恢复 | 低内存和重启 |
 | 诊断 artifact | 完成 | 应用 7 天、性能 14 天 | 趋势存储 |
 | 截图/无障碍 | 未开始 | 无 | 手机、平板、主题和关键弹窗 |

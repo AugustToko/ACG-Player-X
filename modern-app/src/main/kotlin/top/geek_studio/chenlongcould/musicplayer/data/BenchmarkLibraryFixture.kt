@@ -4,6 +4,10 @@ import top.geek_studio.chenlongcould.musicplayer.model.Song
 
 internal const val BENCHMARK_LIBRARY_SONG_COUNT = 10_000
 internal const val BENCHMARK_LIBRARY_MEDIASTORE_COUNT = 7_000
+internal const val BENCHMARK_MEDIA_AUTHORITY =
+    "top.geek_studio.chenlongcould.musicplayer.benchmark"
+internal const val BENCHMARK_ARTWORK_URI =
+    "content://$BENCHMARK_MEDIA_AUTHORITY/artwork"
 internal const val BENCHMARK_LIBRARY_SAF_COUNT =
     BENCHMARK_LIBRARY_SONG_COUNT - BENCHMARK_LIBRARY_MEDIASTORE_COUNT
 
@@ -42,10 +46,10 @@ internal fun createBenchmarkMusicLibrary(
                 album = "Benchmark Album $albumSequence",
                 durationMs = BASE_DURATION_MS + (index % DURATION_VARIANTS) * 1_000L,
                 contentUri =
-                    "content://top.geek_studio.chenlongcould.musicplayer.benchmark/" +
+                    "content://$BENCHMARK_MEDIA_AUTHORITY/" +
                         (if (isAuthorizedFolderSong) "saf" else "mediastore") +
                         "/$ordinal",
-                albumArtUri = null,
+                albumArtUri = BENCHMARK_ARTWORK_URI,
                 folderName = folderName,
                 folderPath = folderPath,
                 dateAddedMs = BENCHMARK_DATE_EPOCH_MS - index * 60_000L,
