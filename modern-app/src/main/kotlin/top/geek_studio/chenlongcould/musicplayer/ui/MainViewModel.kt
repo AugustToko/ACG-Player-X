@@ -30,6 +30,7 @@ import top.geek_studio.chenlongcould.musicplayer.data.resolveRecentlyPlayedWithi
 import top.geek_studio.chenlongcould.musicplayer.data.resolveUnplayedSongs
 import top.geek_studio.chenlongcould.musicplayer.data.saturatingAdd
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsRepository
+import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsSource
 import top.geek_studio.chenlongcould.musicplayer.lyrics.LyricsUiState
 import top.geek_studio.chenlongcould.musicplayer.model.Song
 import top.geek_studio.chenlongcould.musicplayer.playback.PlaybackUiState
@@ -183,8 +184,11 @@ class MainViewModel(
                 val previousPlayback = _uiState.value.playback
                 _uiState.update { it.copy(playback = playback) }
 
-                if (previousPlayback.mediaId != playback.mediaId) {
-                    loadLyrics(playback.mediaId)
+                if (
+                    previousPlayback.mediaId != playback.mediaId ||
+                    previousPlayback.mediaUri != playback.mediaUri
+                ) {
+                    loadLyrics(playback.mediaId, playback.mediaUri)
                 }
             }
         }
@@ -412,6 +416,7 @@ class MainViewModel(
                                         lines = parsed.lines,
                                         fileOffsetMs = parsed.fileOffsetMs,
                                         userOffsetMs = userOffsetMs,
+                                        source = LyricsSource.IMPORTED,
                                     ),
                             )
                         } else {
@@ -467,14 +472,28 @@ class MainViewModel(
     }
 
     fun deleteLyrics() {
-        val mediaId = _uiState.value.lyrics.mediaId ?: return
+        val currentState = _uiState.value
+        val mediaId = currentState.lyrics.mediaId ?: return
+        if (!currentState.lyrics.isImported) return
+        val mediaUri = currentState.playback.mediaUri
         lyricsJob?.cancel()
         lyricsJob =
             viewModelScope.launch {
                 lyricsRepository.delete(mediaId)
+                val resolved = lyricsRepository.resolve(mediaId, mediaUri)
+                val userOffsetMs = lyricsRepository.getUserOffsetMs(mediaId)
                 _uiState.update { state ->
-                    if (state.playback.mediaId == mediaId) {
-                        state.copy(lyrics = LyricsUiState(mediaId = mediaId))
+                    if (state.playback.mediaId == mediaId && state.playback.mediaUri == mediaUri) {
+                        state.copy(
+                            lyrics =
+                                LyricsUiState(
+                                    mediaId = mediaId,
+                                    lines = resolved?.parsed?.lines.orEmpty(),
+                                    fileOffsetMs = resolved?.parsed?.fileOffsetMs ?: 0L,
+                                    userOffsetMs = userOffsetMs,
+                                    source = resolved?.source,
+                                ),
+                        )
                     } else {
                         state
                     }
@@ -590,7 +609,10 @@ class MainViewModel(
         }
     }
 
-    private fun loadLyrics(mediaId: String?) {
+    private fun loadLyrics(
+        mediaId: String?,
+        mediaUri: Uri?,
+    ) {
         lyricsJob?.cancel()
         if (mediaId == null) {
             _uiState.update { it.copy(lyrics = LyricsUiState()) }
@@ -611,16 +633,17 @@ class MainViewModel(
         lyricsJob =
             viewModelScope.launch {
                 try {
-                    val parsed = lyricsRepository.load(mediaId)
+                    val resolved = lyricsRepository.resolve(mediaId, mediaUri)
                     _uiState.update { state ->
-                        if (state.playback.mediaId == mediaId) {
+                        if (state.playback.mediaId == mediaId && state.playback.mediaUri == mediaUri) {
                             state.copy(
                                 lyrics =
                                     LyricsUiState(
                                         mediaId = mediaId,
-                                        lines = parsed?.lines.orEmpty(),
-                                        fileOffsetMs = parsed?.fileOffsetMs ?: 0L,
+                                        lines = resolved?.parsed?.lines.orEmpty(),
+                                        fileOffsetMs = resolved?.parsed?.fileOffsetMs ?: 0L,
                                         userOffsetMs = userOffsetMs,
+                                        source = resolved?.source,
                                     ),
                             )
                         } else {
@@ -631,7 +654,7 @@ class MainViewModel(
                     throw cancellation
                 } catch (throwable: Throwable) {
                     _uiState.update { state ->
-                        if (state.playback.mediaId == mediaId) {
+                        if (state.playback.mediaId == mediaId && state.playback.mediaUri == mediaUri) {
                             state.copy(
                                 lyrics =
                                     LyricsUiState(

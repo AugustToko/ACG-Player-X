@@ -373,8 +373,8 @@ private fun LyricsPane(
 
             !lyrics.hasLyrics -> {
                 CenteredPlayerState(
-                    title = "当前歌曲没有本地歌词",
-                    subtitle = "选择同名或对应的 .lrc 文件后，歌词会复制到应用内部并随歌曲自动加载。",
+                    title = "当前歌曲没有同步歌词",
+                    subtitle = "会自动读取音频内嵌的 ID3 / FLAC 同步歌词；也可以手动导入 .lrc 文件。",
                     actionLabel = "导入 LRC",
                     onAction = onImportLyrics,
                 )
@@ -465,6 +465,14 @@ private fun LyricsToolbar(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 6.dp),
     ) {
+        lyrics.source?.let { source ->
+            Text(
+                text = "来源：${source.label}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(2.dp))
+        }
         Text(
             text = "校准 ${formatOffset(lyrics.totalOffsetMs)}",
             style = MaterialTheme.typography.labelLarge,
@@ -488,11 +496,17 @@ private fun LyricsToolbar(
                 Text("重置")
             }
             TextButton(onClick = onImportLyrics) {
-                Text(if (lyrics.hasLyrics) "替换歌词" else "导入歌词")
+                Text(
+                    when {
+                        lyrics.isImported -> "替换歌词"
+                        lyrics.hasLyrics -> "导入覆盖"
+                        else -> "导入歌词"
+                    },
+                )
             }
-            if (lyrics.hasLyrics) {
+            if (lyrics.isImported) {
                 TextButton(onClick = onDeleteLyrics) {
-                    Text("移除")
+                    Text("移除导入")
                 }
             }
         }

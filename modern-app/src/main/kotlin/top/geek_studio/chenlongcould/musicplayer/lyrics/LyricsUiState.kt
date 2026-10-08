@@ -5,6 +5,7 @@ data class LyricsUiState(
     val lines: List<LyricLine> = emptyList(),
     val fileOffsetMs: Long = 0L,
     val userOffsetMs: Long = 0L,
+    val source: LyricsSource? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
 ) {
@@ -13,4 +14,7 @@ data class LyricsUiState(
 
     val hasLyrics: Boolean
         get() = lines.isNotEmpty()
+
+    val isImported: Boolean
+        get() = source == LyricsSource.IMPORTED
 }
