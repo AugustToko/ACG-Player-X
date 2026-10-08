@@ -10,9 +10,25 @@ import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.LinkedHashMap
 import kotlin.text.Charsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+enum class LyricsSource(
+    val label: String,
+) {
+    IMPORTED("已导入 LRC"),
+    EMBEDDED_ID3_USLT("音频内嵌 · ID3 USLT"),
+    EMBEDDED_ID3_SYLT("音频内嵌 · ID3 SYLT"),
+    EMBEDDED_ID3_TEXT("音频内嵌 · ID3 文本标签"),
+    EMBEDDED_FLAC("音频内嵌 · FLAC 标签"),
+}
+
+data class ResolvedLyrics(
+    val parsed: ParsedLyrics,
+    val source: LyricsSource,
+)
 
 class LyricsRepository(
     context: Context,
@@ -21,16 +37,43 @@ class LyricsRepository(
     private val lyricsDirectory = File(appContext.filesDir, LYRICS_DIRECTORY)
     private val preferences =
         appContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val embeddedLyricsCache =
+        object : LinkedHashMap<EmbeddedCacheKey, EmbeddedLyrics>(16, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<EmbeddedCacheKey, EmbeddedLyrics>?,
+            ): Boolean = size > MAX_EMBEDDED_CACHE_ENTRIES
+        }
 
     suspend fun load(mediaId: String): ParsedLyrics? = withContext(Dispatchers.IO) {
-        val file = lyricsFile(mediaId)
-        if (!file.isFile) return@withContext null
+        loadImported(mediaId)
+    }
 
-        runCatching { parseLrc(file.readText(Charsets.UTF_8)) }
-            .getOrElse {
-                file.delete()
-                null
-            }
+    suspend fun resolve(
+        mediaId: String,
+        mediaUri: Uri?,
+    ): ResolvedLyrics? = withContext(Dispatchers.IO) {
+        loadImported(mediaId)?.let { imported ->
+            return@withContext ResolvedLyrics(imported, LyricsSource.IMPORTED)
+        }
+        if (mediaUri == null) return@withContext null
+
+        val cacheKey = EmbeddedCacheKey(mediaId = mediaId, mediaUri = mediaUri.toString())
+        val cached = synchronized(embeddedLyricsCache) { embeddedLyricsCache[cacheKey] }
+        val embedded =
+            cached ?:
+                runCatching {
+                    appContext.contentResolver
+                        .openInputStream(mediaUri)
+                        ?.use(EmbeddedLyricsExtractor::extract)
+                }.getOrNull()?.also { extracted ->
+                    synchronized(embeddedLyricsCache) {
+                        embeddedLyricsCache[cacheKey] = extracted
+                    }
+                } ?: return@withContext null
+        ResolvedLyrics(
+            parsed = embedded.parsed,
+            source = embedded.format.toLyricsSource(),
+        )
     }
 
     suspend fun import(
@@ -69,6 +112,36 @@ class LyricsRepository(
             .putLong(offsetKey(mediaId), offsetMs.coerceIn(-MAX_USER_OFFSET_MS, MAX_USER_OFFSET_MS))
             .apply()
     }
+
+    private data class EmbeddedCacheKey(
+        val mediaId: String,
+        val mediaUri: String,
+    )
+
+    private fun loadImported(mediaId: String): ParsedLyrics? {
+        val file = lyricsFile(mediaId)
+        if (!file.isFile) return null
+
+        val parsed =
+            runCatching { parseLrc(file.readText(Charsets.UTF_8)) }
+                .getOrElse {
+                    file.delete()
+                    return null
+                }
+        if (parsed.lines.isEmpty()) {
+            file.delete()
+            return null
+        }
+        return parsed
+    }
+
+    private fun EmbeddedLyricsFormat.toLyricsSource(): LyricsSource =
+        when (this) {
+            EmbeddedLyricsFormat.ID3_USLT -> LyricsSource.EMBEDDED_ID3_USLT
+            EmbeddedLyricsFormat.ID3_SYLT -> LyricsSource.EMBEDDED_ID3_SYLT
+            EmbeddedLyricsFormat.ID3_TEXT -> LyricsSource.EMBEDDED_ID3_TEXT
+            EmbeddedLyricsFormat.FLAC_VORBIS -> LyricsSource.EMBEDDED_FLAC
+        }
 
     private fun lyricsFile(mediaId: String): File =
         File(lyricsDirectory, "${stableKey(mediaId)}.lrc")
@@ -130,5 +203,6 @@ class LyricsRepository(
         const val PREFERENCES_NAME = "lyrics_preferences"
         const val MAX_LYRICS_BYTES = 2 * 1024 * 1024
         const val MAX_USER_OFFSET_MS = 30_000L
+        const val MAX_EMBEDDED_CACHE_ENTRIES = 24
     }
 }
