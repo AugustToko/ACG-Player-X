@@ -2,7 +2,7 @@
 
 ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活动应用已经迁移到 **Jetpack Compose + Material 3 + AndroidX Media3**；旧 Java/XML/Fragment 源码仅保留作迁移参考，不参与默认构建。
 
-当前开发版本：**2.0.0-alpha19**。
+当前开发版本：**2.0.0-alpha22**。
 
 ## 已实现能力
 
@@ -47,11 +47,13 @@ ACG Player X 2.0 是面向现代 Android 的本地音乐播放器重写版。活
 
 ### 歌词
 
-- 本地 LRC 导入并复制到应用内部存储
+- 自动读取音频内嵌同步歌词：ID3v2 USLT/SYLT、歌词类 TXXX/COMM，以及 FLAC Vorbis Comment
+- 本地 LRC 导入并复制到应用内部存储；手动导入优先于内嵌歌词，移除后自动回退
 - UTF-8、UTF-8 BOM 与 GB18030 解码
 - 多时间戳、元数据、文件 offset、排序与去重
 - 逐行同步、自动滚动、点击歌词 Seek
 - 每首歌曲独立的 ±30 秒偏移校准
+- 内嵌标签只读、有界解析，并使用小型进程内 LRU 避免重复扫描
 
 ### 自定义歌单与 M3U
 
@@ -168,7 +170,7 @@ API 35 应用仪器化测试：
 - Android 多版本实机性能门槛和 PSS / GC 监控
 - 可配置规则智能列表和统计重新导入
 - SAF 增量索引、磁盘缓存与 Provider 变更监听
-- 歌词编辑、双语/逐字歌词、音频标签编辑和 Live2D 隔离适配
+- 同目录 LRC 自动匹配、歌词编辑、双语/逐字歌词、音频标签编辑和 Live2D 隔离适配
 - 小组件封面、进度与 Launcher/OEM 尺寸矩阵
 - 睡眠定时、均衡器、无缝播放与正式签名发布流水线
 
@@ -176,6 +178,7 @@ API 35 应用仪器化测试：
 - 迁移矩阵：[`docs/MIGRATION_MATRIX.md`](docs/MIGRATION_MATRIX.md)
 - 测试策略：[`docs/TESTING.md`](docs/TESTING.md)
 - 性能策略：[`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
+- 内嵌歌词：[`docs/EMBEDDED_LYRICS.md`](docs/EMBEDDED_LYRICS.md)
 
 ## 安全说明
 

@@ -149,6 +149,8 @@ M3U8 导出写入便携相对路径，并通过 `#ACGPLAYER-CONTENT-URI` 保留�
 
 LRC 使用纯 Kotlin parser，导入后复制到应用内部目录，支持 UTF-8/GB18030、文件 offset、每曲偏移、逐行同步和点击跳转。
 
+Alpha22 恢复旧版的内嵌同步歌词能力，但不重新引入旧 `jaudiotagger` 运行链。活动模块通过只读、有界解析支持 ID3v2 USLT/SYLT、歌词类 TXXX/COMM 与 FLAC Vorbis Comment；手动导入的 LRC 保持最高优先级，移除导入后自动回退到音频标签。成功结果进入 24 项进程内 LRU，避免切歌往返时重复打开 SAF/MediaStore 流。
+
 ## 8. 性能与 CI
 
 独立 benchmark 模块覆盖：
@@ -173,6 +175,8 @@ Process recovery + Macrobenchmark smoke suite
 Alpha19 新增 JVM 导出测试和 API 35 DataStore 隐私测试，确认清除收听数据不会删除收藏。
 
 Alpha21 增加 Android 12/API 31 权限分支、三星输入法稳定化、WorkManager 2.11.2 显式约束和 benchmark 专用只读媒体 Provider；Samsung SM-G970U 上已通过完整应用仪器化、强停恢复与 10,000 首性能门禁。
+
+Alpha22 增加纯 Kotlin 内嵌同步歌词解析、来源展示、导入覆盖/删除回退语义，并在 Samsung API 31 上用真实带 USLT 的 MP3 完成 MediaStore → Media3 → Compose 歌词页端到端验收。
 
 ## 9. 安全与数据边界
 
@@ -202,6 +206,6 @@ Git 历史中的旧凭据不会因删除当前文件而消失，正式发布前�
 
 ### P2
 
-- 歌词编辑、双语与逐字歌词
+- 同目录 LRC 自动匹配、歌词编辑、双语与逐字歌词
 - 标签编辑和 Live2D 隔离层
 - 睡眠定时、均衡器、无缝播放和正式发布流水线

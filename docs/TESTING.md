@@ -4,7 +4,7 @@
 
 ACG Player X 2.0 当前使用四层验证：
 
-1. **JVM 单元测试**：路径、合并去重、排序、歌单、M3U、LRC、播放状态、完成度、统计导出、Glance 文本状态和 benchmark 夹具选择。
+1. **JVM 单元测试**：路径、合并去重、排序、歌单、M3U、LRC、ID3/FLAC 内嵌歌词、播放状态、完成度、统计导出、Glance 文本状态和 benchmark 夹具选择。
 2. **构建门禁**：Android Lint、JVM 测试、Debug APK、AndroidTest APK 与 benchmark APK。
 3. **应用设备测试**：API 35 AOSP ATD 与 Samsung Android 12 实机运行 Compose、MediaSession、Glance、ContentResolver、DataStore 隐私清理和应用文件系统测试。
 4. **性能与恢复门禁**：生成 Baseline/Startup Profile，并在托管设备与物理设备运行冷启动、滚动 Macrobenchmark、10,000 首资料库和 `am force-stop` 恢复测试。
@@ -71,7 +71,7 @@ Alpha21 在 Samsung SM-G970U、Android 12、API 31 上执行了以下门禁：
 | `PlaybackStateStoreInstrumentedTest` | 队列/位置/随机/循环持久化，损坏 JSON 自动清理 |
 | `PlaylistImportPreviewInstrumentedTest` | 待处理筛选、确认按钮和手工映射 |
 | `PlaylistTransferRepositoryInstrumentedTest` | 文件 URI 导入、UTF-8 M3U8 导出、离线 ID 和再次导入 |
-| `LyricsRepositoryInstrumentedTest` | UTF-8、GB18030、内部存储、偏移和删除清理 |
+| `LyricsRepositoryInstrumentedTest` | UTF-8、GB18030、内部存储、偏移、ID3 USLT、导入覆盖与删除后回退 |
 | `LibraryStatePrivacyInstrumentedTest` | 清除最近播放和统计后，收藏仍保持不变 |
 
 ## 4. Alpha19 统计测试
@@ -157,6 +157,8 @@ benchmark/build/reports/androidTests/managedDevice/
 - API 31 使用 `READ_EXTERNAL_STORAGE`，API 33+ 使用 `READ_MEDIA_AUDIO`。
 - 三星输入法路径使用 IME Search/Enter，并在 Compose 重组后重新获取 accessibility node。
 - benchmark 变体注册只读媒体 Provider，避免 10,000 首夹具反复查询不存在的 authority。
+- 内嵌歌词解析限制 ID3 标签、FLAC metadata、单字段和缓存规模；损坏标签降级为空，不阻断播放。
+- Samsung API 31 使用真实带 USLT/LRC 的 MP3 验证 MediaStore → Media3 → Compose 歌词页链路。
 - 隐私测试使用唯一 ID，并在结束时移除测试收藏，避免跨方法污染。
 
 ## 10. 仍需真实设备验证
